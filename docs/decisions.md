@@ -29,6 +29,9 @@ them are in `results.md`.
 | 20 | 2026-11-15 | Price model v1 is not shipped as "Speider says" yet | Test 5: median error 76 % vs 59 % for market value; gate 4 not passed | Showing v1 estimates as final |
 | 21 | 2026-11-15 | Cups are excluded from league data | They appeared as leagues and distorted the ranking | – |
 
+| 22 | 2026-11-15 | Finer roles and league strength as inputs do not fix the price model; next step is league-translated absolute quality and the simulator's expected value as inputs | Test 6: v2 equals v1 (76 %); statistics add 3 points | More feature engineering on season z-scores |
+| 23 | 2026-11-15 | Cross-era comparison is not shown until full historical squads are loaded | Historical profile v0 normalises against survivors only | Showing v0 numbers |
+
 ## Open questions
 
 - Dropout as its own state in the simulator (survivorship bias).

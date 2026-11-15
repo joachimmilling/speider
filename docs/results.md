@@ -188,3 +188,64 @@ being too crude (one z-score per statistic, no role-specific weighting).
 Cups are now excluded. Results unchanged (rating 9.4 %, passes 8.1 % better
 than the damped reference). Top of the ranking: Premier League, Bundesliga,
 LaLiga, Ligue 1, Serie A, Brazilian Série A.
+
+## Test 6: Price model v2, finer quality layer
+
+`python3 analysis/price_model_v2.py`
+
+Changes from v1: eight roles instead of four, league strength as a number,
+two seasons of history, and two extra variants to test the quality gate.
+
+| Model | Median error | Rank correlation |
+|---|---|---|
+| B: age + league + role | 126 % | 0.59 |
+| Goals + assists only | 105 % | 0.68 |
+| v2 without any statistics | 79 % | 0.79 |
+| Speider v2 | 76 % | 0.79 |
+| A: market value (opponent) | 59 % | 0.86 |
+| 50/50 blend (reference only) | 56 % | 0.87 |
+
+Groups (Speider v2 vs market value): defenders and defensive midfielders 80 %
+vs 57 %; small leagues 88 % vs 63 %; under 23: 82 % vs 63 %, and the blend at
+58 % beats the market value there.
+
+- **No improvement over v1.** Finer roles, league strength and a second
+  season did not move the result.
+- **Detailed statistics add almost nothing to fee prediction as used here**
+  (79 → 76 %). Age, league, team strength, earlier fees and career so far
+  carry the model.
+- The quality gate ("explains fees better than goals and assists alone") is
+  passed on paper (105 → 76 %), but not because of the statistics.
+- Gate 4 is still not passed.
+
+**Hypotheses to test next, in order:**
+1. Season z-scores throw away level. Use league-translated absolute
+   quality (test 3 per statistic), not rank within own league.
+2. Fees price expected future value. Feed the career simulator's expected
+   value at the player's age and level into the price model.
+3. The previous season is the wrong window. Use form up to the transfer
+   date from match-level data.
+4. Missing inputs dominate: contract length at the selling club, parent club
+   and loan status, national team minutes, injuries.
+
+## Historical profile v0
+
+`python3 analysis/historical_profile.py`
+
+Career lines (matches, goals, assists per league and season) standardised
+within league, season and position group, shrunk for few matches.
+
+- Works on real data: Cristiano Ronaldo 2007/08 (34 matches, 31 goals) and
+  Antonio Nusa 2025/26 (31 matches, 4 goals, 3 assists) are both in.
+- Best seasons at age 22 or younger in the top five leagues come out as
+  Haaland 2022/23, Mbappé 2018/19 and 2020/21, Haaland at Dortmund, Palmer
+  2023/24, Bellingham 2023/24.
+
+**Not yet valid across eras, two reasons:**
+- Assists are missing before about 2009 in the source (Ronaldo 2007/08 shows
+  0). Old seasons must be compared on goals only, or assists reconstructed.
+- The comparison group is only players whose profile is loaded, that is
+  players still active after 2021. For 2008 that is a few hundred survivors,
+  who are better than the league average of the time, so old seasons are
+  understated. Full historical squads are needed (SofaScore season lists for
+  old seasons).

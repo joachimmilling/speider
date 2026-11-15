@@ -16,4 +16,6 @@
 - UI mockup now exists in Norwegian and English (design canvas).
 - Test 5: price model v1 on fees (`analysis/price_model.py`). Cups excluded from league strength.
 - SofaScore season-level ingestion started (browser, in progress).
+- Test 6: price model v2 (`analysis/price_model_v2.py`), no gain over v1.
+- Historical profile v0 (`analysis/historical_profile.py`).
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.
