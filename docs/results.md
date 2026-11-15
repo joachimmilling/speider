@@ -273,3 +273,23 @@ midfielders 72 % vs 57 %; small leagues 84 % vs 63 %; fee over 10m 62 % vs 36 %.
 - The blend improves again (54 %), so the gap to the market value is closing
   while Speider's independent information grows.
 - Gate 4 is still not passed. The interval still covers 67 % instead of 80 %.
+
+## Test 7b: Calibrated interval for the price model
+
+Same script. Conformalised quantile regression: quantile models fitted on
+transfers up to 2023, widened using the misses on 2024, tested on 2025–2026.
+
+- Coverage of the 80 % interval: 67 % → 76 %.
+- The interval is wide: the upper bound is 8.8 times the lower bound (median).
+- Per group: under 23: 76 %, defenders and defensive midfielders 78 %, small
+  leagues 74 %. Transfers that turned out very cheap (under 1m: 63 %) or very
+  expensive (over 10m: 66 %) fall outside more often, as expected when
+  grouping by the outcome.
+
+With career path in, the model leans on age (52), league (49) and career
+path (47); team strength 9, earlier fees 8, rating 6. Detailed statistics
+still add nothing measurable.
+
+**Conclusion:** the calibrated interval replaces the raw one. A range of
+almost nine times is the honest uncertainty of v3 and too wide to be useful
+on its own; narrowing it is the purpose of the next model steps.

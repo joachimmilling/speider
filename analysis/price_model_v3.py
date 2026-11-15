@@ -188,6 +188,19 @@ def main() -> None:
     print(f"\n80% interval coverage (Speider v3): {100*np.mean((y>=lo)&(y<=hi)):.0f} %   median width: x{np.exp(np.median(hi-lo)):.1f}")
     res.to_csv("data/result_price_model_v3.csv", index=False)
 
+    # calibrated interval (conformalised quantile regression): fit on <= 2023, calibrate on 2024
+    fit_, cal = tr[tr.y <= 2023], tr[tr.y == 2024]
+    kw = dict(max_iter=400, learning_rate=0.05, max_leaf_nodes=15, min_samples_leaf=25, l2_regularization=1.0,
+              categorical_features=[full.index("league"), full.index("role")], random_state=0)
+    ql = HGB(loss="quantile", quantile=0.1, **kw).fit(fit_[full], fit_.y_log)
+    qh = HGB(loss="quantile", quantile=0.9, **kw).fit(fit_[full], fit_.y_log)
+    sc = np.maximum(ql.predict(cal[full]) - cal.y_log.values, cal.y_log.values - qh.predict(cal[full]))
+    q = np.quantile(sc, min(1.0, 0.8 * (1 + 1 / len(sc))))
+    clo, chi = ql.predict(te[full]) - q, qh.predict(te[full]) + q
+    print(f"calibrated 80% interval: coverage {100*np.mean((y>=clo)&(y<=chi)):.0f} %  median width x{np.exp(np.median(chi-clo)):.1f}  (widened by x{np.exp(q):.2f} each side, n_cal={len(cal)})")
+    for gname, mask in groups.items():
+        print(f"   {gname}: coverage {100*np.mean(((y>=clo)&(y<=chi))[mask]):.0f} %")
+
     # which inputs matter: drop-one-group permutation on the test set
     mdl = fit(full); basee = np.median(np.abs(mdl.predict(te[full]) - y)); rng = np.random.default_rng(0); imp = {}
     for name, cols in {"age": ["age", "age2"], "league": ["league"], "playing time": ["lmin", "matches", "recency"],

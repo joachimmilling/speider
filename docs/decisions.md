@@ -34,6 +34,8 @@ them are in `results.md`.
 
 | 24 | 2026-11-15 | Career path features are in the price model | Test 7: 76 → 72 %, under 23: 82 → 72 % | – |
 
+| 25 | 2026-11-15 | Price intervals are conformal-calibrated | Test 7b: coverage 67 → 76 % against a target of 80 % | Raw quantile intervals |
+
 ## Open questions
 
 - Dropout as its own state in the simulator (survivorship bias).
