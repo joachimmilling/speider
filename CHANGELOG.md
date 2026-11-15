@@ -14,4 +14,6 @@
 - Platform UI with sample data (design canvas, not in the repository).
 - Repository switched to English: docs, file names, CLI and script output.
 - UI mockup now exists in Norwegian and English (design canvas).
+- Test 5: price model v1 on fees (`analysis/price_model.py`). Cups excluded from league strength.
+- SofaScore season-level ingestion started (browser, in progress).
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.

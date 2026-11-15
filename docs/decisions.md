@@ -26,6 +26,9 @@ them are in `results.md`.
 
 | 19 | 2026-11-15 | The UI ships in Norwegian and English | Owner's requirement. All UI strings go through one translation table; numbers and currency follow the locale | Single-language UI |
 
+| 20 | 2026-11-15 | Price model v1 is not shipped as "Speider says" yet | Test 5: median error 76 % vs 59 % for market value; gate 4 not passed | Showing v1 estimates as final |
+| 21 | 2026-11-15 | Cups are excluded from league data | They appeared as leagues and distorted the ranking | – |
+
 ## Open questions
 
 - Dropout as its own state in the simulator (survivorship bias).

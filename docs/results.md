@@ -140,3 +140,51 @@ Two verdicts, both at the same price level:
 2. **In hindsight:** fee paid against actual value and playing time later.
 
 Verdict 2 is used to test verdict 1: did "good buy on the day" hold up two years later?
+
+## Test 5: Price model v1 on actual fees
+
+`python3 analysis/price_model.py`
+
+Target: log(fee / price index). Train on 5,788 transfers up to 2024, test on
+3,057 transfers in 2025–2026 (2,993 with a market value to compare against).
+Gradient boosting. Third-party market value is not an input.
+
+| Model | Median error | Within 2x | Rank correlation |
+|---|---|---|---|
+| B: age + league + role | 126 % | 44 % | 0.59 |
+| Speider v1, statistics only | 93 % | 52 % | 0.73 |
+| Speider v1 (+ team strength, earlier fees, career so far) | 76 % | 59 % | 0.79 |
+| A: market value on the day (opponent) | 59 % | 67 % | 0.86 |
+| 50/50 blend of Speider v1 and A (reference only) | 56 % | 70 % | 0.87 |
+
+Per group, Speider v1 vs market value (median error): under 23: 82 % vs 63 %;
+fee under 1m: 116 % vs 90 %; fee over 10m: 74 % vs 36 %.
+
+- **Gate 4 is not passed.** Speider v1 clearly beats the simple reference but
+  is behind the market value.
+- **Speider carries information the market value lacks.** The blend beats the
+  market value alone (56 vs 59 %; under 23: 61 vs 63 %, rank 0.88 vs 0.85).
+- What the model leans on (error added when the input is shuffled): league
+  108, age 61, team strength 16, earlier fees 14, rating 10, career so far 8,
+  attacking statistics 5, playing time 4, role 3, passing/defending 1.
+- The 80 % interval only covered 67 %. It must be calibrated.
+
+**Reading the misses:** the largest errors are players whose previous season
+does not describe them: reserve-team or youth-league minutes at a big club,
+long-term injuries, and transfers with unusual terms. Detailed statistics
+add little beyond rating in this version, which points at the quality layer
+being too crude (one z-score per statistic, no role-specific weighting).
+
+**Next for the price model:**
+- Role-specific quality score instead of raw z-scores.
+- League strength from test 3 as a number, so small leagues share strength.
+- Parent club and loan status; several seasons of history, not one.
+- Contract length at the selling club (not in the transfer feed).
+- Calibrated intervals (conformal).
+- Selection: only sold players have a fee.
+
+## Test 3, rerun without cups
+
+Cups are now excluded. Results unchanged (rating 9.4 %, passes 8.1 % better
+than the damped reference). Top of the ranking: Premier League, Bundesliga,
+LaLiga, Ligue 1, Serie A, Brazilian Série A.

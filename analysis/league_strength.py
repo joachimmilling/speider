@@ -33,7 +33,7 @@ def main() -> None:
                cast(json_extract(p.positions,'$[0]') as int) pos
         from fm_stats s join fm_seasons se using (league_id, season_id)
         join fm_leagues l using (league_id) join fm_players p using (player_id)
-        where l.gender='male' and s.stat in (select unnest(?)) and s.minutes >= 900 and isfinite(s.value)
+        where l.gender='male' and l.name not ilike '%cup%' and l.name not ilike '%pokal%' and l.name not ilike '%copa%' and l.name not ilike '%coppa%' and l.name not ilike '%trophy%' and s.stat in (select unnest(?)) and s.minutes >= 900 and isfinite(s.value)
     """, [STATS]).fetchdf()
     df["role"] = df.pos.fillna(0).astype(int).map(role)
     df = df[df.role != "K"].groupby(["stat", "league_id", "y", "player_id"], as_index=False).first()
