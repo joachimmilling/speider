@@ -170,3 +170,17 @@ To dommer, begge i samme prisnivå:
 2. **I ettertid**: betalt sum mot faktisk verdi og spilletid senere.
 
 Dom 2 brukes til å teste dom 1: holdt «godt kjøp på dagen» seg to år etter?
+
+## Test 2b: Prisindeks med alder
+
+`PYTHONPATH=analyse python3 analyse/prisindeks_alder.py`
+
+12 667 av 13 386 overganger har nå fødselsdato.
+
+- Medianalder ved overgang er stabil: 24,1–25,0 år i alle år 2015–2026.
+  Bekymringen om at kjøperne blir yngre stemte ikke.
+- Med alder holdt fast: vekst 3,3 % per år (uten alder, samme utvalg: 3,0 %).
+- Indeks 2015 = 70, 2019 = 95, 2020 = 82, 2026 = 100.
+- Fremskriving: 2029 = 110 (92–133), 2034 = 129 (96–175).
+
+**Konklusjon:** Alder er med i indeksen fra nå. Den endrer lite.

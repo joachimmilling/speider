@@ -22,6 +22,8 @@ Testresultatene bak står i `resultater.md`.
 | 15 | 2026-11-15 | Kjøp får to dommer: på kjøpsdagen og i ettertid | Må kunne dømme overganger som skjer nå | Bare etterpåklokskap |
 | 16 | 2026-11-15 | Klausuler prises som opsjoner med simulatoren | Slik fungerer avtaler i virkeligheten | Se bort fra klausuler |
 
+| 17 | 2026-11-15 | Alder er med i prisindeksen | Test 2b: endrer veksten fra 3,0 til 3,3 % per år | Indeks uten alder |
+
 ## Åpne spørsmål
 
 - Frafall som egen tilstand i simulatoren (overlevelsesskjevhet).
