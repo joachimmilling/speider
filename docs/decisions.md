@@ -40,6 +40,8 @@ them are in `results.md`.
 | 27 | 2026-11-15 | Stop engineering season-aggregate statistics for the price model | Tests 6 and 9: no gain. Next: match-level form up to the transfer date, contract length, loan status | More season-level features |
 | 28 | 2026-11-15 | Sell-on clauses are handled as a user-entered clause, not as a correction of the training fees | Test 10: assumed 10–20 % clauses leave the ranking almost unchanged (0.985) | Adjusting historical fees |
 
+| 29 | 2026-11-15 | Projections show both "if still playing" and expected value including dropout | Test 11: for a 21-year-old regular the two differ by 35 % up vs 7 % down at 25 | Survivor curve alone |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

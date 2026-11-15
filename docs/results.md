@@ -366,3 +366,33 @@ test transfers) carry a sell-on clause worth 10 or 20 % of the headline fee.
 
 **Conclusion:** sell-on clauses of this size do not change which transfers
 look cheap. Some of the difference is refit noise, not the assumption.
+
+## Test 11: Career curve with dropout built in
+
+`python3 analysis/career_curve_with_dropout.py`
+
+Expected value at an age = value if still playing × probability of still
+playing. Chained age curve on 92,269 one-year transitions (2021–2026), dropout
+from test 8 (one-year rate scaled by 0.66, the share still out a year later).
+
+Regular at 21, value set to 1.00:
+
+| Age | 21 | 23 | 25 | 27 | 29 | 31 | 33 |
+|---|---|---|---|---|---|---|---|
+| Value if still playing | 1.00 | 1.25 | 1.35 | 1.14 | 0.84 | 0.55 | 0.35 |
+| Still playing | 100 % | 83 % | 69 % | 57 % | 44 % | 33 % | 22 % |
+| Expected value | 1.00 | 1.04 | 0.93 | 0.64 | 0.38 | 0.18 | 0.08 |
+
+From 19: value if playing peaks at 2.31 (age 25), expected value peaks at
+1.46 (age 23). From 24: expected value falls from the start.
+
+- Survivors peak at 24–25. With dropout included the expected value of a
+  21-year-old regular peaks at 22–23 and is back below today's value by 25.
+- This is the number that matters for a buyer: the survivor curve says
+  "worth 35 % more at 25", the expected curve says "worth 7 % less".
+
+**Weaknesses:** "out" includes moves to leagues we do not cover, so dropout is
+overstated and the expected curve is too low. Level is not conditioned on
+here (test 4 showed it matters); this is the average regular. Both are fixed
+by moving dropout into the simulator as a state, with SofaScore's wider
+league coverage.

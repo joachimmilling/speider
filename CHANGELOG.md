@@ -22,4 +22,5 @@
 - Test 7b: calibrated price intervals.
 - More profiles (25,505) and SofaScore season statistics loaded (`scripts/load_sofascore.py`).
 - Test 8 dropout, test 9 price model v4, test 10 sell-on sensitivity.
+- Test 11: career curve with dropout (`analysis/career_curve_with_dropout.py`).
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.
