@@ -20,4 +20,6 @@
 - Historical profile v0 (`analysis/historical_profile.py`).
 - Test 7: price model v3 with career path features (`analysis/price_model_v3.py`).
 - Test 7b: calibrated price intervals.
+- More profiles (25,505) and SofaScore season statistics loaded (`scripts/load_sofascore.py`).
+- Test 8 dropout, test 9 price model v4, test 10 sell-on sensitivity.
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.

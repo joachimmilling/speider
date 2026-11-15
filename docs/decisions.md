@@ -36,9 +36,13 @@ them are in `results.md`.
 
 | 25 | 2026-11-15 | Price intervals are conformal-calibrated | Test 7b: coverage 67 → 76 % against a target of 80 % | Raw quantile intervals |
 
+| 26 | 2026-11-15 | Dropout is a required part of every career projection | Test 8: a regular at 21 is still in the data at 29 with 43 % probability | Survivor-only age curves |
+| 27 | 2026-11-15 | Stop engineering season-aggregate statistics for the price model | Tests 6 and 9: no gain. Next: match-level form up to the transfer date, contract length, loan status | More season-level features |
+| 28 | 2026-11-15 | Sell-on clauses are handled as a user-entered clause, not as a correction of the training fees | Test 10: assumed 10–20 % clauses leave the ranking almost unchanged (0.985) | Adjusting historical fees |
+
 ## Open questions
 
-- Dropout as its own state in the simulator (survivorship bias).
+- Dropout is measured (test 8) but not yet a state inside the simulator.
 - Team strength separated from league strength (club Elo).
 - How much sell-on clauses shift the ground truth for young players from small leagues.
 - Wages: no free source found.

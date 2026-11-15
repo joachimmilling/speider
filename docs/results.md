@@ -293,3 +293,76 @@ still add nothing measurable.
 **Conclusion:** the calibrated interval replaces the raw one. A range of
 almost nine times is the honest uncertainty of v3 and too wide to be useful
 on its own; narrowing it is the purpose of the next model steps.
+
+## Data: more profiles and SofaScore season statistics (2026-11-15, late)
+
+- Player profiles: 25,505 of 48,341 loaded. 1.35M market value points,
+  621,000 career lines.
+- SofaScore season statistics (`scripts/load_sofascore.py`): 191,188
+  player-seasons, 58,313 players, 64 leagues with detailed statistics so far
+  (the discovery crawl is not finished), five latest seasons each.
+- A history crawl for 21 large leagues (basic statistics for every squad
+  member, all seasons) is running; three leagues are in.
+
+## Test 8: Dropout
+
+`python3 analysis/dropout.py`
+
+Cohort without look-ahead: 54,191 regular player-seasons (≥ 900 min) in
+2022–2025, in leagues that are covered the following year.
+
+- Next year: 65 % still regulars, 16 % fringe (270–899 min), 18 % out
+  (under 270 min or absent).
+- Out two years running: 12 %. Of those out for one year, 20 % are regulars
+  again the year after.
+- By age (scaled to the overall rate): out-rate is 13–14 % a year from 20 to
+  26, 18 % at 28, 25 % at 31, 35 % at 34.
+- Chained: a regular at 21 is still in the data at 25 with 68 % probability
+  and at 29 with 43 %. From 25: 64 % at 29, 31 % at 33.
+
+**Reading:** "out" mixes retirement, long injury and moves to leagues we do
+not cover, so it overstates leaving the game. SofaScore's wider coverage
+will shrink the last part. Even so, dropout is large enough that every
+career projection must carry it; the test 4 age curve describes survivors.
+
+**Weakness:** only 86 % of the cohort has an age yet, and the missing ones
+drop out more often (18.1 % overall vs 14.1 % with age). The age table is
+scaled to compensate. Rerun when all profiles are in.
+
+## Test 9: Price model v4, league-translated absolute quality
+
+`python3 analysis/price_model_v4.py`
+
+Each statistic is now also given as an absolute level: rank within own
+league and role plus that league's offset for the statistic from test 3.
+
+| Model | Median error | Rank correlation |
+|---|---|---|
+| Speider v3 | 72 % | 0.81 |
+| Speider v4 | 71 % | 0.82 |
+| A: market value (opponent) | 59 % | 0.86 |
+
+- Hypothesis 1 (season z-scores throw away level) explains very little.
+  Absolute quality takes over the role of the raw statistics in the model
+  but adds no accuracy.
+- Small leagues 83 % and defenders 73 % are unchanged.
+
+**Conclusion so far on the price model:** four versions, 93 → 76 → 72 → 71 %.
+What moved it was context (team strength, earlier fees, career path), not a
+finer description of last season's play. Season-aggregate statistics from
+this source are close to exhausted for predicting fees.
+
+## Test 10: Sensitivity to hidden sell-on clauses
+
+`SELLON=0.1 python3 analysis/price_model_v4.py`, then `python3 analysis/sellon_sensitivity.py`
+
+Assumption, not data: players under 23 sold from weaker leagues (11 % of the
+test transfers) carry a sell-on clause worth 10 or 20 % of the headline fee.
+
+- Rank correlation between the adjusted and unadjusted "paid below
+  estimate" ranking: 0.986 (10 %) and 0.985 (20 %).
+- Top-100 overlap 86 of 100 in both cases; top-300 overlap 276 and 266.
+- The segment's share of the top 300 moves from 14 % to 13 % and 12 %.
+
+**Conclusion:** sell-on clauses of this size do not change which transfers
+look cheap. Some of the difference is refit noise, not the assumption.

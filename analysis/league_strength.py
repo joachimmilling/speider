@@ -87,6 +87,7 @@ def main() -> None:
     print(out.round(3).to_string(index=False))
     out.to_csv("data/result_league_strength.csv", index=False)
     S = pd.DataFrame(strengths)
+    S.to_csv("data/result_league_strength_by_stat.csv")
     att = S[[c for c in ["goals_per_90", "expected_goals_per_90", "total_scoring_att", "won_contest", "expected_assists_per_90", "rating"] if c in S]].mean(axis=1)
     rank = pd.concat([names, att.rename("strength")], axis=1).dropna().sort_values("strength", ascending=False)
     print("\nStrongest (attacking stats + rating, mean z shift):")
