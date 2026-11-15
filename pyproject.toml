@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "speider"
 version = "0.1.0"
-description = "Åpen spillerdatabase og egne modeller for scouting i norsk fotball"
+description = "What football players are really worth: local player database and own models"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

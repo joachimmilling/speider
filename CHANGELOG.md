@@ -1,15 +1,16 @@
-# Endringslogg
+# Changelog
 
 ## 2026-11-15
 
-- Forstudie av datagrunnlaget (`docs/forstudie.md`).
-- Plan for egne modeller (`docs/egne-modeller.md`, 13 modeller) og
-  evalueringsprotokoll (`docs/evaluering.md`).
-- Innhenting fra FotMob: 4,17 mill. statistikkrader, 22 190 overganger,
-  19 242 spillerprofiler (pågår).
-- Innlasting: `scripts/last_fotmob.py`, `scripts/last_profiler.py`.
-- Test 1 krymping, test 2 prisindeks, test 3 ligastyrke, test 4
-  karrieresimulator (`analyse/`, resultater i `docs/resultater.md`).
-- Beslutningslogg (`docs/beslutninger.md`).
-- Plattform-UI med eksempeldata (designlerret, ikke i repoet).
-- Tidligere samme dag: datamodell, ESF- og FotMob-parsere, CLI, 17 tester.
+- Pre-study of the data foundation (`docs/pre-study.md`).
+- Plan for own models (`docs/models.md`, 13 models) and evaluation protocol
+  (`docs/evaluation.md`).
+- FotMob ingestion: 4.17M statistic rows, 22,190 transfers with fees,
+  19,242 player profiles (in progress).
+- Loaders: `scripts/load_fotmob.py`, `scripts/load_profiles.py`.
+- Test 1 shrinkage, test 2 price index (2b with age), test 3 league strength,
+  test 4 career simulator (`analysis/`, results in `docs/results.md`).
+- Decision log (`docs/decisions.md`).
+- Platform UI with sample data (design canvas, not in the repository).
+- Repository switched to English: docs, file names, CLI and script output.
+- Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.

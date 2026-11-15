@@ -1,80 +1,72 @@
 # Speider
 
-Åpen spillerdatabase og egne modeller for scouting i norsk fotball. Et hobbyprosjekt, laget for å se hva man kan regne ut selv: estimert markedsverdi, prognoser og likhetssøk.
+What football players are really worth. A hobby project: a local player database and our own models for quality, transfer value and future value, in any league.
 
-Speider er for dem som jobber som scouter og agenter, og svarer på spørsmål som:
+Speider is built for the questions scouts and agents ask:
 
-- Hvem ligner på denne spilleren, men er yngre eller billigere?
-- Hva er spilleren verdt nå, og hvor er verdien på vei?
-- Hvem presterer over nivået sitt og går ut av kontrakt snart?
+- What is this player really worth, and is the asking price a good or bad buy?
+- What is he expected to be worth in one, three or eight years?
+- Who is underpriced, in leagues few people watch?
+- Who resembles this player but is younger or cheaper?
 
 ## Status
 
-Første byggestein er på plass: en lokal database med alle spillere i Eliteserien. Veien videre står i [docs/plan.md](docs/plan.md), og resultatene fra første test i [docs/pilot.md](docs/pilot.md).
-
-| Del | Status |
+| Part | Status |
 |---|---|
-| Lokal database (DuckDB) | Ferdig |
-| Spillere, lag, minutter, mål, målgivende (Eliteserien Fantasy) | Ferdig |
-| Kamplogg og tidligere sesonger per spiller | Ferdig |
-| Prestasjonstall fra FotMob (pasninger, forsvar, xG, xA) | Henting ferdig, ikke kjørt på ekte data herfra |
-| Alder, kontrakt, overgangssummer | Kilde funnet, henting ikke skrevet |
-| Verdimodell, likhetssøk, prognoser | Ikke startet |
-| Nettside | Ikke startet, design finnes |
+| Local database (DuckDB) | Done |
+| FotMob season statistics, transfers with fees, player profiles | Loaded locally, profiles still downloading |
+| Shrinkage for low-minute players | Tested, in |
+| League strength from league switchers | Tested, in |
+| Transfer price index with projection | First version |
+| Career simulator (chained one-year transitions) | First version |
+| Quality per role, fee-trained price model, "underpriced" backtest | Not started |
+| Web app | Design mockup exists |
 
-## Kom i gang
+Start with [docs/plan.md](docs/plan.md). Test results are in [docs/results.md](docs/results.md), decisions in [docs/decisions.md](docs/decisions.md), planned models in [docs/models.md](docs/models.md).
 
-Krever Python 3.10 eller nyere.
+## Getting started
+
+Requires Python 3.10 or newer.
 
 ```bash
-git clone https://github.com/joachimmilling/speider.git
-cd speider
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
+pip install numpy pandas
 
-speider fetch              # henter spillere, lag og kamper (noen sekunder)
-speider fetch --matches    # henter også kamplogg per spiller (noen minutter)
-speider fetch --fotmob     # henter også FotMob-statistikk for alle sesonger
-speider status
-speider top --metric goals_per_90 --min-minutes 900
-speider player "berg"
+# Load a FotMob export and player profiles into data/speider.duckdb
+python3 scripts/load_fotmob.py data/raw/fotmob/export-YYYYMMDD.ndjson.gz
+python3 scripts/load_profiles.py data/raw/fotmob/profiler-*.ndjson.gz
+
+# Run the tests behind docs/results.md
+python3 analysis/shrinkage.py
+python3 analysis/league_strength.py
+python3 analysis/price_index.py
+PYTHONPATH=analysis python3 analysis/price_index_age.py
+python3 analysis/career_simulator.py
 ```
 
-Dataene havner i `data/speider.duckdb`. Hver gang du kjører `speider fetch`, lagres et nytt øyeblikksbilde, så du etter hvert kan se utvikling over tid.
+The exports are collected through a browser session (see [docs/pre-study.md](docs/pre-study.md)); plain scripts could not reach the sources from the development environment. The older `speider fetch` command covers Eliteserien Fantasy and FotMob season lists for one league.
 
-Du kan også spørre databasen direkte:
+## Data and terms
 
-```bash
-duckdb data/speider.duckdb "SELECT display_name, team, minutes, goal_involvements_per_90 FROM player_current WHERE position = 'DEF' AND minutes > 900 ORDER BY 4 DESC LIMIT 10"
-```
+The repository contains code only. No third-party data is committed, and `data/` is ignored. Read [docs/data-sources.md](docs/data-sources.md) before using Speider for anything other than private exploration: the main sources are unofficial.
 
-## Data og vilkår
-
-Repoet inneholder bare kode. Ingen data fra tredjeparter er sjekket inn, og `data/` er utelatt i `.gitignore`. Du henter dataene selv til din egen maskin.
-
-Les [docs/datakilder.md](docs/datakilder.md) før du bruker Speider til noe annet enn privat utforsking. Flere av kildene er uoffisielle eller tillater bare ikke-kommersiell bruk.
-
-## Slik er det bygget
+## Layout
 
 ```
-src/speider/
-  schema.sql        tabeller og visningen player_current
-  db.py             kobling til DuckDB
-  sources/esf.py    oversetter Eliteserien Fantasy til våre tabeller
-  sources/http.py   rolig henting med rådata-kopi
-  ingest.py         henter og laster inn
-  cli.py            kommandoene over
-tests/              tester mot oppdiktede eksempeldata
+src/speider/     package: schema, DuckDB access, source parsers, CLI
+scripts/         loaders for browser exports, access check
+analysis/        model tests; each prints the numbers quoted in docs/results.md
+docs/            plan, pre-study, models, evaluation protocol, results, decisions
+tests/           tests against invented sample data
 ```
 
-Hver kilde får sin egen fil under `sources/` og sitt eget prefiks på id-ene (`esf:12`), så flere kilder kan kobles sammen senere.
-
-## Tester
+## Tests
 
 ```bash
 pytest
 ```
 
-## Lisens
+## License
 
-Koden er MIT-lisensiert. Lisensen gjelder ikke dataene du henter.
+The code is MIT licensed. The license does not cover the data you fetch.

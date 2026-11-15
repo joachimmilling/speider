@@ -1,8 +1,8 @@
-"""Test 2: prisindeks for overgangsmarkedet, og fremskriving.
+"""Test 2: price index for the transfer market, and projection.
 
-Indeksen er årseffekten i en regresjon på log(sum), der vi holder fast
-hvem som selger, hvem som kjøper, posisjon og (versjon B) spillerens tall
-sesongen før. Alder mangler foreløpig og legges inn når profilene er hentet.
+The index is the year effect in a regression on log(fee), holding selling
+league, buying league and position fixed (version B also holds the player's
+previous-season numbers fixed).
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def fit(df: pd.DataFrame, cats: list[str], nums: list[str]) -> pd.Series:
     for c in cats:
         top = df[c].value_counts()
         keep = top[top >= 15].index
-        X.append(pd.get_dummies(df[c].where(df[c].isin(keep), "annet"), prefix=c, drop_first=True, dtype=float))
+        X.append(pd.get_dummies(df[c].where(df[c].isin(keep), "other"), prefix=c, drop_first=True, dtype=float))
     for n in nums:
         X.append(((df[n] - df[n].mean()) / df[n].std()).rename(n))
     X = pd.concat(X, axis=1)
@@ -42,11 +42,11 @@ def main() -> None:
       group by 1""")
     base = con.execute("""
       select t.player_id, t.date, year(t.date) y, month(t.date) mo, t.fee, coalesce(t.pos,'?') pos,
-             coalesce(cast(f.league_id as varchar),'ukjent') fra, coalesce(cast(k.league_id as varchar),'ukjent') til
+             coalesce(cast(f.league_id as varchar),'unknown') src, coalesce(cast(k.league_id as varchar),'unknown') dst
       from fm_transfers t left join tl f on f.team_id=t.from_id left join tl k on k.team_id=t.to_id
       where t.fee >= 50000 and not t.loan and not t.extension
     """).fetchdf()
-    A = fit(base, ["fra", "til", "pos"], [])
+    A = fit(base, ["src", "dst", "pos"], [])
 
     perf = con.execute("""
       with s as (
@@ -64,22 +64,22 @@ def main() -> None:
     m = m[m.ey >= m.ey_max - 1]
     m["lmin"] = np.log(m.minutes)
     m["ga90"] = m.ga / m.minutes * 90
-    B = fit(m, ["fra", "til", "pos"], ["rating", "lmin", "ga90"])
+    B = fit(m, ["src", "dst", "pos"], ["rating", "lmin", "ga90"])
 
-    for navn, idx in [("A: uten prestasjon", A), ("B: med prestasjon sesongen før", B)]:
+    for name, idx in [("A: without performance", A), ("B: with previous-season performance", B)]:
         lvl = np.exp(idx - idx.iloc[-1]) * 100
         d = np.diff(idx.values)
         drift, sd = d.mean(), d.std(ddof=1)
-        print(f"\n{navn}  (n={idx.attrs['n']}, R2={idx.attrs['r2']:.2f})")
-        print("  indeks (2026=100):", {int(k): round(float(v)) for k, v in lvl.items()})
-        print(f"  snitt endring per år: {100*(np.exp(drift)-1):.1f} %, standardavvik {100*sd:.0f} %-poeng (log)")
+        print(f"\n{name}  (n={idx.attrs['n']}, R2={idx.attrs['r2']:.2f})")
+        print("  index (2026=100):", {int(k): round(float(v)) for k, v in lvl.items()})
+        print(f"  mean change per year: {100*(np.exp(drift)-1):.1f} %, standard deviation {100*sd:.0f} pct points (log)")
         for h in [3, 5, 8]:
             mid = 100 * np.exp(drift * h)
             lo, hi = 100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h)), 100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h))
             print(f"  {2026+h}: {mid:.0f}  (80 %: {lo:.0f}–{hi:.0f})")
     raw = base.groupby("y").fee.median()
-    print("\nRå median (mill.):", {int(k): round(v / 1e6, 2) for k, v in raw.items()})
-    print("Antall per år:", base.groupby("y").size().to_dict())
+    print("\nRaw median (EUR m):", {int(k): round(v / 1e6, 2) for k, v in raw.items()})
+    print("Count per year:", base.groupby("y").size().to_dict())
 
 
 if __name__ == "__main__":

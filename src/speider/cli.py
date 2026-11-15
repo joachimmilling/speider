@@ -27,16 +27,16 @@ def cmd_fetch(con, args) -> int:
     counts = fetch_esf(con, raw_dir=args.raw_dir, with_matches=args.matches, progress=print)
     if args.fotmob:
         counts.update(fetch_fotmob(con, raw_dir=args.raw_dir, progress=print))
-    print("Lagret: " + ", ".join(f"{rows} {what}" for what, rows in counts.items()))
+    print("Saved: " + ", ".join(f"{rows} {what}" for what, rows in counts.items()))
     return 0
 
 
 def cmd_status(con, args) -> int:
     tables = ["teams", "players", "player_snapshots", "fixtures", "player_matches", "player_seasons", "player_stats"]
     rows = [(t, con.execute(f"SELECT count(*) FROM {t}").fetchone()[0]) for t in tables]
-    print(_table(["tabell", "rader"], rows))
+    print(_table(["table", "rows"], rows))
     last = con.execute("SELECT max(fetched_at) FROM fetch_log").fetchone()[0]
-    print(f"\nSist hentet: {last or 'aldri. Kjør: speider fetch'}")
+    print(f"\nLast fetched: {last or 'never. Run: speider fetch'}")
     return 0
 
 
@@ -48,9 +48,9 @@ def cmd_player(con, args) -> int:
            WHERE (first_name || ' ' || last_name || ' ' || display_name) ILIKE ?
            ORDER BY minutes DESC LIMIT 20""", [f"%{args.name}%"]).fetchall()
     if not rows:
-        print(f"Fant ingen spiller som ligner «{args.name}».")
+        print(f"No player matching '{args.name}'.")
         return 1
-    print(_table(["spiller", "fullt navn", "pos", "lag", "min", "mål", "ass", "mål/90", "ass/90", "andel min"], rows))
+    print(_table(["player", "full name", "pos", "team", "min", "goals", "ast", "goals/90", "ast/90", "min share"], rows))
     return 0
 
 
@@ -64,29 +64,29 @@ def cmd_top(con, args) -> int:
         f"""SELECT display_name, position, team, minutes, goals, assists, {column}
             FROM player_current WHERE {' AND '.join(where)}
             ORDER BY {column} DESC, minutes DESC LIMIT ?""", params + [args.limit]).fetchall()
-    print(_table(["spiller", "pos", "lag", "min", "mål", "ass", args.metric], rows))
+    print(_table(["player", "pos", "team", "min", "goals", "ast", args.metric], rows))
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="speider", description="Spillerdatabase for norsk fotball.")
+    parser = argparse.ArgumentParser(prog="speider", description="Local football player database.")
     parser.add_argument("--version", action="version", version=f"speider {__version__}")
-    parser.add_argument("--db", default=str(DEFAULT_PATH), help="sti til databasen (standard: data/speider.duckdb)")
+    parser.add_argument("--db", default=str(DEFAULT_PATH), help="path to the database (default: data/speider.duckdb)")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    fetch = sub.add_parser("fetch", help="hent ferske data til den lokale databasen")
-    fetch.add_argument("--matches", action="store_true", help="hent også kamplogg og tidligere sesonger per spiller (noen minutter)")
-    fetch.add_argument("--fotmob", action="store_true", help="hent også FotMob-statistikk for alle sesonger (rundt 400 små filer)")
-    fetch.add_argument("--raw-dir", default="data/raw", help="hvor rådata lagres")
+    fetch = sub.add_parser("fetch", help="fetch fresh data into the local database")
+    fetch.add_argument("--matches", action="store_true", help="also fetch match log and earlier seasons per player (a few minutes)")
+    fetch.add_argument("--fotmob", action="store_true", help="also fetch FotMob statistics for all seasons (about 400 small files)")
+    fetch.add_argument("--raw-dir", default="data/raw", help="where raw data is stored")
     fetch.set_defaults(func=cmd_fetch)
 
-    sub.add_parser("status", help="vis hva databasen inneholder").set_defaults(func=cmd_status)
+    sub.add_parser("status", help="show what the database contains").set_defaults(func=cmd_status)
 
-    player = sub.add_parser("player", help="slå opp en spiller på navn")
+    player = sub.add_parser("player", help="look up a player by name")
     player.add_argument("name")
     player.set_defaults(func=cmd_player)
 
-    top = sub.add_parser("top", help="ranger spillere på et nøkkeltall")
+    top = sub.add_parser("top", help="rank players on a metric")
     top.add_argument("--metric", choices=sorted(METRICS), default="goal_involvements_per_90")
     top.add_argument("--min-minutes", type=int, default=450)
     top.add_argument("--position", choices=["GK", "DEF", "MID", "FWD", "gk", "def", "mid", "fwd"])

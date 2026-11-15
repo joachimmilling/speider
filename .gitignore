@@ -1,4 +1,4 @@
-# Data hentes lokalt av hver bruker og skal aldri sjekkes inn (se docs/datakilder.md)
+# Data is fetched locally by each user and must never be committed (see docs/data-sources.md)
 data/
 *.duckdb
 *.duckdb.wal
@@ -8,5 +8,5 @@ __pycache__/
 .venv/
 .DS_Store
 
-# Importarkiv fra første overføring
+# Import archive from the first transfer
 *.tgz

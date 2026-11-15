@@ -1,9 +1,9 @@
-"""Leser FotMob-eksporten (NDJSON, gzip) inn i DuckDB.
+"""Load the FotMob export (NDJSON, gzip) into DuckDB.
 
-Kjør:  python3 scripts/last_fotmob.py data/raw/fotmob/export-YYYYMMDD.ndjson.gz
+Run:  python3 scripts/load_fotmob.py data/raw/fotmob/export-YYYYMMDD.ndjson.gz
 
-Tabeller: fm_leagues, fm_seasons, fm_teams, fm_players, fm_stats, fm_transfers.
-Data ligger bare lokalt i data/ og sjekkes aldri inn.
+Tables: fm_leagues, fm_seasons, fm_teams, fm_players, fm_stats, fm_transfers.
+Data stays local in data/ and is never committed.
 """
 from __future__ import annotations
 

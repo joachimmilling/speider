@@ -1,4 +1,4 @@
-"""Leser spillerprofiler (NDJSON, gzip) inn i DuckDB: fm_profiles, fm_mv, fm_career."""
+"""Load player profiles (NDJSON, gzip) into DuckDB: fm_profiles, fm_mv, fm_career."""
 from __future__ import annotations
 
 import csv, gzip, json, re, sys, tempfile

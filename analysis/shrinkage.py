@@ -1,7 +1,7 @@
-"""Test 1: slår krympede tall rå tall når vi spår neste sesong?
+"""Test 1: do shrunk numbers beat raw numbers when predicting next season?
 
-Tren (finn krympestyrke k per statistikk) på sesongpar som ender <= 2024.
-Test på par der neste sesong ender >= 2025. Samme liga begge år.
+Train (find shrinkage strength k per statistic) on season pairs ending <= 2024.
+Test on pairs where the next season ends >= 2025. Same league both years.
 """
 from __future__ import annotations
 
@@ -56,17 +56,17 @@ def main() -> None:
         rmse = lambda a: float(np.sqrt(np.mean((a - te.v2) ** 2)))
         lo = te.m < 900
         rows.append(dict(stat=stat, n_test=len(te), k=k,
-                         rmse_raa=rmse(te.v), rmse_krympet=rmse(pred), rmse_snitt=rmse(te.mu),
-                         forbedring_pst=round(100 * (1 - rmse(pred) / rmse(te.v)), 1),
-                         forbedring_under900=round(100 * (1 - np.sqrt(np.mean((pred[lo] - te.v2[lo]) ** 2)) /
+                         rmse_raw=rmse(te.v), rmse_shrunk=rmse(pred), rmse_mean=rmse(te.mu),
+                         improvement_pct=round(100 * (1 - rmse(pred) / rmse(te.v)), 1),
+                         improvement_under900=round(100 * (1 - np.sqrt(np.mean((pred[lo] - te.v2[lo]) ** 2)) /
                                                          np.sqrt(np.mean((te.v[lo] - te.v2[lo]) ** 2))), 1) if lo.sum() > 50 else None,
                          n_under900=int(lo.sum()),
-                         r_raa=round(float(np.corrcoef(te.v, te.v2)[0, 1]), 3),
-                         r_krympet=round(float(np.corrcoef(pred, te.v2)[0, 1]), 3)))
-    out = pd.DataFrame(rows).sort_values("forbedring_pst", ascending=False)
+                         r_raw=round(float(np.corrcoef(te.v, te.v2)[0, 1]), 3),
+                         r_shrunk=round(float(np.corrcoef(pred, te.v2)[0, 1]), 3)))
+    out = pd.DataFrame(rows).sort_values("improvement_pct", ascending=False)
     pd.set_option("display.width", 250)
     print(out.round(3).to_string(index=False))
-    out.to_csv("data/resultat_krymping.csv", index=False)
+    out.to_csv("data/result_shrinkage.csv", index=False)
 
 
 if __name__ == "__main__":

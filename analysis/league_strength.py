@@ -1,10 +1,10 @@
-"""Test 3: hjelper ligastyrke når vi spår en spiller som bytter liga?
+"""Test 3: does league strength help when predicting a player who changes league?
 
-Mål: spillerens tall i ny liga, relativt til rollesnittet der.
-  B0  samme relative nivå som før (ingen ligastyrke, ingen demping)
-  B1  dempet relativt nivå (lært helning, ingen ligastyrke)
-  M   B1 + ligastyrke per statistikk (ridge, lært på bytter til og med 2025)
-Test: bytter der ny sesong ender 2026 eller senere.
+Target: the player's numbers in the new league, relative to the role mean there.
+  B0  same relative level as before (no league strength, no damping)
+  B1  damped relative level (learned slope, no league strength)
+  M   B1 + league strength per statistic (ridge, learned on moves up to 2025)
+Test: moves where the new season ends 2026 or later.
 """
 from __future__ import annotations
 
@@ -78,22 +78,22 @@ def main() -> None:
         beta = np.linalg.solve(Xtr.T @ Xtr + P, Xtr.T @ ytr)
         rm = lambda pred: float(np.sqrt(np.mean((pred - yte) ** 2)))
         r0, r1, rM = rm(Xte[:, 0]), rm(slope * Xte[:, 0]), rm(Xte @ beta)
-        res.append(dict(stat=stat, n_tren=len(tr), n_test=len(te), helning=round(slope, 2),
-                        rmse_B0=r0, rmse_B1=r1, rmse_M=rM, M_mot_B1_pst=round(100 * (1 - rM / r1), 1),
-                        M_mot_B0_pst=round(100 * (1 - rM / r0), 1)))
+        res.append(dict(stat=stat, n_train=len(tr), n_test=len(te), slope_=round(slope, 2),
+                        rmse_B0=r0, rmse_B1=r1, rmse_M=rM, M_vs_B1_pct=round(100 * (1 - rM / r1), 1),
+                        M_vs_B0_pct=round(100 * (1 - rM / r0), 1)))
         strengths[stat] = pd.Series(beta[1:], index=leagues)
-    out = pd.DataFrame(res).sort_values("M_mot_B1_pst", ascending=False)
+    out = pd.DataFrame(res).sort_values("M_vs_B1_pct", ascending=False)
     pd.set_option("display.width", 250)
     print(out.round(3).to_string(index=False))
-    out.to_csv("data/resultat_ligastyrke.csv", index=False)
+    out.to_csv("data/result_league_strength.csv", index=False)
     S = pd.DataFrame(strengths)
     att = S[[c for c in ["goals_per_90", "expected_goals_per_90", "total_scoring_att", "won_contest", "expected_assists_per_90", "rating"] if c in S]].mean(axis=1)
-    rank = pd.concat([names, att.rename("styrke")], axis=1).dropna().sort_values("styrke", ascending=False)
-    print("\nSterkest (offensive tall + rating, snitt z-forskyvning):")
+    rank = pd.concat([names, att.rename("strength")], axis=1).dropna().sort_values("strength", ascending=False)
+    print("\nStrongest (attacking stats + rating, mean z shift):")
     print(rank.head(15).round(2).to_string())
-    print("\nSvakest:")
+    print("\nWeakest:")
     print(rank.tail(10).round(2).to_string())
-    rank.to_csv("data/resultat_ligarangering.csv")
+    rank.to_csv("data/result_league_ranking.csv")
 
 
 if __name__ == "__main__":
