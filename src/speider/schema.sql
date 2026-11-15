@@ -104,6 +104,27 @@ CREATE TABLE IF NOT EXISTS player_seasons (
     PRIMARY KEY (player_id, season)
 );
 
+-- One row per player, season and statistic, as published. Long format so new
+-- statistics need no schema change.
+CREATE TABLE IF NOT EXISTS player_stats (
+    player_id      VARCHAR NOT NULL,
+    league         VARCHAR NOT NULL,
+    season         VARCHAR NOT NULL,
+    stat           VARCHAR NOT NULL,
+    value          DOUBLE,
+    sub_value      DOUBLE,
+    is_per_90      BOOLEAN,
+    minutes        INTEGER,
+    matches        INTEGER,
+    player_name    VARCHAR,
+    team_id        VARCHAR,
+    team_name      VARCHAR,
+    nationality    VARCHAR,
+    position_code  INTEGER,
+    role           VARCHAR,
+    PRIMARY KEY (player_id, league, season, stat)
+);
+
 CREATE TABLE IF NOT EXISTS fetch_log (
     fetched_at     TIMESTAMP NOT NULL,
     source         VARCHAR NOT NULL,

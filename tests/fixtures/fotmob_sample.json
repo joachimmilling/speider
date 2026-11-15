@@ -1,0 +1,78 @@
+{
+ "_note": "Oppdiktede spillere. Bare feltnavnene følger den ekte strømmen.",
+ "total_tackle": {
+  "TopLists": [
+   {
+    "StatName": "total_tackle",
+    "Title": "Tackles per 90",
+    "Subtitle": "Total tackles",
+    "StatList": [
+     {
+      "ParticipantName": "Jonas Eksempel",
+      "ParticiantId": 1,
+      "TeamId": 10,
+      "StatValue": 4.5,
+      "SubStatValue": 18,
+      "MinutesPlayed": 359,
+      "MatchesPlayed": 16,
+      "ParticipantCountryCode": "NOR",
+      "TeamName": "Eksempel FK",
+      "Positions": [
+       72,
+       74
+      ]
+     },
+     {
+      "ParticipantName": "Emil Prøve",
+      "ParticiantId": 2,
+      "TeamId": 11,
+      "StatValue": 2.0,
+      "SubStatValue": 40,
+      "MinutesPlayed": 1800,
+      "MatchesPlayed": 20,
+      "ParticipantCountryCode": "SWE",
+      "TeamName": "Prøve IL",
+      "Positions": [
+       36
+      ]
+     },
+     {
+      "ParticipantName": "Uten Posisjon",
+      "ParticiantId": 3,
+      "TeamId": 11,
+      "StatValue": 1.0,
+      "SubStatValue": 9,
+      "MinutesPlayed": 810,
+      "MatchesPlayed": 9,
+      "ParticipantCountryCode": "NOR",
+      "TeamName": "Prøve IL"
+     }
+    ]
+   }
+  ],
+  "LeagueName": "Eliteserien"
+ },
+ "expected_goals": {
+  "TopLists": [
+   {
+    "Title": "Expected goals (xG)",
+    "Subtitle": "Goals",
+    "StatList": [
+     {
+      "ParticipantName": "Jonas Eksempel",
+      "ParticiantId": 1,
+      "TeamId": 10,
+      "StatValue": 3.2,
+      "SubStatValue": 4,
+      "MinutesPlayed": 359,
+      "MatchesPlayed": 16,
+      "TeamName": "Eksempel FK",
+      "Positions": [
+       72
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable
 
 from .db import upsert
-from .sources import esf
+from .sources import esf, fotmob
 from .sources.http import Fetcher
 
 
@@ -59,4 +59,31 @@ def fetch_esf(con, raw_dir: str | Path = "data/raw", with_matches: bool = False,
                                        f"element-summary/{player_id}.json")
             for what, rows in load_esf_summary(con, player_id, summary, season).items():
                 counts[what] += rows
+    return counts
+
+
+def load_fotmob_stat(con, document: dict, league: int, season: str, stat: str) -> int:
+    """Load one statistic file. No network."""
+    return upsert(con, "player_stats", fotmob.parse_stat_list(document, league, season, stat))
+
+
+def fetch_fotmob(con, league: int = fotmob.ELITESERIEN, seasons: list[str] | None = None,
+                 raw_dir: str | Path = "data/raw", fetcher: Fetcher | None = None,
+                 progress: Callable[[str], None] = lambda message: None) -> dict[str, int]:
+    """Fetch every statistic list for the given seasons (all known seasons by default)."""
+    known = fotmob.SEASONS[league]
+    seasons = seasons or sorted(known)
+    fetcher = fetcher or Fetcher(raw_dir=Path(raw_dir) / fotmob.SOURCE / date.today().isoformat(), delay=0.3)
+    counts = {"player_stats": 0, "missing_lists": 0}
+    for season in seasons:
+        progress(f"Henter FotMob {season}")
+        for stat in fotmob.STATS:
+            try:
+                document = fetcher.get_json(fotmob.url(league, known[season], stat), f"{league}/{season}/{stat}.json")
+            except Exception:   # a list that does not exist for that season
+                counts["missing_lists"] += 1
+                continue
+            counts["player_stats"] += load_fotmob_stat(con, document, league, season, stat)
+    now = datetime.now().replace(microsecond=0)
+    con.execute("INSERT INTO fetch_log VALUES (?, ?, ?, ?)", [now, fotmob.SOURCE, "player_stats", counts["player_stats"]])
     return counts

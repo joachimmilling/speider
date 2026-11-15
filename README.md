@@ -10,15 +10,15 @@ Speider er for dem som jobber som scouter og agenter, og svarer på spørsmål s
 
 ## Status
 
-Første byggestein er på plass: en lokal database med alle spillere i Eliteserien, og de første nøkkeltallene.
+Første byggestein er på plass: en lokal database med alle spillere i Eliteserien. Veien videre står i [docs/plan.md](docs/plan.md), og resultatene fra første test i [docs/pilot.md](docs/pilot.md).
 
 | Del | Status |
 |---|---|
 | Lokal database (DuckDB) | Ferdig |
 | Spillere, lag, minutter, mål, målgivende (Eliteserien Fantasy) | Ferdig |
 | Kamplogg og tidligere sesonger per spiller | Ferdig |
-| Alder, kontrakt og markedsverdi | Mangler kilde |
-| Hendelsesdata (pasninger, skudd, xG) | Ikke startet |
+| Prestasjonstall fra FotMob (pasninger, forsvar, xG, xA) | Henting ferdig, ikke kjørt på ekte data herfra |
+| Alder, kontrakt, overgangssummer | Kilde funnet, henting ikke skrevet |
 | Verdimodell, likhetssøk, prognoser | Ikke startet |
 | Nettside | Ikke startet, design finnes |
 
@@ -34,6 +34,7 @@ pip install -e ".[dev]"
 
 speider fetch              # henter spillere, lag og kamper (noen sekunder)
 speider fetch --matches    # henter også kamplogg per spiller (noen minutter)
+speider fetch --fotmob     # henter også FotMob-statistikk for alle sesonger
 speider status
 speider top --metric goals_per_90 --min-minutes 900
 speider player "berg"

@@ -15,6 +15,14 @@ Speider deler kode, ikke data. Denne siden sier hva hver kilde gir, og hva du ha
 
 Fantasy-prisen er et mål på popularitet i spillet. Den er ikke en markedsverdi.
 
+### FotMob
+
+- **Hva:** sesonglister per spiller for Eliteserien fra 2017: pasninger, driblinger, taklinger, brudd, gjenvinninger, klareringer, og fra 2020 xG og xA. Se [pilot.md](pilot.md).
+- **Mangler:** listene per 90 tar bare med spillere som har vært med i omtrent halvparten av kampene.
+- **Vilkår:** uoffisiell kilde uten avtale. Speider henter rolig og lagrer bare lokalt.
+- **Du kan:** bruke dataene privat på egen maskin.
+- **Du kan ikke:** legge dataene ut, sjekke dem inn eller vise dem på en offentlig side.
+
 ## Planlagt
 
 ### StatsBomb Open Data

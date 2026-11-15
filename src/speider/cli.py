@@ -7,7 +7,7 @@ import sys
 
 from . import __version__
 from .db import DEFAULT_PATH, connect
-from .ingest import fetch_esf
+from .ingest import fetch_esf, fetch_fotmob
 
 METRICS = {
     "goals": "goals", "assists": "assists", "minutes": "minutes",
@@ -25,12 +25,14 @@ def _table(headers: list[str], rows: list[tuple]) -> str:
 
 def cmd_fetch(con, args) -> int:
     counts = fetch_esf(con, raw_dir=args.raw_dir, with_matches=args.matches, progress=print)
+    if args.fotmob:
+        counts.update(fetch_fotmob(con, raw_dir=args.raw_dir, progress=print))
     print("Lagret: " + ", ".join(f"{rows} {what}" for what, rows in counts.items()))
     return 0
 
 
 def cmd_status(con, args) -> int:
-    tables = ["teams", "players", "player_snapshots", "fixtures", "player_matches", "player_seasons"]
+    tables = ["teams", "players", "player_snapshots", "fixtures", "player_matches", "player_seasons", "player_stats"]
     rows = [(t, con.execute(f"SELECT count(*) FROM {t}").fetchone()[0]) for t in tables]
     print(_table(["tabell", "rader"], rows))
     last = con.execute("SELECT max(fetched_at) FROM fetch_log").fetchone()[0]
@@ -74,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
 
     fetch = sub.add_parser("fetch", help="hent ferske data til den lokale databasen")
     fetch.add_argument("--matches", action="store_true", help="hent også kamplogg og tidligere sesonger per spiller (noen minutter)")
+    fetch.add_argument("--fotmob", action="store_true", help="hent også FotMob-statistikk for alle sesonger (rundt 400 små filer)")
     fetch.add_argument("--raw-dir", default="data/raw", help="hvor rådata lagres")
     fetch.set_defaults(func=cmd_fetch)
 
