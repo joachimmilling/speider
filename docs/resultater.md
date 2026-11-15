@@ -70,3 +70,41 @@ Fremskriving (tilfeldig gang med drift, 80 %-spenn):
   ligaer med historikk) og er forkastet inntil videre.
 - Fremskrivingen er den enkleste mulige. Alternativer som skal testes mot
   den: kobling til klubbenes inntekter/TV-avtaler, egen indeks per prisklasse.
+
+## Test 3: Ligastyrke hjelper når spillere bytter liga
+
+`python3 analyse/ligastyrke.py`
+
+Oppgave: spå spillerens tall i ny liga, relativt til rollesnittet der.
+Lært på bytter til og med 2025, testet på ca. 2 000 bytter i 2026–27.
+
+| Statistikk | Mot «samme nivå som før» | Mot dempet nivå uten ligastyrke |
+|---|---|---|
+| Rating | 37 % mindre feil | 9 % |
+| Pasninger | 21 % | 8 % |
+| Skudd | 19 % | 5 % |
+| xA | 17 % | 4 % |
+| Mål | 26 % | 2 % |
+| Dribler | 12 % | 2 % |
+| xG | 21 % | 2 % |
+| Taklinger | 12 % | 1 % |
+| Brudd | 16 % | 0 % |
+
+- Bedre på 14 av 15 statistikker. Brudd: ingen effekt.
+- Det meste av gevinsten kommer fra demping (en spiller som var langt over
+  snittet, havner nærmere snittet i ny liga). Ligastyrke gir 1–9 % i tillegg.
+- Ligastyrke betyr mest for rating, pasninger og skudd, minst for
+  defensive tellinger.
+
+Rangering som faller ut (offensive tall): Premier League, Bundesliga, LaLiga,
+Ligue 1, Serie A, brasiliansk Série A … nederst Island, Irland, dansk 1.
+divisjon, India. Stemmer med det man venter, uten at vi har fortalt
+modellen noe om nivå.
+
+**Konklusjon:** Stoppregelen er passert. Sammenligning på tvers av ligaer
+er med.
+
+**Må fikses:** Cuper ligger i dataene som egne ligaer (Copa del Rey havnet
+øverst) og skal ut. Lagstyrke er ikke med ennå: en spiller som går fra et
+bunnlag til et topplag blandes med ligaeffekten. Klubb-Elo skal testes som
+tillegg.
