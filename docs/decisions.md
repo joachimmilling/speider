@@ -32,6 +32,8 @@ them are in `results.md`.
 | 22 | 2026-11-15 | Finer roles and league strength as inputs do not fix the price model; next step is league-translated absolute quality and the simulator's expected value as inputs | Test 6: v2 equals v1 (76 %); statistics add 3 points | More feature engineering on season z-scores |
 | 23 | 2026-11-15 | Cross-era comparison is not shown until full historical squads are loaded | Historical profile v0 normalises against survivors only | Showing v0 numbers |
 
+| 24 | 2026-11-15 | Career path features are in the price model | Test 7: 76 → 72 %, under 23: 82 → 72 % | – |
+
 ## Open questions
 
 - Dropout as its own state in the simulator (survivorship bias).

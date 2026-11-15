@@ -18,4 +18,5 @@
 - SofaScore season-level ingestion started (browser, in progress).
 - Test 6: price model v2 (`analysis/price_model_v2.py`), no gain over v1.
 - Historical profile v0 (`analysis/historical_profile.py`).
+- Test 7: price model v3 with career path features (`analysis/price_model_v3.py`).
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.

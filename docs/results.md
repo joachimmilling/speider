@@ -249,3 +249,27 @@ within league, season and position group, shrunk for few matches.
   who are better than the league average of the time, so old seasons are
   understated. Full historical squads are needed (SofaScore season lists for
   old seasons).
+
+## Test 7: Price model v3, career path
+
+`python3 analysis/price_model_v3.py`
+
+Added what was known on the day about the player's path: matches in top five
+leagues, European matches, youth and reserve matches, strongest league played
+in, debut age, matches/goals/rating/level over the last three seasons, number
+of clubs. All from career lines up to the transfer.
+
+| Model | Median error | Within 2x | Rank correlation |
+|---|---|---|---|
+| Speider v2 | 76 % | 59 % | 0.79 |
+| Speider v3 | 72 % | 61 % | 0.81 |
+| A: market value (opponent) | 59 % | 67 % | 0.86 |
+| 50/50 blend (reference only) | 54 % | 71 % | 0.88 |
+
+Groups, v3 vs market value: under 23: 72 % vs 63 %; defenders and defensive
+midfielders 72 % vs 57 %; small leagues 84 % vs 63 %; fee over 10m 62 % vs 36 %.
+
+- Career path helps everywhere, most for players under 23 (82 → 72 %).
+- The blend improves again (54 %), so the gap to the market value is closing
+  while Speider's independent information grows.
+- Gate 4 is still not passed. The interval still covers 67 % instead of 80 %.
