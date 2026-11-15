@@ -108,3 +108,65 @@ er med.
 øverst) og skal ut. Lagstyrke er ikke med ennå: en spiller som går fra et
 bunnlag til et topplag blandes med ligaeffekten. Klubb-Elo skal testes som
 tillegg.
+
+## Data: spillerprofiler (2026-11-15, delvis)
+
+19 242 av 48 341 profiler inne (spillere med overgang først). Gir fødselsdato,
+kontrakt, 1,03 mill. markedsverdi-punkter tilbake til 2014 og 470 000
+sesonglinjer med kamper, mål, assist og rating tilbake til 2002.
+
+Last inn: `python3 scripts/last_profiler.py data/raw/fotmob/profiler-*.ndjson.gz`
+
+## Test 4: Karrieresimulator lenket av korte vinduer
+
+`python3 analyse/karrieresimulator.py`
+
+Idé (Joachim): man trenger ikke hele karrierer. Lær ettårs-overganger for
+hver alder fra noen få år, og lenk dem.
+
+Oppsett: overganger lært bare fra 2022–2026 (58 232 stk). Test: start i 2016,
+simuler ti år frem, sammenlign med faktisk verdi i 2026. 2 000 spillere som
+var 18–26 år ved start.
+
+| Modell | Median feil etter 10 år | 80 %-spennet traff | Rangkorrelasjon |
+|---|---|---|---|
+| Verdien står stille | 213 % | – | 0,23 |
+| A: bare alder | 190 % | 88 % | 0,47 |
+| B: alder + nivå | 107 % | 81 % | 0,46 |
+| C: alder + nivå + retning siste år | 111 % | 81 % | 0,46 |
+
+Åtte år (start 2018): B 139 %, dekning 77 %. Stille: 201 %.
+
+- Lenkingen virker. Spennet er riktig kalibrert: 80 %-spennet traff 81 %.
+- Nivå må være med (190 → 107 %). Retning siste år ga ingenting ekstra.
+- Feil på faktor 2 etter ti år er størrelsen på usikkerheten, ikke en feil i
+  modellen. Derfor vises alltid spenn.
+
+Lenket alderskurve (verdi relativt til 21 år):
+
+| Alder | 18 | 19 | 20 | 21 | 23 | 25 | 27 | 29 | 31 | 33 | 35 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Verdi | 0,21 | 0,44 | 0,70 | 1,00 | 1,42 | 1,58 | 1,33 | 0,99 | 0,61 | 0,36 | 0,22 |
+
+Topp ved 25 år. Tilbake på 21-årsnivå ved 29.
+
+**Svakheter:**
+- Overlevelsesskjevhet: profilene er hentet for spillere som fortsatt spilte
+  etter 2021. De som forsvant før er ikke med, så kurven er for pen.
+  Frafall som egen tilstand er neste steg.
+- Testspillernes egne siste år ligger i treningsbanken (lite, men ikke rent).
+- Tilstanden er markedsverdi fra leverandør, i løpende priser. Neste versjon
+  bruker Speiders egen kvalitet og verdi, og prisindeksen.
+- Bare 40 % av profilene er inne.
+
+## Definisjon: godt og dårlig kjøp
+
+To dommer, begge i samme prisnivå:
+
+1. **På kjøpsdagen** (kan gis for overganger i dag): betalt sum mot Speiders
+   verdi den dagen, der verdien inkluderer forventet utvikling og
+   videresalg i kontraktsperioden (fra karrieresimulatoren). Gis som
+   sannsynlighet for at kjøpet lønner seg, ikke bare ja/nei.
+2. **I ettertid**: betalt sum mot faktisk verdi og spilletid senere.
+
+Dom 2 brukes til å teste dom 1: holdt «godt kjøp på dagen» seg to år etter?
