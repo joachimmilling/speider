@@ -98,3 +98,34 @@ sett. Ellers bruker vi referansen.
 4. Alderskurver (8) og prismodell (9).
 5. Lagpåvirkning (4), innfylling (6), ballverdi (7): mest usikre, størst
    mulig gevinst for forsvarere.
+
+## 10. Karrieresimulator (lappet sammen av korte vinduer)
+
+- **Hull:** Detaljert statistikk dekker få hele karrierer.
+- **Idé:** Vi trenger ikke hele karrierer. To–tre år med alle spillere gir
+  overgangene 20→21, 21→22, … , 33→34. De lenkes sammen.
+- **Modell:** Overgangsmodell. Tilstand = alder, rolle, kvalitetsnivå,
+  liganivå, andel spilletid, retning siste år. Modellen gir fordelingen over
+  neste års tilstand. Spilleren simuleres mange ganger år for år.
+- **Frafall er et utfall:** «Ute av dataene» og «ned til lavere nivå» er egne
+  tilstander. Ellers ser kurven for pen ut (bare de som overlever telles).
+- **Ikke bare alder:** Betinger på nivå og retning, så stjerner ikke
+  trekkes mot snittet for fort.
+- **Verdi:** Simulert tilstand ved alder X → prismodellen, i dagens prisnivå.
+- **Test:** Lenkede korte vinduer skal gjenskape ekte lange karrierer fra den
+  enkle historikken (mål, minutter, liga). Historikken er fasit, ikke krav.
+
+## 11. Detaljert profil for gamle sesonger (rekonstruksjon)
+
+- **Hull:** Før 2014/15 finnes bare mål, assist, minutter og skudd.
+- **Modell:** Lær i moderne data sammenhengen fra det enkle (uttelling,
+  posisjon, lagets styrke og stil, alder) til det detaljerte. Bruk den
+  bakover. Resultatet er en anslått profil med spenn, tydelig merket.
+- **Støtte:** Lagstatistikk per kamp finnes ofte lenger tilbake og låser
+  summen av spillernes tall.
+- **Test:** Skjul detaljene for 2016–2018, rekonstruer, sammenlign.
+
+## 12. Markedsverdi som svakt kvalitetssignal bakover
+
+- For epoker uten statistikk kan verdiutvikling og hvem som kjøpte brukes
+  som støyete mål på nivå. Bare for historisk profil, aldri i prismodellen.
