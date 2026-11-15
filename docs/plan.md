@@ -22,7 +22,8 @@ Ligaer med dype tall hos FotMob (sjekket 15. november 2026, første og andre niv
 - 40 av de 65 ligaene har også xG.
 - Dekket i Europa: de fem store, Nederland, Portugal, Belgia, Tyrkia, Skottland, Østerrike, Sveits, Danmark, Sverige, Norge, Finland, Island, Irland, Polen, Tsjekkia, Slovakia, Romania, Serbia, Kroatia, Hellas, Israel, Russland.
 - Dekket ellers: Argentina, Brasil, Colombia, Chile, Ecuador, Paraguay, Peru, Bolivia, Mexico, USA, Canada, Japan, Sør-Korea, Kina, Thailand, India, Saudi-Arabia, Qatar, Emiratene, Egypt, Sør-Afrika, Australia.
-- **Ikke dekket:** Bosnia og Kypros har bare mål og målgivende. Det samme gjelder blant andre Ungarn, Bulgaria, Slovenia, Ukraina, Albania, Marokko og Uruguay.
+- **Ikke dekket hos FotMob:** Bosnia og Kypros har bare mål og målgivende der. Det samme gjelder blant andre Ungarn, Bulgaria, Slovenia, Ukraina, Albania, Marokko og Uruguay.
+- **SofaScore dekker flere:** 127 ligaer i 87 land har tall per spiller per kamp, også Bosnia, Kypros, Ungarn, Bulgaria, Slovenia og Marokko.
 
 Historikken varierer: fra to sesonger (Serbia, Romania, Finland) til over ti (de store ligaene, Sverige, Norge, Danmark).
 
@@ -34,7 +35,8 @@ Arbeidet startet med kildene som var lettest å nå, ikke med hva spørsmålene 
 
 | Kilde | Rolle | Status |
 |---|---|---|
-| FotMob | Prestasjonstall per spiller og sesong: pasninger, driblinger, taklinger, brudd, gjenvinninger, og for 40 ligaer xG og xA. 65 ligaer. | Gratis, uoffisiell. Data lagres bare lokalt. |
+| SofaScore | Ryggraden: 45 til 78 tall per spiller per kamp i 127 ligaer, pluss alder, kontrakt, verdi og overganger. Se [kildeutforskning.md](kildeutforskning.md). | Gratis, uoffisiell. Data lagres bare lokalt. |
+| FotMob | Skadehistorikk, skudd med xG, verdihistorikk fra SciSports og sesonglister i 65 ligaer. | Gratis, uoffisiell. Data lagres bare lokalt. |
 | Sportmonks | Samme type tall gjennom et betalt, offisielt API. | Reserve hvis FotMob ikke holder, eller hvis data skal vises offentlig. |
 | transfermarkt-datasets | Overgangssummer, verdihistorikk, alder, kontrakt. Dekker 31 toppligaer, så ikke alle FotMob-ligaene har pris. | I bruk. |
 | Eliteserien Fantasy | Skader og status akkurat nå. | I bruk, lagres daglig. |
