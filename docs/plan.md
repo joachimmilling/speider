@@ -71,3 +71,18 @@ Arbeidet startet med kildene som var lettest å nå, ikke med hva spørsmålene 
 - Pris mangler for noen ligaer: verdidatasettet dekker 31 ligaer, FotMob 65. For resten kan Speider anslå verdi, men ikke si hva markedet mener.
 - Fasit: overgangssummer er også støyete. Bonuser og videresalg er ofte ukjente.
 - Utvalg: bare solgte spillere har en sum. De er ikke et tilfeldig utvalg.
+
+## Status etter forstudien (2026-11-15)
+
+Se `docs/forstudie.md`, `docs/egne-modeller.md` og `docs/evaluering.md`.
+
+- Base: FotMob (statistikk, overganger med sum, spillerprofil, samme id).
+- Utfylling: SofaScore for ligaer FotMob ikke har dypt (fra 2023/24).
+- Fasit for pris: FotMobs overgangsliste, ca. 6 300 eksempler siden 2022.
+- Største hull: ligastyrke for små ligaer med få bytter.
+- Uavklart: om innhenting kan kjøres som skript (`scripts/nettsjekk.py`)
+  eller må gå via nettleser.
+
+Neste steg: innhenting i to trinn (sesongnivå for alt, kampnivå der det
+trengs), rådata først, kø som kan gjenopptas. Deretter krymping og rolle,
+så ligastyrke.
