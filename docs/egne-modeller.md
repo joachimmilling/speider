@@ -129,3 +129,21 @@ sett. Ellers bruker vi referansen.
 
 - For epoker uten statistikk kan verdiutvikling og hvem som kjøpte brukes
   som støyete mål på nivå. Bare for historisk profil, aldri i prismodellen.
+
+## 13. Klausuler priset med simulatoren
+
+- **Hull:** Summene vi har er overskriftstall. Bonuser, videresalgsandel,
+  tilbakekjøp og lønn står ikke i dataene.
+- **Idé:** En klausul er en opsjon på spillerens fremtid, og simulatoren gir
+  nettopp fordelingen over fremtiden. Brukeren legger inn vilkårene for en
+  avtale, Speider regner forventet verdi:
+  - Videresalgsandel: andel × forventet (gevinst ved salg) × sjanse for salg.
+  - Bonus ved kamper/mål/opprykk: sjanse for at terskelen nås × beløp.
+  - Tilbakekjøp: verdi over avtalt pris, i de utfallene der det lønner seg.
+- **Systematisk skjevhet i fasiten:** Unge spillere fra små klubber selges
+  ofte med videresalgsandel. Da er overskriftssummen lavere enn reell pris,
+  og modellen kan tro de er billigere enn de er. Følsomhetstest: anta
+  typisk andel (f.eks. 10–20 %) for slike salg og se om «underpriset»-
+  listen endrer seg.
+- **Lønn:** Ikke i gratis data. Kjøpsdommen gjelder overgangssum, ikke
+  totalkostnad, inntil vi har lønnsanslag.
