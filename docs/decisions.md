@@ -24,6 +24,8 @@ them are in `results.md`.
 | 17 | 2026-11-15 | Age is in the price index | Test 2b: growth moves from 3.0 to 3.3 % a year | Index without age |
 | 18 | 2026-11-15 | Everything in the repository is in English | Owner's requirement | Norwegian docs |
 
+| 19 | 2026-11-15 | The UI ships in Norwegian and English | Owner's requirement. All UI strings go through one translation table; numbers and currency follow the locale | Single-language UI |
+
 ## Open questions
 
 - Dropout as its own state in the simulator (survivorship bias).

@@ -13,4 +13,5 @@
 - Decision log (`docs/decisions.md`).
 - Platform UI with sample data (design canvas, not in the repository).
 - Repository switched to English: docs, file names, CLI and script output.
+- UI mockup now exists in Norwegian and English (design canvas).
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.
