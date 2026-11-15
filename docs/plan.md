@@ -86,3 +86,25 @@ Se `docs/forstudie.md`, `docs/egne-modeller.md` og `docs/evaluering.md`.
 Neste steg: innhenting i to trinn (sesongnivå for alt, kampnivå der det
 trengs), rådata først, kø som kan gjenopptas. Deretter krymping og rolle,
 så ligastyrke.
+
+## Tillegg 2026-11-15: historikk og karriereprognose
+
+Ønske: sammenligne på tvers av epoker (Ronaldo 2007 mot Nusa 2026) og anslå
+verdi langt frem (Nusa som 29-åring).
+
+To datanivåer:
+- **Full profil:** detaljert statistikk. Store ligaer fra 2014/15 (SofaScore),
+  FotMob fra 2016/17, små ligaer fra 2023/24.
+- **Historisk profil:** mål, assist, minutter, skudd, liga, alder, overganger
+  og markedsverdihistorikk. Så langt tilbake kildene går (minst 2007).
+
+Karriereprognose:
+- Trenes på ferdige karrierer: hva skjedde med spillere som lignet ved samme
+  alder. Krever historisk profil, ikke full profil.
+- Verdi regnes i dagens prisnivå. Prisveksten i markedet skilles ut som egen
+  indeks, ellers blandes spillerens utvikling med inflasjon.
+- Svaret er et spenn og sannsynligheter, aldri ett tall.
+- Backtest: spå 21-åringer i 2016–2018, sjekk mot fasit i 2024–2026.
+
+Må undersøkes: hvor langt tilbake markedsverdihistorikk og overganger går, og
+hvilke ligaer som har historisk profil.
