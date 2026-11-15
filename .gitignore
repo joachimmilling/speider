@@ -1,0 +1,9 @@
+# Data hentes lokalt av hver bruker og skal aldri sjekkes inn (se docs/datakilder.md)
+data/
+*.duckdb
+*.duckdb.wal
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+.DS_Store
