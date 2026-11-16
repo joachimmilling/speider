@@ -22,6 +22,8 @@ Speider is built for the questions scouts and agents ask:
 | Quality per role, fee-trained price model, "underpriced" backtest | Not started |
 | Web app | Design mockup exists |
 
+Working method and the reading order for a new session: [AGENTS.md](AGENTS.md). Current numbers: [docs/scoreboard.md](docs/scoreboard.md).
+
 Start with [docs/plan.md](docs/plan.md). Test results are in [docs/results.md](docs/results.md), decisions in [docs/decisions.md](docs/decisions.md), planned models in [docs/models.md](docs/models.md).
 
 ## Getting started

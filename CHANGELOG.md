@@ -1,5 +1,13 @@
 # Changelog
 
+## Lab routine, scoreboard, squad on a pitch
+
+- `AGENTS.md` (read first every session), `docs/lab.md` (method and test template), `docs/lessons.md`, `docs/open-questions.md`. Decision 46.
+- `scripts/run_all.py` runs the whole chain; `scripts/scoreboard.py` writes `docs/scoreboard.md` and appends to `docs/scoreboard_history.csv`.
+- Test 20 rerun with the fee model as the site runs it (ratio target, tail line): no measurable change on the buy test (variants B2, B3, C3).
+- Team page: the best eleven drawn on a pitch (4-2-3-1) with second choices, and a choice of tag per player: Speider value, peak value, level, age, growth, contract, advice.
+- Corrected: the squad model was tested on 1,071 team seasons, not 252.
+
 ## Squad model (test 22) and tail treatment for the most expensive players
 
 - `analysis/squad_model.py`: expected goal difference from the value and level of the best eleven, depth, age and last season; out-of-time correlation 0.65 (R2 0.42). Coefficients shipped in `market.js` (`squad`).

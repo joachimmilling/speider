@@ -27,6 +27,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from price_model_v4 import INDEX
 from projection_v3 import FEATS, KW
+from site_models import tail_fit, tail_w
 
 NOMOM = [f for f in FEATS if f not in ("mom1", "mom2")]
 # no momentum in the fee model: the mid-year value can postdate a summer transfer and leak the fee
@@ -51,15 +52,25 @@ def main() -> None:
         fee_m = HGBR(loss="absolute_error", **KW).fit(m[m.yy < Y][PF], m[m.yy < Y].target)
         te["A"] = te.mv / te.fee
         te["B"] = np.exp(fee_m.predict(te[PF])) * INDEX[Y] / 100 / te.fee
+        # B2: the fee model as the site runs it since 2026-11-16, on the ratio to the value on the day; B3 adds the tail line above 40m
+        trf = m[m.yy < Y]
+        ratio_m = HGBR(loss="absolute_error", **KW).fit(trf[PF], trf.target - trf.val)
+        b2 = ratio_m.predict(te[PF]) + te.val.values
+        te["B2"] = np.exp(b2) * INDEX[Y] / 100 / te.fee
+        tf = tail_fit(trf.age.values, trf.val.values, (trf.target - trf.val).values, 20e6)
+        te["B3"] = np.exp(b2 + tail_w(te.val.values) * (tf(te.age.values, te.val.values) + te.val.values - b2)) * INDEX[Y] / 100 / te.fee
         tr = b[(b.y <= Y - 3) & b.g3.notna()]
         tex = te.assign(lv=te.val)                                   # start from the value on the day
         for name, F in (("C", FEATS), ("C2", NOMOM)):
             om = HGBR(loss="absolute_error", **KW).fit(tr[F], tr.g3)
             te[name] = np.exp(tex.lv + om.predict(tex[F])) / te.fee
+        # C3: C2 with the tail line above 40m
+        g2 = om.predict(tex[NOMOM]); tg = tail_fit(tr.age.values, tr.lv.values, tr.g3.values, 15e6)
+        te["C3"] = np.exp(tex.lv + g2 + tail_w(tex.lv.values) * (tg(tex.age.values, tex.lv.values) - g2)) / te.fee
         nn = NearestNeighbors(n_neighbors=60).fit(np.column_stack([tr.age.values, tr.lv.values / 0.35]))
         ix = nn.kneighbors(np.column_stack([tex.age.values, tex.lv.values / 0.35]), return_distance=False)
         te["D"] = np.sqrt(te.C2 * np.exp(tex.lv + np.median(tr.g3.values[ix], axis=1)) / te.fee)
-        rows.append(te[["player_id", "name", "date", "yy", "age", "fee", "mv", "ret", "resale", "held_years", "A", "B", "C", "C2", "D"]])
+        rows.append(te[["player_id", "name", "date", "yy", "age", "fee", "mv", "ret", "resale", "held_years", "A", "B", "B2", "B3", "C", "C2", "C3", "D"]])
     allr = pd.concat(rows)
     # verdict used on the site: expected value in three years / fee (C2), in fifths within the year and fee size
     allr["size"] = allr.groupby("yy").fee.transform(lambda x: pd.qcut(x.rank(method="first"), 3, labels=False))
@@ -70,12 +81,12 @@ def main() -> None:
     y_, lf_ = np.log(vs.resale * vs.fee), np.log(vs.fee)
     def r2(cols):
         X = np.column_stack([np.ones(len(y_))] + cols); return round(float(1 - (y_ - X @ np.linalg.lstsq(X, y_, rcond=None)[0]).var() / y_.var()), 3)
-    extra = dict(next_fee_r2=dict(fee_only=r2([lf_]), **{k: r2([lf_, np.log(vs[k] * vs.fee)]) for k in ("A", "B", "C2", "D")}),
-                 next_fee_rank=dict(fee=round(float(vs.fee.corr(vs.resale * vs.fee, method="spearman")), 3), **{k: round(float((vs[k] * vs.fee).corr(vs.resale * vs.fee, method="spearman")), 3) for k in ("A", "B", "C2", "D")}),
+    extra = dict(next_fee_r2=dict(fee_only=r2([lf_]), **{k: r2([lf_, np.log(vs[k] * vs.fee)]) for k in ("A", "B", "B2", "B3", "C2", "C3", "D")}),
+                 next_fee_rank=dict(fee=round(float(vs.fee.corr(vs.resale * vs.fee, method="spearman")), 3), **{k: round(float((vs[k] * vs.fee).corr(vs.resale * vs.fee, method="spearman")), 3) for k in ("A", "B", "B2", "B3", "C2", "C3", "D")}),
                  verdict=[[int(q), int(len(g)), round(float(g.resale.median()), 2), round(float((g.resale > 1).mean()), 2)] for q, g in vs.groupby("verdict")],
                  verdict_large=[[int(q), int(len(g)), round(float(g.resale.median()), 2), round(float((g.resale > 1).mean()), 2)] for q, g in vs[vs["size"] == 2].groupby("verdict")])
     res = dict(extra, n=len(r), median_return=round(float(r.ret.median()), 2), signals={})
-    for s in ("A", "B", "C", "C2", "D"):
+    for s in ("A", "B", "B2", "B3", "C", "C2", "C3", "D"):
         q = r.groupby("yy")[s].transform(lambda x: pd.qcut(x.rank(method="first"), 5, labels=False))
         top, bot = r[q == 4], r[q == 0]
         res["signals"][s] = dict(rank_corr=round(float(r.groupby("yy").apply(lambda g: g[s].corr(g.ret, method="spearman")).mean()), 3),
@@ -83,15 +94,15 @@ def main() -> None:
                                  cheap_share_held_value=round(float((top.ret >= 1).mean()), 2), dear_share_held_value=round(float((bot.ret >= 1).mean()), 2))
     rs = r[r.resale.notna() & (r.held_years >= 0.9)]
     res["resale"] = dict(n=len(rs), median_resale=round(float(rs.resale.median()), 2), signals={})
-    for s in ("A", "B", "C", "C2", "D"):
+    for s in ("A", "B", "B2", "B3", "C", "C2", "C3", "D"):
         q = pd.qcut(rs[s].rank(method="first"), 5, labels=False)
         res["resale"]["signals"][s] = dict(rank_corr=round(float(rs[s].corr(rs.resale, method="spearman")), 3), cheap_median=round(float(rs[q == 4].resale.median()), 2), dear_median=round(float(rs[q == 0].resale.median()), 2),
                                            cheap_profit_share=round(float((rs[q == 4].resale > 1).mean()), 2), dear_profit_share=round(float((rs[q == 0].resale > 1).mean()), 2))
-    res["resale"]["under23"] = {s: round(float(rs[rs.age < 23][s].corr(rs[rs.age < 23].resale, method="spearman")), 3) for s in ("A", "B", "C", "C2", "D")}
+    res["resale"]["under23"] = {s: round(float(rs[rs.age < 23][s].corr(rs[rs.age < 23].resale, method="spearman")), 3) for s in ("A", "B", "B2", "B3", "C", "C2", "C3", "D")}
     res["resale"]["n_under23"] = int((rs.age < 23).sum())
     for u23, lab in ((True, "under23"), (False, "23plus")):
         g = r[(r.age < 23) == u23]
-        res[lab] = {s: round(float(g.groupby("yy").apply(lambda x: x[s].corr(x.ret, method="spearman")).mean()), 3) for s in ("A", "B", "C", "C2", "D")}
+        res[lab] = {s: round(float(g.groupby("yy").apply(lambda x: x[s].corr(x.ret, method="spearman")).mean()), 3) for s in ("A", "B", "B2", "B3", "C", "C2", "C3", "D")}
     # The "Speider above market value" flag: fee-model value / third-party value on the day, for players of 26 or younger.
     # Outcome: the next fee paid for the player / third-party value on the day, against the same year's typical.
     f = r[(r.age <= 26) & r.resale.notna() & (r.held_years >= 0.9)].copy(); f["flag"] = f.B / f.A; f["nx"] = f.resale * f.fee / f.mv

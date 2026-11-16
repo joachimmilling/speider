@@ -789,9 +789,9 @@ a description of what changes, not a tested prediction of results.
 
 `analysis/squad_model.py`, result in `data/result_squad_model.json`.
 
-Target: goal difference per match, standardised within the league season (1,000+ team seasons, 2018-2026).
+Target: goal difference per match, standardised within the league season (3,570 team seasons, 2018-2026; missing inputs set to the league average).
 Inputs known before the season, standardised the same way. The eleven is picked by market value per role slot.
-Ridge models, fit to 2024, tested on 2025-26 (252 team seasons):
+Ridge models, fit to 2024 (2,499 team seasons), tested on 2025-26 (1,071):
 
 | Inputs | R2 | Correlation |
 |---|---|---|
@@ -818,3 +818,11 @@ expensive end only. In the data teenagers at 60m+ lost value against the market 
 and fees above 70m are 1.08 times the value on the day (n=24); the trees had carried the pattern from cheaper teenagers upward.
 Held-out error is about unchanged (fees at 40m+: 0.227 trees, 0.236 with tail, n=81; growth mixed by horizon), because the held-out
 data has almost nothing above 150m. The change is a choice about extrapolation, not a measured gain.
+
+
+## Test 20, addendum (2026-11-16): the fee model as the site now runs it
+
+Hypothesis: moving the fee model to a ratio target (B2) and adding the tail line above 40m (B3, and C3 for the outcome model) should not
+hurt the buy test; a gain was not expected because few transfers are above 40m.
+Result: next-fee rank B 0.538, B2 0.536, B3 0.536; C2 0.548, C3 0.548. Rank against the three-year outcome: B 0.362, B2 0.362, B3 0.362.
+Resale rank among resold players: B 0.296, B2 0.275. Reading: no measurable change. The two changes correct the extremes and nothing else.

@@ -1,0 +1,60 @@
+"""Collect the headline number of every tested model into docs/scoreboard.md and append a row to docs/scoreboard_history.csv.
+
+Reads the result files the analysis scripts write under data/. Run after any model change (scripts/run_all.py does it last).
+"""
+import csv
+import datetime
+import json
+import subprocess
+from pathlib import Path
+
+
+def load(name):
+    p = Path("data") / name
+    return json.load(open(p)) if p.exists() else None
+
+
+def main() -> None:
+    sm, bv, sq, ts = load("result_site_models.json"), load("result_buy_verdict.json"), load("result_squad_model.json"), load("result_team_strength.json")
+    rows = []          # (key, area, what, value, reference, note)
+    if sm:
+        v = sm["value"]
+        rows += [("fee_miss", "Pricing", "Speider value: typical miss on fees not seen (2025-26)", v["speider_err"], f'third-party value {v["third_party_err"]}', f'n={v["n_test"]}, lower is better'),
+                 ("fee_rank", "Pricing", "Speider value: rank correlation with fees", v["rank"], f'third-party value {v["rank_third_party"]}', ""),
+                 ("fee_inside80", "Pricing", "Share of fees inside the 80 % range", v["inside_80"], "target 0.80", "")]
+        if "tail_value" in sm: rows.append(("fee_miss_40m", "Pricing", "Miss on fees for players worth 40m+", sm["tail_value"]["err_with_tail"], f'trees alone {sm["tail_value"]["err_trees"]}', f'n={sm["tail_value"]["n_test_40m"]}'))
+    if bv:
+        r, vd, vl = bv["next_fee_rank"], bv["verdict"], bv["verdict_large"]
+        rows += [("next_fee_rank", "Pricing", "Predicting the next fee: Speider outcome model (rank)", r["C2"], f'fee paid {r["fee"]}, third-party value {r["A"]}', "higher is better"),
+                 ("verdict_cheap", "Pricing", "Buys judged cheapest: resale / fee (median)", vd[-1][2], f"dearest fifth {vd[0][2]}", f"n={vd[-1][1]}"),
+                 ("verdict_cheap_large", "Pricing", "Same, largest third of fees", vl[-1][2], f"dearest fifth {vl[0][2]}", f"n={vl[-1][1]}"),
+                 ("flag_top", "Pricing", "Speider above market value, top fifth: next fee vs typical", bv["flag"]["top"], f'bottom fifth {bv["flag"]["bottom"]}', f'n={bv["flag"]["n"]}')]
+    if sq:
+        o = sq["out_of_time"]
+        rows += [("squad_corr", "Squads", "Squad model: correlation with goal difference, seasons not seen", o["xi+depth+age + last season"]["corr"], f'last season only {o["last season only"]["corr"]}', f'n={sq["n_test"]}'),
+                 ("squad_r2", "Squads", "Squad model: explained share", o["xi+depth+age + last season"]["r2"], f'value and level of the eleven {o["xi_value+level"]["r2"]}', ""),
+                 ("squad_attr_r2", "Squads", "Same with the seven attributes added", o["xi+depth+age+attributes + last season"]["r2"], "no gain = attributes add nothing", "")]
+    if ts:
+        c = ts["corr_with_goal_difference"]
+        rows.append(("xi_level_corr", "Squads", "Level of the best eleven alone: correlation with goal difference", c["level"], f'value of top eleven {c["value"]}, last season {c["gd_prev"]}', f'n={ts["n_all_three"]}'))
+    commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+    today = datetime.date.today().isoformat()
+    md = ["# Scoreboard", "", f"Rebuilt {today} at commit `{commit}` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.", "",
+          "| Area | Measure | Now | Reference | Note |", "|---|---|---|---|---|"]
+    md += [f"| {a} | {w} | **{v}** | {ref} | {n} |" for _, a, w, v, ref, n in rows]
+    hist = Path("docs/scoreboard_history.csv")
+    prev = list(csv.DictReader(open(hist))) if hist.exists() else []
+    now = dict(date=today, commit=commit, **{k: v for k, _, _, v, _, _ in rows})
+    if prev:
+        last = prev[-1]; moved = [(k, last.get(k), str(now[k])) for k in now if k not in ("date", "commit") and last.get(k) not in (None, "", str(now[k]))]
+        md += ["", "## Changed since the previous row", ""] + ([f"- `{k}`: {a} -> {b}" for k, a, b in moved] or ["Nothing."])
+        if all(last.get(k) == str(now[k]) for k in now if k not in ("date", "commit")) : prev = prev[:-1] if last.get("commit") == commit else prev
+    keys = list(dict.fromkeys([k for r_ in prev for k in r_] + list(now)))
+    with open(hist, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=keys); w.writeheader(); w.writerows(prev); w.writerow({k: now.get(k, "") for k in keys})
+    Path("docs/scoreboard.md").write_text("\n".join(md) + "\n")
+    print("\n".join(md))
+
+
+if __name__ == "__main__":
+    main()

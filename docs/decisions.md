@@ -78,14 +78,18 @@ Hitting the fee is a sanity check only. A value estimate earns its place if buys
 
 ## Open questions
 
-- Dropout is measured (test 8) but not yet a state inside the simulator.
-- Team strength separated from league strength (club Elo).
-- How much sell-on clauses shift the ground truth for young players from small leagues.
-- Wages: no free source found.
-- Whether scripts can reach the sources directly from the owner's machine (`scripts/check_access.py`).
+Moved to `docs/open-questions.md` (2026-11-16).
 
 
 ## 45. The squad half is judged against results
 
 Any statement that a team gets better or worse comes from a model tested against goal difference out of time (test 22).
 Descriptions that have not shown predictive value (collective attributes, weakest line) are shown as descriptions and labelled so.
+
+
+## 46. The project is run as a lab
+
+`AGENTS.md` is read first in every session. Hypotheses are written before a test runs (`docs/lab.md`), every result ends as a line in
+`docs/lessons.md`, unknowns live in `docs/open-questions.md`, and no model change is finished before `scripts/run_all.py` has
+rebuilt `docs/scoreboard.md`. Reason: on 2026-11-16 the value model was changed three times in reaction to single players before
+the buy test was rerun.
