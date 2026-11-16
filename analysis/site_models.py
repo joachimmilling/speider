@@ -67,6 +67,9 @@ def main() -> None:
     now["val"] = now.lv
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(q[0.5].predict(now[PF])),
                             sv_lo=np.exp(q[0.1].predict(now[PF]) + lo_off), sv_hi=np.exp(q[0.9].predict(now[PF]) + hi_off), band=now.band.values))
+    # Speider value back in time: the same model applied to each earlier mid-year (in-sample for the training years)
+    hist = b[b.y < 2026].copy(); hist["val"] = hist.lv
+    pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(q[0.5].predict(hist[PF])) * hist.y.map(INDEX).fillna(70).values / 100)).to_pickle("data/site_models_hist.pkl")
     print("value", json.dumps(res["value"]), flush=True)
 
     # 2. Value path, relative to the market, in today's prices

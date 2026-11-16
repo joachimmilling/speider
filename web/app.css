@@ -33,7 +33,13 @@ section{display:flex;flex-direction:column;gap:20px}
 .tile{flex:1 1 200px;background:var(--surface);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:8px;transition:transform 320ms var(--spring),box-shadow 320ms ease}
 .tile:hover{transform:translateY(-4px) scale(1.012);box-shadow:0 12px 32px rgba(0,0,0,.08)}
 .tile b{font-size:40px;line-height:44px;font-weight:600;letter-spacing:-.02em}.tile b.g{color:var(--signal)}
-.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.filters select{width:auto}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.filters .f{width:auto;height:44px;min-height:44px;font-size:15px;font-weight:500;padding:0 18px;line-height:44px;box-sizing:border-box}
+.filters input.f{width:170px}.filters .chip{height:44px;padding:0 18px}
+select{appearance:none;-webkit-appearance:none;padding-right:42px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer}
+.agef{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border-radius:980px;color:var(--muted)}
+.agef input{width:44px;min-height:0;height:30px;padding:0;text-align:center;background:var(--ground);border-radius:10px;font-size:15px;font-weight:600;-moz-appearance:textfield}.agef input::-webkit-outer-spin-button,.agef input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[list]::-webkit-calendar-picker-indicator{display:none!important}
 .table{overflow-x:auto}.grid{display:grid;gap:16px;align-items:center;padding:14px 16px;border-radius:16px;min-width:760px}
 .head{padding-top:0;padding-bottom:8px;font-size:13px;color:var(--muted)}
 .row{text-decoration:none;color:var(--ink);transition:background 200ms ease,transform 260ms var(--spring)}.row:hover{background:var(--surface)}
@@ -68,3 +74,4 @@ svg[data-ch]{cursor:crosshair}.ov{opacity:0;transition:opacity 160ms ease}.ov.on
 .pc{flex:0 0 230px;scroll-snap-align:start;display:flex;flex-direction:column;gap:4px;background:var(--surface);border-radius:22px;padding:22px;text-decoration:none;color:var(--ink);animation:rise 600ms var(--ease) both;transition:transform 320ms var(--spring),box-shadow 320ms ease}
 .pc:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 14px 34px rgba(0,0,0,.12)}.pc:active{transform:scale(.95,.91)}
 .pc strong{font-size:19px;line-height:24px;font-weight:600}.pc b{font-size:38px;line-height:44px;font-weight:600;letter-spacing:-.02em;color:var(--signal);margin-top:14px}
+.plink{display:flex;flex-wrap:wrap;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}.plink:hover h2{text-decoration:underline;text-underline-offset:5px}

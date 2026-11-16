@@ -95,6 +95,9 @@ def main() -> None:
     if Path("data/site_models.pkl").exists():
         sm = pd.read_pickle("data/site_models.pkl").set_index("player_id").to_dict("index")
         smres = json.load(open("data/result_site_models.json"))
+    svh = {}
+    if Path("data/site_models_hist.pkl").exists():
+        svh = {k: v.sort_values("y") for k, v in pd.read_pickle("data/site_models_hist.pkl").groupby("player_id")}
 
     # most similar players by style: distance between percentile profiles within the role
     pv = st[st.stat != "big_chance_created"].pivot_table(index="player_id", columns="stat", values="pct").fillna(50)
@@ -131,6 +134,7 @@ def main() -> None:
         if pid in sim: d["sim"] = sim[pid]
         if pid in sm:
             v = sm[pid]
+            if pid in svh: d["svh"] = [[int(x.y), int(x.sv)] for x in svh[pid].itertuples()]
             d["val"] = [int(v["sv"]), int(v["sv_lo"]), int(v["sv_hi"]), int(v["mv"])]
             # light smoothing over horizons in log space (each horizon is a separate model), anchored at 1 today
             sm3 = lambda xs: [round(float(np.exp(0.25 * a_ + 0.5 * b_ + 0.25 * c_)), 3) for a_, b_, c_ in zip(np.log([1.0] + xs[:-1]), np.log(xs), np.log(xs[1:] + xs[-1:]))]

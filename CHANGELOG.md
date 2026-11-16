@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-16 – Charts, finder and player landing reworked
+
+- Charts: readout above the plot instead of a tooltip, crosshair and markers that follow the pointer, smooth curves, animation when scrolled into view.
+- Value path is a fan chart (2, 5 and 8 in 10 outcomes; inner bands assume a log-normal shape around the modelled 10/50/90 percentiles) and includes the Speider value back in time.
+- Today's numbers start from the latest third-party value, not the mid-year one (fixes tile and history disagreeing).
+- Find: sort by top-league chance, Speider value, expected growth or Speider above market; filter on role, nationality, league, club and any age range.
+- Player landing: large search and carousels (expected growth, Speider above market, top-league chance).
+- Eras: search dropdown no longer hidden behind the card; names link to the player page.
+- Known issues: historical Speider value is in-sample for training years; the fee model overvalues older players with a low market value; country names are English in both languages.
+
 ## 2026-11-16 – Player page: Speider value, value path, profile
 
 - `analysis/site_models.py`: fee-trained Speider value with interval, and a calibrated value path for 1 to 5 years per player (relative to the market, today's prices) with the chance of still playing.
