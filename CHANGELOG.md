@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-16 – Player page redesigned; Speider's advice
+
+- The page now answers, in order: who he is (one generated sentence), level, price, direction and potential (four verdict cells), Speider's advice, strengths and weaknesses on the common scale, playing style against similar players, where he fits, value ahead, transfers. Per-90 numbers, career and third-party value sit under "The numbers behind it".
+- Speider's advice: rule-based reading of playing time, place in the squad by value, value path and its peak, contract length and the fit list. Five outcomes (last big contract, find playing time, ready for the next step, stay one more year, stay but listen to offers) with reasons and one line each for player and agent, current club and buyer. Rules, not a tested model.
+
 ## 2026-11-16 – Sporting verdict for the buying club, fitted scale, place by value
 
 - Sporting outcome counts matches for the buying club only (a loan elsewhere no longer counts): regular 20+ in one of the first two seasons (10+ in the half season after a winter move), rotation 10+.
