@@ -81,6 +81,10 @@ function flag(c) {
   if (c === 'Czech Republic' || c === 'Czechia') return wrap(`<rect width="${W}" height="10" fill="#fff"/><rect y="10" width="${W}" height="10" fill="#D7141A"/><path d="M0 0L13 10L0 20Z" fill="#11457E"/>`);
   return '';
 }
+/* Club and league marks: initials by default. A local build made with SITE_LOGOS=1 loads the crest from the data source's image server instead and falls back to the initials if it does not load. */
+const mono = n => `<span class="mono">${esc(((n || '?').replace(/\(.*\)/, '').split(/\s+/).filter(w => /^[A-ZÀ-Þ0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('')) || (n || '?')[0])}</span>`;
+const crest = (kind, id, name) => M.logos && id ? `<img class="crest" src="https://images.fotmob.com/image_resources/logo/${kind}logo/${id}.png" alt="" loading="lazy" data-f="${esc(mono(name))}" onerror="this.outerHTML=this.dataset.f">` : mono(name);
+const withMark = (kind, id, name) => `<span style="display:inline-flex;align-items:center;gap:10px">${crest(kind, id, name)}${esc(name || '–')}</span>`;
 let F = { role: '', type: '', rec: false, nat: '', league: '', club: '', amin: '', amax: '', sort: 'sv' };
 const uniq = k => [...new Set(P.map(p => p[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 const SORTS = { sv: p => p[10], level: p => p[7] >= 600 ? p[17] : null, p5: p => p[9] >= 0.25 ? null : p[8], grow: p => p[10] && p[7] >= 600 ? p[11] : null, under: p => p[10] && p[12] >= 5e5 ? p[10] / p[12] : null };
@@ -185,7 +189,7 @@ async function showPlayer(id) {
   const needK = NEED[p.role] || [0, 1, 2, 3, 4, 5, 6], sd = da ? [0, 1, 2, 3, 4, 5, 6].sort((a, b) => da[b] - da[a]).slice(0, 3) : [], wd = da ? needK.slice().sort((a, b) => da[a] - da[b]).filter(k => !sd.includes(k) || da[k] < 50).slice(0, 3) : [];
   const rowf = k => `<div class="bar" style="grid-template-columns:minmax(90px,130px) 1fr 36px;margin-top:14px"><span>${DIM[k][li()]}</span><div class="track"><div class="fill ${da[k] >= 70 ? 'g' : ''}" style="width:${Math.max(3, da[k])}%;${da[k] < 40 ? 'background:var(--alert)' : ''}"></div></div><span class="r"><strong>${nf(Math.min(99, da[k]))}</strong></span></div>`;
   const c0 = (p.career || [])[0], facts = [[t('position'), ROLE[p.role][li()]], [t('age'), nf(p.age, 1) + ' ' + t('yrs')], p.height ? [t('height'), nf(p.height) + ' cm'] : null, p.country ? [t('nat'), `<span style="display:inline-flex;align-items:center;gap:10px">${flag(p.country)}${esc(p.country)}</span>`] : null,
-    [t('club'), esc(p.team || '–')], [t('league'), esc(p.league)], p.contract ? [t('until'), p.contract.slice(0, 4)] : null, [t('min') + ' ' + (p.season - 1) + '/' + String(p.season).slice(2), nf(p.minutes)],
+    [t('club'), withMark('team', me[18], p.team)], [t('league'), withMark('league', me[19], p.league)], p.contract ? [t('until'), p.contract.slice(0, 4)] : null, [t('min') + ' ' + (p.season - 1) + '/' + String(p.season).slice(2), nf(p.minutes)],
     c0 ? [t('thisSeason') + ' ' + esc(c0[0]), nf(c0[3]) + ' ' + t('matches').toLowerCase() + ' · ' + nf(c0[4]) + ' ' + t('goals').toLowerCase() + ' · ' + nf(c0[5]) + ' ' + t('assists').toLowerCase()] : null].filter(Boolean);
   const vcells = [];
   if (lvl != null) vcells.push([t('vLevel'), t(lvl >= 85 ? 'lv4' : lvl >= 70 ? 'lv3' : lvl >= 50 ? 'lv2' : lvl >= 30 ? 'lv1' : 'lv0'), lvl >= 70 ? 'g' : '', t('vLevelSub').replace('{n}', nf(lvl))]);

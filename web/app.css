@@ -101,3 +101,4 @@ details.under>summary::-webkit-details-marker{display:none}details.under>summary
 .aud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding-top:8px}.aud p{margin:6px 0 0;font-size:15px;line-height:22px}@media (max-width:760px){.aud{grid-template-columns:1fr}}
 .facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px 24px;padding:4px 4px}.facts div{display:flex;flex-direction:column;gap:3px}.facts strong{font-size:17px;font-weight:600}
 .cfg{display:grid;grid-template-columns:minmax(90px,130px) minmax(70px,auto) 1fr 32px;gap:6px 14px;align-items:center;font-size:15px}.cfg strong{text-align:right}
+.crest{width:24px;height:24px;object-fit:contain;flex:none}.mono{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--surface);align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:.02em;flex:none;color:var(--muted)}

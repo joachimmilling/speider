@@ -5,7 +5,9 @@ page from web/ and the data as JavaScript files (loaded with script tags, so
 the page works from file://). Only numbers that have passed their test are
 exported; third-party market value is shown as such and never called Speider's.
 
-Run:  PYTHONPATH=analysis python3 scripts/build_site.py   then open data/site/index.html
+Run:  SITE_LOGOS=1 PYTHONPATH=analysis python3 scripts/build_site.py   then open data/site/index.html
+SITE_LOGOS=1 makes the page load club and league crests straight from the data source's image server (local,
+private use only; nothing is copied into the repo or the build). Without it the page shows initials instead.
 """
 from __future__ import annotations
 
@@ -238,7 +240,7 @@ def main() -> None:
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
             if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
         if len(index[-1]) == 10: index[-1] += [None, None, None]
-        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid)]
+        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id)]
         if pid in alt: d["alt"] = alt[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
@@ -266,7 +268,7 @@ def main() -> None:
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), logos=os.environ.get("SITE_LOGOS") == "1", verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 
