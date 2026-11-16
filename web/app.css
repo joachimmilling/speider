@@ -100,3 +100,4 @@ details.under>summary::-webkit-details-marker{display:none}details.under>summary
 .why li{padding-left:18px;position:relative}.why li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--signal)}
 .aud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding-top:8px}.aud p{margin:6px 0 0;font-size:15px;line-height:22px}@media (max-width:760px){.aud{grid-template-columns:1fr}}
 .facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px 24px;padding:4px 4px}.facts div{display:flex;flex-direction:column;gap:3px}.facts strong{font-size:17px;font-weight:600}
+.cfg{display:grid;grid-template-columns:minmax(90px,130px) minmax(70px,auto) 1fr 32px;gap:6px 14px;align-items:center;font-size:15px}.cfg strong{text-align:right}
