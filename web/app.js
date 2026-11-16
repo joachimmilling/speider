@@ -1,7 +1,7 @@
 /* Speider local site. All UI text goes through T (Norwegian and English). */
 const T = {
   no: { find: 'Finn', player: 'Spiller', eras: 'Epoker', market: 'Marked', search: 'Søk etter spiller',
-    findTitle: 'Hvem tar steget?', findLead: 'Unge spillere utenfor de fem store ligaene, rangert etter sjansen for å spille der innen tre år. Modellen bygger på alder, karriere og nivå, og er testet på ekte utfall.',
+    findTitle: 'Sjanse for toppliga', findLead: 'Unge spillere utenfor de fem store ligaene, rangert etter sjansen for å spille der innen tre år. Modellen bygger på alder, karriere og nivå, og er testet på ekte utfall.',
     baseRate: 'Snittsjanse', baseSub: 'For alle under 24 utenfor topp fem', inList: 'Spillere i utvalget', inListSub: 'Under 24, minst 270 minutter', hit: 'Treff i øverste tidel', hitSub: 'I testen: én av fire nådde en toppliga',
     allRoles: 'Alle roller', maxAge: 'Maks alder', smallOnly: 'Bare svakere ligaer', name: 'Spiller', league: 'Liga', age: 'Alder', min: 'Minutter', chance: 'Sjanse toppliga', times: 'Mot snittet',
     noPlayer: 'Søk etter en spiller øverst, eller velg en fra Finn.', yrs: 'år', until: 'Kontrakt til', season: 'Sesong', height: 'Høyde',
@@ -9,13 +9,13 @@ const T = {
     better: 'Bedre enn', career: 'Karriere', matches: 'Kamper', goals: 'Mål', assists: 'Assist', rating: 'Rating', team: 'Lag',
     mv: 'Markedsverdi fra tredjepart', mvSub: 'Millioner euro. Dette er ikke Speiders anslag. Leverandørens tall hopper mye fra år til år og vises bare som bakgrunn.',
     notYet: 'Speiders egen verdi og fremskriving vises ikke ennå. Prismodellen har ikke bestått kravet.',
-    erasTitle: 'På tvers av epoker', erasLead: 'Mål uten straffer per 90 minutter, målt mot alle faste utespillere i samme liga og sesong. Fulle tropper tilbake til 2001/02 for seks ligaer.',
+    erasTitle: 'Epoker', erasLead: 'Mål uten straffer per 90 minutter, målt mot alle faste utespillere i samme liga og sesong. Fulle tropper tilbake til 2001/02 for seks ligaer.',
     pick: 'Søk etter spiller og velg sesong', perc: 'Bedre enn', npg: 'Mål uten straffer per 90', sd: 'Standardavvik over snittet', loading: 'Laster …', noHit: 'Ingen treff',
-    marketTitle: 'Markedet', marketLead: 'Prisnivået på overganger over tid, og hvor sterke ligaene er målt på spillere som bytter liga.',
+    marketTitle: 'Marked', marketLead: 'Prisnivået på overganger over tid, og hvor sterke ligaene er målt på spillere som bytter liga.',
     idx: 'Prisindeks', idxSub: 'Samme type spiller, samme selgende og kjøpende liga, samme alder. 2026 = 100. Stiplet linje er fremskrevet, med spennet 8 av 10 utfall faller i.',
     strength: 'Ligastyrke', strengthSub: 'Målt på spillere som bytter liga. Høyere tall betyr sterkere liga.', now: 'Nå', growth: 'Vekst per år', y2034: 'Anslag 2034' },
   en: { find: 'Find', player: 'Player', eras: 'Eras', market: 'Market', search: 'Search for a player',
-    findTitle: 'Who takes the step?', findLead: 'Young players outside the big five leagues, ranked by their chance of playing there within three years. The model uses age, career and level, and is tested on real outcomes.',
+    findTitle: 'Top-league chance', findLead: 'Young players outside the big five leagues, ranked by their chance of playing there within three years. The model uses age, career and level, and is tested on real outcomes.',
     baseRate: 'Average chance', baseSub: 'For everyone under 24 outside the big five', inList: 'Players in the sample', inListSub: 'Under 24, at least 270 minutes', hit: 'Hit rate in the top tenth', hitSub: 'In the test: one in four reached a top league',
     allRoles: 'All roles', maxAge: 'Max age', smallOnly: 'Weaker leagues only', name: 'Player', league: 'League', age: 'Age', min: 'Minutes', chance: 'Top-league chance', times: 'Against average',
     noPlayer: 'Search for a player above, or pick one from Find.', yrs: 'yrs', until: 'Contract to', season: 'Season', height: 'Height',
@@ -23,9 +23,9 @@ const T = {
     better: 'Better than', career: 'Career', matches: 'Matches', goals: 'Goals', assists: 'Assists', rating: 'Rating', team: 'Team',
     mv: 'Third-party market value', mvSub: "Millions of euros. This is not Speider's estimate. The provider's numbers jump a lot from year to year and are shown as background only.",
     notYet: "Speider's own value and projection are not shown yet. The price model has not passed its test.",
-    erasTitle: 'Across eras', erasLead: 'Non-penalty goals per 90 minutes, measured against every outfield regular in the same league and season. Full squads back to 2001/02 for six leagues.',
+    erasTitle: 'Eras', erasLead: 'Non-penalty goals per 90 minutes, measured against every outfield regular in the same league and season. Full squads back to 2001/02 for six leagues.',
     pick: 'Search for a player and pick a season', perc: 'Better than', npg: 'Non-penalty goals per 90', sd: 'Standard deviations above the mean', loading: 'Loading …', noHit: 'No matches',
-    marketTitle: 'The market', marketLead: 'The price level of transfers over time, and how strong the leagues are measured on players who change league.',
+    marketTitle: 'Market', marketLead: 'The price level of transfers over time, and how strong the leagues are measured on players who change league.',
     idx: 'Price index', idxSub: 'Same type of player, same selling and buying league, same age. 2026 = 100. The dotted line is projected, with the range 8 in 10 outcomes fall in.',
     strength: 'League strength', strengthSub: 'Measured on players who change league. A higher number means a stronger league.', now: 'Now', growth: 'Growth per year', y2034: 'Estimate 2034' } };
 const STAT = { rating: ['Rating', 'Rating'], goals_per_90: ['Mål', 'Goals'], expected_goals_per_90: ['xG', 'xG'], expected_assists_per_90: ['xA', 'xA'], total_scoring_att: ['Skudd', 'Shots'],
@@ -43,11 +43,11 @@ const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().repla
 const P = window.SP.players, M = window.SP.market, view = document.getElementById('view');
 const PN = P.map(p => norm(p[1]));
 const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s) });
-async function player(id) { const n = id % 256, k = 'shard' + n; if (!window.SP[k]) await load('data/shard/' + n + '.js'); return window.SP[k][id] }
+async function player(id) { const n = id % (M.shards || 256), k = 'shard' + n; if (!window.SP[k]) await load('data/shard/' + n + '.js'); return window.SP[k][id] }
 
 function chrome() {
   document.documentElement.lang = lang === 'no' ? 'nb' : 'en';
-  const cur = (location.hash.slice(1).split('/')[0]) || 'find';
+  const cur = (location.hash.slice(1).split(/[\/-]/)[0]) || 'find';
   document.getElementById('tabs').innerHTML = ['find', 'player', 'eras', 'market'].map(k => `<a href="#${k}" ${cur === k ? 'aria-current="page"' : ''}>${t(k)}</a>`).join('');
   document.getElementById('q').placeholder = t('search'); document.getElementById('lang').textContent = lang === 'no' ? 'English' : 'Norsk';
 }
@@ -66,7 +66,7 @@ function find() {
   <section class="rise"><div class="filters"><select id="frole" aria-label="${t('allRoles')}"><option value="">${t('allRoles')}</option>${Object.keys(ROLE).map(r => `<option value="${r}" ${F.role === r ? 'selected' : ''}>${ROLE[r][li()]}</option>`).join('')}</select>
   ${[19, 21, 23].map(a => `<button class="chip" data-age="${a}" aria-pressed="${F.age === a}">${t('maxAge')} ${a}</button>`).join('')}<button class="chip" id="fsmall" aria-pressed="${F.small}">${t('smallOnly')}</button></div>
   <div class="table"><div class="grid head" style="${G}"><span>${t('name')}</span><span>${t('league')}</span><span class="r">${t('age')}</span><span class="r">${t('min')}</span><span class="r">${t('chance')}</span><span class="r">${t('times')}</span></div>
-  ${rows.map(p => `<a class="grid row" style="${G}" href="#player/${p[0]}"><span><strong>${esc(p[1])}</strong><br><span class="sub">${ROLE[p[4]][li()]} · ${esc(p[5] || '')}</span></span><span>${esc(p[6])}<br><span class="sub">${esc(p[3] || '')}</span></span><span class="r">${nf(p[2], 1)}</span><span class="r">${nf(p[7])}</span><span class="r"><strong>${pc(p[8])}</strong></span><span class="r"><span class="badge">×${nf(p[8] / base, 1)}</span></span></a>`).join('') || `<p class="empty">${t('noHit')}</p>`}</div></section>`;
+  ${rows.map(p => `<a class="grid row" style="${G}" href="#player-${p[0]}"><span><strong>${esc(p[1])}</strong><br><span class="sub">${ROLE[p[4]][li()]} · ${esc(p[5] || '')}</span></span><span>${esc(p[6])}<br><span class="sub">${esc(p[3] || '')}</span></span><span class="r">${nf(p[2], 1)}</span><span class="r">${nf(p[7])}</span><span class="r"><strong>${pc(p[8])}</strong></span><span class="r"><span class="badge">×${nf(p[8] / base, 1)}</span></span></a>`).join('') || `<p class="empty">${t('noHit')}</p>`}</div></section>`;
   document.getElementById('frole').onchange = e => { F.role = e.target.value; find() };
   view.querySelectorAll('[data-age]').forEach(b => b.onclick = () => { F.age = +b.dataset.age; find() });
   document.getElementById('fsmall').onclick = () => { F.small = !F.small; find() }; countUp();
@@ -124,12 +124,12 @@ function market() {
   <section class="rise"><div><h2>${t('strength')}</h2><p class="note">${t('strengthSub')}</p></div><div class="card">${M.leagues.map(l => `<div class="bar"><span>${esc(l[0])} <span class="sub">${esc(l[1])}</span></span><div class="track"><div class="fill ${l[2] > 0.2 ? 'g' : ''}" style="width:${Math.max(2, 100 * (l[2] - mn) / (mx - mn))}%"></div></div><span class="r"><strong>${nf(l[2], 2)}</strong></span></div>`).join('')}</div></section>`;
   countUp();
 }
-function route() { chrome(); const [v, id] = location.hash.slice(1).split('/'); window.scrollTo(0, 0);
+function route() { chrome(); const [v, id] = location.hash.slice(1).split(/[\/-]/); window.scrollTo(0, 0);
   if (v === 'player') showPlayer(id); else if (v === 'eras') eras(); else if (v === 'market') market(); else find() }
 const q = document.getElementById('q'), hits = document.getElementById('hits');
 q.oninput = () => { const s = norm(q.value.trim()); if (s.length < 2) { hits.hidden = true; return } const out = [];
   for (let i = 0; i < PN.length && out.length < 12; i++) if (PN[i].includes(s)) out.push(P[i]);
-  hits.hidden = false; hits.innerHTML = out.map(p => `<a href="#player/${p[0]}"><span>${esc(p[1])}</span><small>${ROLE[p[4]][li()]} · ${esc(p[5] || '')} · ${esc(p[6])}</small></a>`).join('') || `<small style="padding:12px">${t('noHit')}</small>` };
+  hits.hidden = false; hits.innerHTML = out.map(p => `<a href="#player-${p[0]}"><span>${esc(p[1])}</span><small>${ROLE[p[4]][li()]} · ${esc(p[5] || '')} · ${esc(p[6])}</small></a>`).join('') || `<small style="padding:12px">${t('noHit')}</small>` };
 q.onkeydown = e => { if (e.key === 'Enter') { const a = hits.querySelector('a'); if (a) { location.hash = a.getAttribute('href'); hits.hidden = true; q.value = '' } } };
 document.addEventListener('click', e => { if (e.target.closest('.hits a')) { document.querySelectorAll('.hits').forEach(h => h.hidden = true); q.value = '' } else if (!e.target.closest('.search')) document.querySelectorAll('.hits').forEach(h => h.hidden = true) });
 document.getElementById('lang').onclick = () => { lang = lang === 'no' ? 'en' : 'no'; try { localStorage.setItem('sp-lang', lang) } catch (e) { } route() };

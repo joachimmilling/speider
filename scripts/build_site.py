@@ -10,6 +10,7 @@ Run:  PYTHONPATH=analysis python3 scripts/build_site.py   then open data/site/in
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -20,8 +21,8 @@ from sklearn.ensemble import HistGradientBoostingClassifier as HGBC
 
 from projection_young import C
 
-OUT = Path("data/site")
-SHARDS = 256
+OUT = Path(os.environ.get("SITE_OUT", "data/site"))
+SHARDS = int(os.environ.get("SITE_SHARDS", 256))
 STATS = ["rating", "goals_per_90", "expected_goals_per_90", "expected_assists_per_90", "total_scoring_att", "ontarget_scoring_att",
          "won_contest", "big_chance_created", "accurate_pass", "accurate_long_balls", "total_tackle", "interception",
          "ball_recovery", "effective_clearance", "poss_won_att_3rd"]
@@ -129,7 +130,7 @@ def main() -> None:
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 
