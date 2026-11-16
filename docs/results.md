@@ -726,29 +726,35 @@ Per-player numbers from this test are not shown in the product.
 
 Matching the fee is the wrong goal for judging buys: a model that predicts fees perfectly calls every buy fair. The test is whether a signal known on the day sorts buys by what happened afterwards.
 
-Outcome: the next fee paid for the same player (same price level), for 1,994 buys in 2018-2023 that were later sold on for a fee at least a year later. Walk-forward, every model only sees what was known. Outcomes measured in the provider's own later value are not used as evidence: they are circular for the provider's value.
+**Correction.** The first version of this test used `fm_transfers.market_value` as the third-party value on the day. That field is the player's value at crawl time (within about 5 % of his latest value for every transfer year), so it leaked the future and made the third-party value look like the best predictor by far. All numbers below use the latest entry in the value history dated on or before the transfer (`analysis/transfers.py`). The fee model on the site was trained on the same wrong field and has been retrained.
 
-Rank correlation with the next fee, of each estimate of the player's worth on the day:
+Outcome: the next fee paid for the same player (same price level), 1,998 buys in 2018-2023 later sold on for a fee at least a year later. Walk-forward.
 
-| Estimate on the day | Rank corr. with next fee |
-|---|---|
-| Third-party value | 0.72 |
-| Speider outcome model blended with comparables | 0.69 |
-| Speider fee model | 0.61 |
-| The fee actually paid | 0.59 |
-
-- The fee paid is the worst predictor of the next fee; the third-party value is the best single one. Speider's models do not beat it.
-- Momentum inputs add nothing out of time (0.681 vs 0.682) and are removed everywhere. They also risked leaking the fee, since the mid-year value can postdate a summer transfer.
-- The provider's values and fees drift apart over the years (median fee / value on the day: x7 in 2016, x1.4 in 2022, x0.9 in 2025), so anything trained across years on that ratio is unstable.
-
-The "Speider above market value" flag (fee-model value / third-party value, players of 26 or younger, 1,647 later sales, within-year fifths, next fee / value on the day against the year's typical):
-
-| Fifth | Next fee vs the year's typical | Share above typical |
+| Known on the day | Rank corr. with next fee | R2 for log next fee, together with the fee |
 |---|---|---|
-| Speider furthest above market value | x1.76 | 72 % |
-| Middle three fifths | x1.04 | |
-| Speider furthest below | x0.57 | 20 % |
+| The fee paid | 0.59 | 0.341 (alone) |
+| Speider outcome model (expected value in three years) | 0.55 | 0.367 |
+| Speider fee model | 0.54 | 0.355 |
+| Third-party value on the day | 0.50 | 0.346 |
 
-It holds every year 2018-2023 (weakest in 2023: 1.27 vs 0.82) and among buys priced near the third-party value (1.32 vs 0.67). Limits: only players who were sold on for a fee; players who left for free or stayed are not in it.
+- The fee paid is the best single predictor of the next fee: the market is mostly right.
+- Speider's estimates carry information the fee does not (R2 0.341 to 0.367); the third-party value adds almost nothing (0.346). Speider beats the third-party value on this test.
+- Momentum inputs add nothing (C 0.289 vs C2 0.289 on resale per euro) and are removed everywhere.
+
+Verdict used on the site: expected value in three years / fee, in fifths within the year and fee size. Resale / fee by fifth (2018-2023):
+
+| Fifth | n | Median resale / fee | Sold on with a profit |
+|---|---|---|---|
+| Dearest | 370 | 0.89 | 48 % |
+| 2 | 399 | 0.81 | 43 % |
+| 3 | 386 | 0.98 | 49 % |
+| 4 | 416 | 1.22 | 55 % |
+| Cheapest | 429 | 1.41 | 63 % |
+
+For the largest third of fees: dearest 0.52 (36 % profit), cheapest 1.05 (53 %).
+
+"Speider above market value" flag (fee-model value / third-party value on the day, 26 or younger, 1,649 later sales, next fee / value on the day against the year's typical): top fifth x3.06 (78 % above typical), middle x0.96, bottom x0.48 (27 %); among buys priced near the value 2.10 vs 0.57.
+
+Limits: only players sold on for a fee; a stale provider value (far below the fee) makes the verdict meaningless and such buys are left out of the lists.
 
 `PYTHONPATH=analysis python3 analysis/buy_verdict_backtest.py`

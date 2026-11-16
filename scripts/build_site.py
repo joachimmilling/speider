@@ -30,6 +30,8 @@ TYPES = {
     "CB": {"ball_playing": ["accurate_pass", "accurate_long_balls"], "stopper": ["total_tackle", "interception"], "cover": ["effective_clearance", "ball_recovery"]},
     "FB": {"attacking_back": ["expected_assists_per_90", "won_contest", "total_scoring_att"], "defensive_back": ["total_tackle", "interception", "effective_clearance"], "passing_back": ["accurate_pass", "accurate_long_balls"]},
 }
+DIMS = [["goals_per_90", "expected_goals_per_90", "ontarget_scoring_att"], ["expected_assists_per_90"], ["won_contest"], ["accurate_pass", "accurate_long_balls"],
+        ["total_tackle", "interception"], ["ball_recovery", "poss_won_att_3rd"], ["effective_clearance"]]
 OUT = Path(os.environ.get("SITE_OUT", "data/site"))
 SHARDS = int(os.environ.get("SITE_SHARDS", 256))
 STATS = ["rating", "goals_per_90", "expected_goals_per_90", "expected_assists_per_90", "total_scoring_att", "ontarget_scoring_att",
@@ -141,6 +143,24 @@ def main() -> None:
     car = car[car.player_id.isin(ids)]; mv = mv[mv.player_id.isin(ids)]
     carg = {k: v for k, v in car.groupby("player_id")}; mvg = {k: v for k, v in mv.groupby("player_id")}; stg = {k: v for k, v in st.groupby("player_id")}
 
+    # Buy verdicts (test 20): the fee against the third-party value on the day, relative to the same year's typical
+    # ratio (the provider's level drifts against fees from year to year), in fifths within the year.
+    from transfers import load as load_transfers
+    tf = load_transfers(con).rename(columns={"yy": "y"}).sort_values(["player_id", "date"])
+    # verdict: Speider's expected value in three years against the fee, in fifths within the year and fee size
+    # (walk-forward, from analysis/buy_verdict_backtest.py); rel = expected value in three years / fee
+    bv = pd.read_pickle("data/buy_verdicts.pkl")[["player_id", "date", "C2", "verdict"]].rename(columns={"C2": "rel", "verdict": "q"})
+    tf = tf.merge(bv, on=["player_id", "date"], how="inner")
+    nxt = tf.groupby("player_id").shift(-1); tf["next_fee"], tf["next_y"] = nxt.fee, nxt.y
+    tfg = {k: v for k, v in tf.groupby("player_id")}
+    bvres = json.load(open("data/result_buy_verdict.json")); verdict_stats = dict(all=bvres["verdict"], large=bvres["verdict_large"], next_fee_r2=bvres["next_fee_r2"])
+    # a value on the day below a tenth of the fee is a stale provider value, not a verdict: left out of the lists
+    d26 = tf[(tf.y == 2026) & (tf.fee >= 2e6) & (tf.mv >= 0.1 * tf.fee) & tf.player_id.isin(set(base.player_id))]
+    deal = lambda g_: [[int(x.player_id), x["name"], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2)] for _, x in g_.iterrows()]
+    deals = dict(cheap=deal(d26.sort_values("rel", ascending=False).head(12)), dear=deal(d26.sort_values("rel").head(12)))
+    # style dimensions per player for the team view (same groups as the radar on the player page)
+    dimv = {pid_: [int(round(float(np.mean([row[c] for c in cols if c in row.index])))) for cols in DIMS] for pid_, row in pv.iterrows()}
+
     def r(x, d=2):
         return None if x is None or (isinstance(x, float) and not np.isfinite(x)) or pd.isna(x) else round(float(x), d)
     index, shards = [], {i: {} for i in range(SHARDS)}
@@ -169,7 +189,10 @@ def main() -> None:
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
             if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
         if len(index[-1]) == 10: index[-1] += [None, None, None]
-        index[-1] += [ptype.get(pid), rec]
+        index[-1] += [ptype.get(pid), rec, dimv.get(pid)]
+        if pid in tfg:
+            d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
+                        int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None] for _, x in tfg[pid].iterrows()]
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)
@@ -193,7 +216,7 @@ def main() -> None:
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict_stats=verdict_stats, deals=deals, verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 

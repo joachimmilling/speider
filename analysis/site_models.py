@@ -51,8 +51,8 @@ def main() -> None:
     now = now.merge(latest, on="player_id", how="left")
     shift = (now.lv_latest - now.lv).fillna(0.0)
     now["lv"] += shift; now["mom1"] += shift; now["mom2"] += shift
-    t = con.execute("""select player_id, year(date) yy, month(date) mo, fee, market_value mv from fm_transfers
-                       where fee >= 50000 and not loan and not extension and market_value > 0 and year(date) >= 2016""").fetchdf()
+    from transfers import load as load_transfers
+    t = load_transfers(con).drop(columns=["name"])          # value on the day from the value history, not the crawl-time field
     t["y"] = np.where(t.mo >= 6, t.yy, t.yy - 1)
     m = t.merge(b, on=["player_id", "y"])
     m["val"] = np.log(m.mv); m["target"] = np.log(m.fee / m.yy.map(INDEX) * 100)

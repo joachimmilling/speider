@@ -83,3 +83,8 @@ svg[data-ch]{cursor:crosshair}.ov{opacity:0;transition:opacity 160ms ease}.ov.on
 .simt{display:grid;grid-template-columns:1fr auto auto;gap:10px 24px;font-size:15px;align-items:center}.simt .r{min-width:64px}.simt .dot{margin-right:6px}
 .card .chip{background:color-mix(in srgb,var(--ink) 9%,transparent)}.card .chip[aria-pressed=true]{background:var(--ink)}
 .playrow{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline;font-size:15px}
+.tag.bad{background:var(--alert);color:var(--ground)}
+.trl{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:15px}.trl .tag{flex:none}
+.trow{display:grid;grid-template-columns:minmax(120px,1.1fr) repeat(3,minmax(0,1fr));gap:20px;align-items:center;font-size:15px}
+.tcell{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border-radius:10px}.tcell .sub{grid-column:1/3}.tcell b{font-weight:600;min-width:24px;text-align:right}
+@media (max-width:760px){.trow{grid-template-columns:1fr}}

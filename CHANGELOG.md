@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-16 – Value on the day corrected; buy verdicts; team view
+
+- Found and fixed a leak: `fm_transfers.market_value` is the value at crawl time, not on the day. `analysis/transfers.py` now takes the value on the day from the value history. Test 20 redone (the earlier table was wrong), fee model retrained: typical miss 45.5 % vs 42.4 % for the third-party value, rank 0.849 vs 0.838.
+- Test 20 corrected result: the fee paid predicts the next fee best (0.59), Speider outcome model 0.55, third-party value on the day 0.50; Speider adds information beyond the fee, the third-party value almost none.
+- Buy verdicts on the player page (five levels) from the walk-forward expected value in three years against the fee; this year's best and most expensive buys on the market page.
+- Team view: squad profile per role against its own league, the three biggest gaps, and candidates for each (27 or younger, strong on that dimension, league at the team's level or a little below, within a price the squad has seen).
+- Known: team profile and candidates use rank within the player's own league, not adjusted for league level; no tactics.
+
 ## 2026-11-16 – Test 20: judging buys by what happens next
 
 - `analysis/buy_verdict_backtest.py`: walk-forward test of which estimate on the day predicts the next fee. Third-party value 0.72, Speider outcome model 0.69, Speider fee model 0.61, the fee paid 0.59.

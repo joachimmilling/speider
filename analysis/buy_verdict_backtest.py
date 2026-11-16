@@ -37,19 +37,17 @@ def main() -> None:
     b = pd.read_pickle("data/frame_wide.pkl").drop_duplicates(["player_id", "y"], keep="last")
     b["g3"] = b.lv_f3 - b.lv
     con = duckdb.connect("data/speider.duckdb", read_only=True)
-    t = con.execute("""select player_id, date, year(date) yy, month(date) mo, fee, market_value mv from fm_transfers
-                       where fee >= 50000 and not loan and not extension and market_value > 0 and year(date) >= 2016""").fetchdf()
+    from transfers import load as load_transfers
+    t = load_transfers(con).drop(columns=["name"])
     t["y"] = np.where(t.mo >= 6, t.yy, t.yy - 1)
     # money outcome that does not come from the value provider: the next fee paid for the same player, in the same price level
     t = t.sort_values(["player_id", "date"]); nxt = t.groupby("player_id").shift(-1)
     t["resale"] = (nxt.fee / nxt.yy.map(INDEX)) / (t.fee / t.yy.map(INDEX)); t["held_years"] = (nxt.date - t.date).dt.days / 365.25
     m = t.merge(b, on=["player_id", "y"]); m["val"] = np.log(m.mv); m["target"] = np.log(m.fee / m.yy.map(INDEX) * 100)
     rows = []
-    for Y in range(2018, 2024):
+    for Y in range(2018, 2027):
         te = m[m.yy == Y].copy()
-        stopped = te.lv_f3.isna() & (te.apps_f3.fillna(0) < 5)
-        te = te[te.lv_f3.notna() | stopped].copy()
-        te["ret"] = np.where(te.lv_f3.notna(), np.exp(te.lv_f3) / te.fee, 0.0)
+        te["ret"] = np.where(te.lv_f3.notna(), np.exp(te.lv_f3) / te.fee, np.nan)
         fee_m = HGBR(loss="absolute_error", **KW).fit(m[m.yy < Y][PF], m[m.yy < Y].target)
         te["A"] = te.mv / te.fee
         te["B"] = np.exp(fee_m.predict(te[PF])) * INDEX[Y] / 100 / te.fee
@@ -61,9 +59,22 @@ def main() -> None:
         nn = NearestNeighbors(n_neighbors=60).fit(np.column_stack([tr.age.values, tr.lv.values / 0.35]))
         ix = nn.kneighbors(np.column_stack([tex.age.values, tex.lv.values / 0.35]), return_distance=False)
         te["D"] = np.sqrt(te.C2 * np.exp(tex.lv + np.median(tr.g3.values[ix], axis=1)) / te.fee)
-        rows.append(te[["player_id", "name", "yy", "age", "fee", "mv", "ret", "resale", "held_years", "A", "B", "C", "C2", "D"]])
-    r = pd.concat(rows)
-    res = dict(n=len(r), stopped_share=round(float((r.ret == 0).mean()), 3), median_return=round(float(r.ret.median()), 2), signals={})
+        rows.append(te[["player_id", "name", "date", "yy", "age", "fee", "mv", "ret", "resale", "held_years", "A", "B", "C", "C2", "D"]])
+    allr = pd.concat(rows)
+    # verdict used on the site: expected value in three years / fee (C2), in fifths within the year and fee size
+    allr["size"] = allr.groupby("yy").fee.transform(lambda x: pd.qcut(x.rank(method="first"), 3, labels=False))
+    allr["verdict"] = allr.groupby(["yy", "size"]).C2.transform(lambda x: pd.qcut(x.rank(method="first"), 5, labels=False)).astype(int)
+    allr.to_pickle("data/buy_verdicts.pkl")
+    vs = allr[allr.resale.notna() & (allr.held_years >= 0.9) & (allr.yy <= 2023)]
+    r = allr[allr.ret.notna() & (allr.yy <= 2023)]
+    y_, lf_ = np.log(vs.resale * vs.fee), np.log(vs.fee)
+    def r2(cols):
+        X = np.column_stack([np.ones(len(y_))] + cols); return round(float(1 - (y_ - X @ np.linalg.lstsq(X, y_, rcond=None)[0]).var() / y_.var()), 3)
+    extra = dict(next_fee_r2=dict(fee_only=r2([lf_]), **{k: r2([lf_, np.log(vs[k] * vs.fee)]) for k in ("A", "B", "C2", "D")}),
+                 next_fee_rank=dict(fee=round(float(vs.fee.corr(vs.resale * vs.fee, method="spearman")), 3), **{k: round(float((vs[k] * vs.fee).corr(vs.resale * vs.fee, method="spearman")), 3) for k in ("A", "B", "C2", "D")}),
+                 verdict=[[int(q), int(len(g)), round(float(g.resale.median()), 2), round(float((g.resale > 1).mean()), 2)] for q, g in vs.groupby("verdict")],
+                 verdict_large=[[int(q), int(len(g)), round(float(g.resale.median()), 2), round(float((g.resale > 1).mean()), 2)] for q, g in vs[vs["size"] == 2].groupby("verdict")])
+    res = dict(extra, n=len(r), median_return=round(float(r.ret.median()), 2), signals={})
     for s in ("A", "B", "C", "C2", "D"):
         q = r.groupby("yy")[s].transform(lambda x: pd.qcut(x.rank(method="first"), 5, labels=False))
         top, bot = r[q == 4], r[q == 0]
