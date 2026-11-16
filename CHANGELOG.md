@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-16 – Ceiling removed; path anchored on realised outcomes of comparables
+
+- The fixed value ceiling is gone: the record value has risen from 99m (2014) to 226m (2026), so a cap at today's record is wrong.
+- The cause is handled instead. For each player and horizon, the 60 past player-years closest in age and value give the realised growth against the market (10th, 50th, 90th percentile). The shown path is half model, half these realised outcomes; the 50/50 weight is a choice, not yet backtested.
+- Evidence behind it: players aged 21 or younger valued at 60m+ were typically worth x0.96 three years later (10-90 %: 0.49-2.23) and x0.81 after five; the model alone gave Yamal x3.3.
+- The dotted line is now the realised median of those comparables, labelled "how similar players turned out".
+
 ## 2026-11-16 – Value ceiling and peer path by nearest neighbours
 
 - No quantile of a value path may exceed the highest value the provider has ever published (226m): untouched up to 60 % of that, then bending towards it. Before this, growth multiples learned on cheap teenagers put Yamal at 358m in three years with a band to 845m.

@@ -86,6 +86,16 @@ def main() -> None:
         m1 = fit_q(g[g.y <= T - 1]); off = offsets(m1, g[g.y == T])
         mf = fit_q(g)
         lo, md, hi = apply(mf, now, off)
+        # What actually happened to comparable players: the 60 past player-years closest in age and value
+        # (one year of age counts like a 40 % difference in value), with their realised growth against the market.
+        # The model is good where there are many alike and guesses where there are few (a 100m teenager), so the
+        # shown path is half model, half realised outcomes of the closest comparables. No ceiling: records can fall.
+        from sklearn.neighbors import NearestNeighbors
+        nn = NearestNeighbors(n_neighbors=60).fit(np.column_stack([g.age.values, g.lv.values / 0.35]))
+        ix = nn.kneighbors(np.column_stack([now.age.values, now.lv.values / 0.35]), return_distance=False)
+        e_lo, e_md, e_hi = (np.quantile(g.growth.values[ix], q_, axis=1) for q_ in (0.1, 0.5, 0.9))
+        lo, md, hi = (lo + e_lo) / 2, (md + e_md) / 2, (hi + e_hi) / 2
+        out[f"e{h}_lo"], out[f"e{h}"], out[f"e{h}_hi"] = np.exp(e_lo), np.exp(e_md), np.exp(e_hi)
         # older players are never more likely to still be playing than younger ones with the same record
         cf = HGBC(**KW, monotonic_cst=[-1 if f == "age" else 0 for f in FEATS]).fit(b[b.y <= T][FEATS], b[b.y <= T].playing)
         out[f"g{h}_lo"], out[f"g{h}"], out[f"g{h}_hi"] = np.exp(lo), np.exp(md), np.exp(hi)
@@ -128,23 +138,10 @@ def main() -> None:
         res["path"][h]["typical"] = {int(a): round(float(np.median(out[f"g{h}"].values[out.age_i.values == a])), 3) for a in sorted(set(out.age_i))}
         # typical path for the player's own peer group: same age and about the same value today
         # (expensive players lose more in relative terms than cheap ones, so age alone is the wrong yardstick)
-        pass
-    # Ceiling: no player has been valued above the highest value the provider has ever published, so no
-    # quantile of the path may exceed it (growth multiples learned on cheap teenagers do not carry to a 100m player).
-    vmax = float(con.execute("select max(value) from fm_mv").fetchone()[0]); res["value_ceiling"] = vmax
-    # soft: untouched up to 60 % of the ceiling, then bending towards it instead of being cut off flat
-    def soft(g):
-        v = g * out.sv.values; k = 0.6 * vmax
-        return np.where(v <= k, v, k + (vmax - k) * (1 - np.exp(-(v - k) / (vmax - k)))) / out.sv.values
-    capf = vmax / out.sv.values
-    for h in range(1, 6):
-        for col in (f"g{h}_lo", f"g{h}", f"g{h}_hi"): out[col] = soft(out[col].values)
-    # Peer path: median of the 40 players closest in age and value today (one year of age counts like a
-    # 40 % difference in value), then scaled to the player's own value. Age alone is the wrong yardstick.
-    from sklearn.neighbors import NearestNeighbors
-    Z = np.column_stack([now.age.values, np.log(out.mv.values) / 0.35])
-    idx = NearestNeighbors(n_neighbors=40).fit(Z).kneighbors(Z, return_distance=False)
-    for h in range(1, 6): out[f"t{h}"] = soft(np.median(out[f"g{h}"].values[idx], axis=1))
+        # peers: realised median of the comparables, through the same stopped-or-not mixture
+        el, em, eh = np.log(out[f"e{h}_lo"].values), np.log(out[f"e{h}"].values), np.log(out[f"e{h}_hi"].values)
+        qc = (0.5 - (1 - p_)) / p_; z = ndtri(np.clip(qc, 1e-4, 1 - 1e-4)) / 1.2816
+        out[f"t{h}"] = np.where(qc <= 0.01, 0.02, np.maximum(np.exp(np.where(z < 0, em + z * (em - el), em + z * (eh - em))), 0.02))
     out.to_pickle("data/site_models.pkl")
     json.dump(res, open("data/result_site_models.json", "w"), indent=1)
     print("done", len(out))
