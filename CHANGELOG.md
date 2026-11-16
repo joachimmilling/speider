@@ -1,5 +1,10 @@
 # Changelog
 
+## Squad builder answers whether the team gets better
+
+- Team page: new tiles for the best eleven (average level of ten outfield players by role slots) and depth (second choices), with the change after sales and signings.
+- A verdict card says per move whether the player makes the best eleven, whom he displaces, or who takes over after a sale. Level-based only; no tactics or chemistry.
+
 ## Fee model learns the ratio to market value; advice counts the pitch first
 
 - `analysis/site_models.py`: the Speider value models now predict the log ratio of fee to third-party value instead of the fee itself. Tree models cannot extrapolate, so the old target capped out near the largest fees seen and marked every 100m+ player as overpriced (median Speider/market 0.68 above 100m; now 1.21). Out-of-time miss 44.9 % (was 45.5 %), rank 0.852 (was 0.849).
