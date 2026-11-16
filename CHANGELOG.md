@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-16 – Role mapping fixed, similarity on style and level, club fit check
+
+- Role mapping was wrong for wide attackers: position codes 83 and 87 are the wide players of the attacking-midfield line, not central attacking midfielders. Wingers went from 1,814 to 4,237 players; Saka, Martinelli, Trossard and Vinicius are wingers now. This was why squads had too few players per role.
+- Similar players are picked on the league-adjusted dimensions with the level counted three times one dimension, so a Bundesliga winger is no longer compared with a Serie C one. "Like him, but cheaper" uses the same neighbours.
+- Player page: basic facts row, drawn flags (62 countries, 74 % of players; emblems left out), similar-player panel compares price and facts, level explained as "better than N % in the same role in the big five leagues", and a club picker under Speider's advice that shows the fit with any club.
+- Club and league marks are initials; a local build with SITE_LOGOS=1 loads crests from the source's image server (URL pattern not verified from this environment; falls back to initials).
+
 ## 2026-11-16 – Player page redesigned; Speider's advice
 
 - The page now answers, in order: who he is (one generated sentence), level, price, direction and potential (four verdict cells), Speider's advice, strengths and weaknesses on the common scale, playing style against similar players, where he fits, value ahead, transfers. Per-90 numbers, career and third-party value sit under "The numbers behind it".

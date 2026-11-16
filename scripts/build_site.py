@@ -51,8 +51,9 @@ def role(c: int) -> str:
     if c in (32, 38, 51, 59): return "FB"
     if 62 <= c <= 68: return "DM"
     if 72 <= c <= 78: return "CM"
-    if 83 <= c <= 87: return "AM"
-    if c in (71, 79, 82, 88, 103, 107): return "W"
+    # in the attacking-midfield line 83 and 87 are the wide players (Saka, Vinicius), 84-86 the central ones
+    if c in (84, 85, 86): return "AM"
+    if c in (71, 79, 82, 83, 87, 88, 103, 107): return "W"
     if c in (104, 105, 106, 115): return "ST"
     return "CM"
 
@@ -183,6 +184,21 @@ def main() -> None:
         return ndtr(ndtri(np.clip(np.asarray(pct, float) / 100, 0.01, 0.99)) + ((0.0 if pd.isna(ls_) else ls_) - 0.30) / LS_PER_SD) * 100
     dima = {k: [int(round(float(x))) for x in adj(v, info.at[k, "ls"])] for k, v in dimv.items() if k in info.index}
     level = {k: int(round(float(np.mean([v[i] for i in NEEDP[info.at[k, "role"]]])))) for k, v in dima.items() if info.at[k, "role"] in NEEDP}
+    # Similar players, redone on the common scale: style AND level. Two players are only comparable if a coach could
+    # consider both, so the distance uses the league-adjusted dimensions and counts the level three times one dimension.
+    sim, near = {}, {}
+    wv = np.array([1.0] * 7 + [3.0])
+    for role_, grp in info.groupby("role"):
+        ids_ = [i for i in grp.index if i in dima]; cand = [i for i in ids_ if info.at[i, "m"] >= 600]
+        if len(cand) < 6: continue
+        vec = lambda i: dima[i] + [level.get(i, int(np.mean(dima[i])))]
+        A, B = np.array([vec(i) for i in ids_], float), np.array([vec(i) for i in cand], float)
+        for k0 in range(0, len(ids_), 500):
+            d2 = np.sqrt((((A[k0:k0 + 500, None, :] - B[None, :, :]) ** 2) * wv).sum(axis=2) / wv.sum())
+            for j, row in enumerate(d2):
+                pid_ = ids_[k0 + j]; o = np.argsort(row)[:41]
+                near[pid_] = [int(cand[x]) for x in o if cand[x] != pid_][:40]
+                sim[pid_] = [[int(cand[x]), info.at[cand[x], "name"], info.at[cand[x], "team"], round(float(info.at[cand[x], "age"]), 1), round(float(row[x]), 1)] for x in o[:6] if cand[x] != pid_][:5]
     # "like him, but cheaper": among the 40 closest in style, at most a year older, at most 60 % of his value, about the same level
     alt = {}
     for k, ids_ in near.items():
