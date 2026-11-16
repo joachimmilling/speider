@@ -169,8 +169,16 @@ def main() -> None:
     # big-five players. ASSUMPTION, not fitted: 0.35 strength units equal one standard deviation of player quality,
     # reference level 0.30 (the big-five average). A 90 in a league at -0.14 becomes about 51.
     from scipy.special import ndtr, ndtri
+    # How much one unit of league strength is worth in standard deviations of player quality, from players who
+    # changed league between the two latest full seasons: change in rating rank (as a z-score) against change in strength.
+    rt = full[(full.stat == "rating") & (full.m >= 900) & full.ey.isin([2025, 2026])].assign(z=lambda d_: ndtri(np.clip(d_.pct / 100, 0.01, 0.99)), lsx=lambda d_: d_.league_id.map(ls))
+    mv_ = rt[rt.ey == 2025].merge(rt[rt.ey == 2026], on="player_id", suffixes=("0", "1")); mv_ = mv_[(mv_.league_id0 != mv_.league_id1) & mv_.lsx0.notna() & mv_.lsx1.notna()]
+    dz, dl = (mv_.z1 - mv_.z0).values, (mv_.lsx1 - mv_.lsx0).values
+    slope = float((dz * dl).sum() / (dl * dl).sum()) if len(mv_) > 50 else np.nan
+    LS_PER_SD = float(np.clip(-1 / slope, 0.15, 1.0)) if np.isfinite(slope) and slope < 0 else 0.35
+    print(f"scale: {len(mv_)} league movers, slope {slope:.2f} z per strength unit, {LS_PER_SD:.2f} strength units per SD")
     def adj(pct, ls_):
-        return ndtr(ndtri(np.clip(np.asarray(pct, float) / 100, 0.01, 0.99)) + ((0.0 if pd.isna(ls_) else ls_) - 0.30) / 0.35) * 100
+        return ndtr(ndtri(np.clip(np.asarray(pct, float) / 100, 0.01, 0.99)) + ((0.0 if pd.isna(ls_) else ls_) - 0.30) / LS_PER_SD) * 100
     dima = {k: [int(round(float(x))) for x in adj(v, info.at[k, "ls"])] for k, v in dimv.items() if k in info.index}
     level = {k: int(round(float(np.mean([v[i] for i in NEEDP[info.at[k, "role"]]])))) for k, v in dima.items() if info.at[k, "role"] in NEEDP}
     # "like him, but cheaper": among the 40 closest in style, at most a year older, at most 60 % of his value, about the same level
@@ -180,15 +188,20 @@ def main() -> None:
         c_ = [c for c in ids_ if c in sm and sm[c]["sv"] <= 0.6 * sm[k]["sv"] and info.at[c, "age"] <= info.at[k, "age"] + 1 and level.get(c, 0) >= level.get(k, 0) - 10][:5]
         if c_: alt[k] = [[c, info.at[c, "name"], info.at[c, "team"], round(float(info.at[c, "age"]), 1), int(sm[c]["sv"]), level.get(c)] for c in c_]
     # Sporting outcome of a transfer: senior matches in the two seasons after it (any club, so a loan counts).
-    cy = con.execute("select player_id, end_year y, sum(apps) apps from fm_career where end_year is not null group by 1,2").fetchdf().set_index(["player_id", "y"]).apps
+    # Sporting outcome of a transfer: matches FOR THE BUYING CLUB in the two seasons after it (a loan elsewhere does
+    # not count). Regular: 20+ in one of them (10+ in the half season after a winter move); rotation: 10+; else not.
+    cc = con.execute("select player_id, end_year y, team_id, sum(apps) apps from fm_career where end_year is not null group by 1,2,3").fetchdf().set_index(["player_id", "y", "team_id"]).apps
     ml = con.execute("select player_id, end_year y, arg_max(league_id, apps) lid from fm_career where end_year is not null group by 1,2").fetchdf()
     mls = ml.assign(ls=ml.lid.map(ls)).set_index(["player_id", "y"]).ls
     tf["sy"] = np.where(tf.mo >= 6, tf.y, tf.y - 1)
-    at = lambda ser, k_: ser.reindex(pd.MultiIndex.from_arrays([tf.player_id, tf.sy + k_])).values
-    a1 = np.where(tf.sy + 1 <= 2026, np.nan_to_num(at(cy, 1)), np.nan); a2 = np.where(tf.sy + 2 <= 2026, np.nan_to_num(at(cy, 2)), np.nan)
-    avg_ = np.nanmean(np.vstack([a1, a2]), axis=0) if len(tf) else a1
-    tf["a1"] = a1; tf["sport"] = np.where(np.isnan(a1), -1, np.where(avg_ >= 20, 2, np.where(avg_ >= 10, 1, 0))).astype(int)
-    tf["dls"] = at(mls, 1) - at(mls, 0)
+    atc = lambda k_: np.nan_to_num(cc.reindex(pd.MultiIndex.from_arrays([tf.player_id, tf.sy + k_, tf.to_id])).values)
+    winter = (tf.mo < 6).values
+    a1 = np.where(tf.sy + 1 <= 2026, atc(1), np.nan); a2 = np.where(tf.sy + 2 <= 2026, atc(2), np.nan)
+    best_ = np.fmax(np.where(winter, a1 * 2, a1), a2)
+    tf["a1"], tf["a2"] = a1, a2
+    tf["sport"] = np.where(np.isnan(a1), -1, np.where(best_ >= 20, 2, np.where(best_ >= 10, 1, 0))).astype(int)
+    club_ls = teams.drop_duplicates("team_id").set_index("team_id").league_id.map(ls)
+    tf["dls"] = tf.to_id.map(club_ls).values - mls.reindex(pd.MultiIndex.from_arrays([tf.player_id, tf.sy])).values
     tfg = {k: v for k, v in tf.groupby("player_id")}
     st_ = tf[(tf.sport >= 0) & tf.dls.notna()]
     steps = [[lo_, hi_, int(((st_.dls >= lo_) & (st_.dls < hi_)).sum()), round(float((st_[(st_.dls >= lo_) & (st_.dls < hi_)].sport == 2).mean()), 2)] for lo_, hi_ in ((-9, -0.1), (-0.1, 0.1), (0.1, 0.25), (0.25, 9))]
@@ -229,7 +242,7 @@ def main() -> None:
         if pid in alt: d["alt"] = alt[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
-                        int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1)] for _, x in tfg[pid].iterrows()]
+                        int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1), None if pd.isna(x.a2) else int(x.a2)] for _, x in tfg[pid].iterrows()]
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)
@@ -253,7 +266,7 @@ def main() -> None:
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 

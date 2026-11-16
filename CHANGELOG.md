@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-16 – Sporting verdict for the buying club, fitted scale, place by value
+
+- Sporting outcome counts matches for the buying club only (a loan elsewhere no longer counts): regular 20+ in one of the first two seasons (10+ in the half season after a winter move), rotation 10+.
+- Step success now separates: 83 % regulars after a step down, 80 % sideways, 79 % a small step up, 68 % after the largest steps. By price verdict: 74 % for the dearest fifth, 78-79 % for the rest.
+- The common scale is fitted instead of assumed: 1,609 players who changed league between the two latest seasons give 0.23 strength units per standard deviation (was 0.35 by assumption), so league level counts for more.
+- "Place in the role" in best fit is ranked by Speider value, not by the style level.
+
 ## 2026-11-16 – Common scale, sporting verdict, best fit, club report card, cheaper alternatives
 
 - One scale across leagues: rank within the own league moved by league strength and read as rank among big-five players. Assumption, not fitted: 0.35 strength units per standard deviation, reference 0.30. Used in the team view, best fit and the new "level" sort in Find.
