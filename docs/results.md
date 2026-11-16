@@ -783,3 +783,38 @@ eleven. The seven collective attributes add nothing beyond the level out of time
 creating 0.07, dribbling 0.09, passing 0.32, duels -0.08, ball winning 0.14, clearing -0.15) are confounded by team style:
 teams that defend a lot make more tackles and clearances. The "does the team get better" verdict on the team page is therefore
 a description of what changes, not a tested prediction of results.
+
+
+## Test 22: a model of what makes a good squad
+
+`analysis/squad_model.py`, result in `data/result_squad_model.json`.
+
+Target: goal difference per match, standardised within the league season (1,000+ team seasons, 2018-2026).
+Inputs known before the season, standardised the same way. The eleven is picked by market value per role slot.
+Ridge models, fit to 2024, tested on 2025-26 (252 team seasons):
+
+| Inputs | R2 | Correlation |
+|---|---|---|
+| Last season only | 0.16 | 0.40 |
+| Value and level of the eleven | 0.35 | 0.60 |
+| + depth and age | 0.41 | 0.64 |
+| + last season (site model) | 0.42 | 0.65 |
+| + weakest line | 0.42 | 0.65 |
+| + seven collective attributes | 0.42 | 0.65 |
+
+Site model coefficients (standard deviations of goal difference per standard deviation of input): value of the eleven 0.45,
+depth 0.20, last season 0.15, age 0.14 (older elevens do better within a league, flattening above 26.5), level 0.03.
+
+Reading: with these measurements a good squad is expensive players in the eleven, a bench that is worth something, experience
+and continuity. The level from last season's numbers adds almost nothing once value is known, and neither the weakest line nor
+the mix of attributes adds anything out of time. That does not prove balance is irrelevant: the attributes are per-90 numbers
+coloured by the team's own style, and there is no match-level data yet. It is the open question for the squad half of the platform.
+One standard deviation of goal difference is 0.69 goals per match.
+
+## Tail treatment in the value models (after the 600m peak for a teenager)
+
+Above 40m the fee and growth models hand over gradually (fully from 100m) to a robust straight line in age and value fitted on the
+expensive end only. In the data teenagers at 60m+ lost value against the market over three years (x0.86, n=18; x0.73 at 100m+, n=3),
+and fees above 70m are 1.08 times the value on the day (n=24); the trees had carried the pattern from cheaper teenagers upward.
+Held-out error is about unchanged (fees at 40m+: 0.227 trees, 0.236 with tail, n=81; growth mixed by horizon), because the held-out
+data has almost nothing above 150m. The change is a choice about extrapolation, not a measured gain.

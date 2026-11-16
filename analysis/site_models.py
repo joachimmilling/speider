@@ -30,6 +30,25 @@ FEATS = [f for f in FEATS if f not in ("mom1", "mom2")]; _pv.FEATS = FEATS
 PF = [f for f in dict.fromkeys(FEATS + ["age"]) if f != "lv"] + ["val"]
 
 
+# Above about 40m the data thins out (145 fees at 40-70m, 24 above), and trees fill the gap with patterns learned
+# from cheaper players: teenagers sell above their value and grow fast, so a 220m teenager was priced at 320m and
+# projected to 600m. Outside the support a straight line in age and value takes over gradually: it is fitted on the
+# expensive end only and carries the mean reversion seen there (teenagers at 60m+ lost value against the market).
+TAIL_LO, TAIL_HI = np.log(40e6), np.log(100e6)
+
+
+def tail_w(lv):
+    return np.clip((np.asarray(lv, float) - TAIL_LO) / (TAIL_HI - TAIL_LO), 0, 1)
+
+
+def tail_fit(age, lv, y, floor):
+    from sklearn.linear_model import HuberRegressor
+    k = np.asarray(lv) >= np.log(floor)
+    X = lambda a, l: np.column_stack([a, np.asarray(a) ** 2 / 100, l])
+    m = HuberRegressor(alpha=1.0, max_iter=500).fit(X(np.asarray(age)[k], np.asarray(lv)[k]), np.asarray(y)[k])
+    return lambda a, l: m.predict(X(np.asarray(a, float), np.asarray(l, float)))
+
+
 def err(pred, fee):
     return float(np.median(np.abs(pred - fee) / fee))
 
@@ -60,11 +79,20 @@ def main() -> None:
     # extrapolate, so a model of the fee itself caps out near the largest fees seen and marks every
     # 100m+ player as overpriced. A ratio carries over to values above anything in the training data.
     m["ratio"] = m.target - m.val
-    pv = lambda mm, X: mm.predict(X[PF]) + X.val.values
+    pv0 = lambda mm, X: mm.predict(X[PF]) + X.val.values
+    TL = {}
+    def pv(mm, X):
+        # the tail line moves the median; the 10 % and 90 % models move by the same amount
+        d = tail_w(X.val.values) * (TL["f"](X.age.values, X.val.values) + X.val.values - pv0(TL["med"], X))
+        return pv0(mm, X) + d
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
     q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PF], tr.ratio) for a in (0.1, 0.5, 0.9)}
+    TL["f"], TL["med"] = tail_fit(tr.age.values, tr.val.values, tr.ratio.values, 20e6), q[0.5]
     scale = te.yy.map(INDEX).values / 100
+    big = (te.mv >= 40e6).values
+    res["tail_value"] = dict(n_test_40m=int(big.sum()), err_trees=round(err(np.exp(pv0(q[0.5], te))[big] * scale[big], te.fee.values[big]), 3))
     p = {a: np.exp(pv(mm, te)) * scale for a, mm in q.items()}
+    res["tail_value"]["err_with_tail"] = round(err(p[0.5][big], te.fee.values[big]), 3)
     young = (te.age < 23).values
     res["value"] = dict(n_train=len(tr), n_test=len(te), speider_err=round(err(p[0.5], te.fee.values), 3), third_party_err=round(err(te.mv.values, te.fee.values), 3),
                         speider_err_u23=round(err(p[0.5][young], te.fee.values[young]), 3), third_party_err_u23=round(err(te.mv.values[young], te.fee.values[young]), 3),
@@ -76,6 +104,7 @@ def main() -> None:
     lo_off = float(np.quantile(r - pv(q[0.1], te), 0.10)); hi_off = float(np.quantile(r - pv(q[0.9], te), 0.90))
     res["value"]["interval_offsets"] = [round(lo_off, 3), round(hi_off, 3)]
     q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PF], m.ratio) for a in (0.1, 0.5, 0.9)}
+    TL["f"], TL["med"] = tail_fit(m.age.values, m.val.values, m.ratio.values, 20e6), q[0.5]
     now["val"] = now.lv
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),
                             sv_lo=np.exp(pv(q[0.1], now) + lo_off), sv_hi=np.exp(pv(q[0.9], now) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
@@ -95,6 +124,16 @@ def main() -> None:
         m1 = fit_q(g[g.y <= T - 1]); off = offsets(m1, g[g.y == T])
         mf = fit_q(g)
         lo, md, hi = apply(mf, now, off)
+        # same tail treatment for the growth model; checked on the held-out year first
+        hold = g[g.y == T]; hb = (hold.lv >= TAIL_LO).values
+        if hb.sum() >= 5:
+            _, md1, _ = apply(m1, hold, off); tr_ = g[g.y <= T - 1]
+            tf1 = tail_fit(tr_.age.values, tr_.lv.values, tr_.growth.values, 15e6)
+            md1t = md1 + tail_w(hold.lv.values) * (tf1(hold.age.values, hold.lv.values) - md1)
+            res.setdefault("tail_growth", {})[h] = dict(n=int(hb.sum()), abs_err_trees=round(float(np.median(np.abs(md1[hb] - hold.growth.values[hb]))), 3), abs_err_with_tail=round(float(np.median(np.abs(md1t[hb] - hold.growth.values[hb]))), 3))
+        tf = tail_fit(g.age.values, g.lv.values, g.growth.values, 15e6)
+        d_ = tail_w(now.lv.values) * (tf(now.age.values, now.lv.values) - md)
+        lo, md, hi = lo + d_, md + d_, hi + d_
         # What actually happened to comparable players: the 60 past player-years closest in age and value
         # (one year of age counts like a 40 % difference in value), with their realised growth against the market.
         # The model is good where there are many alike and guesses where there are few (a 100m teenager), so the

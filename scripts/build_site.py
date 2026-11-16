@@ -287,6 +287,12 @@ def main() -> None:
                         int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1), None if pd.isna(x.a2) else int(x.a2), x.unit] for _, x in tfg[pid].iterrows()]
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
+    # squad model (analysis/squad_model.py): coefficients on standardised team features, and last season's standardised goal difference
+    squad = None
+    if Path("data/result_squad_model.json").exists():
+        sq_ = json.load(open("data/result_squad_model.json")); sm_ = sq_["site_model"]
+        squad = dict(features=sm_["features"], coef=sm_["coef"], intercept=sm_["intercept"], sd=sq_["sd_goal_difference_per_match"], gd_last=sq_["gd_last"],
+                     test=sq_["out_of_time"]["xi+depth+age + last season"], n_test=sq_["n_test"])
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)
 
     # across eras: non-penalty goals per 90 against the full squads of the league season
@@ -308,7 +314,7 @@ def main() -> None:
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), logos=os.environ.get("SITE_LOGOS") == "1", verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), squad=squad, verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), logos=os.environ.get("SITE_LOGOS") == "1", verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 

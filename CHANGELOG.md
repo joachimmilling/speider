@@ -1,5 +1,11 @@
 # Changelog
 
+## Squad model (test 22) and tail treatment for the most expensive players
+
+- `analysis/squad_model.py`: expected goal difference from the value and level of the best eleven, depth, age and last season; out-of-time correlation 0.65 (R2 0.42). Coefficients shipped in `market.js` (`squad`).
+- Team page: expected goal difference over the season and league rank, before and after sales and signings, with what moves the number. The best eleven is now picked by market value. Collective attributes stay as a description.
+- `analysis/site_models.py`: above 40m the fee and growth models hand over to a line fitted on the expensive end. The largest expected peak falls from 605m to 338m.
+
 ## Team attributes, expected peak value, test 21
 
 - Team page: collective attributes (mean of the ten outfield starters on each of the seven dimensions) with rank in the league; a signing is counted as a starter and the verdict weighs the change by where the team is weakest.

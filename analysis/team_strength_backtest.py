@@ -24,8 +24,8 @@ LS_PER_SD = 0.23
 SLOTS = {"CB": 2, "FB": 2, "DM": 1, "CM": 1, "AM": 1, "W": 2, "ST": 1}
 
 
-def main() -> None:
-    con = duckdb.connect("data/speider.duckdb", read_only=True)
+def prep(con):
+    """Squads (players with 450+ minutes, with level and attributes from the season before, value before the season, age) and team outcomes."""
     s = con.execute(f"""
         select s.stat, s.league_id, se.end_year ey, s.player_id, s.team_id, s.value v, s.sub_value sv, s.minutes m,
                cast(json_extract(p.positions,'$[0]') as int) pos
@@ -63,6 +63,17 @@ def main() -> None:
     sq = s[(s.stat == "mins_played") & (s.m >= 450)][["league_id", "ey", "team_id", "player_id", "m"]].merge(prior, on=["player_id", "ey"], how="left")
     mv = con.execute("select player_id, year(date) + (month(date) >= 8)::int ey, arg_max(value, date) mv from fm_mv where value > 0 group by 1, 2").fetchdf()   # latest value before 1 August
     sq = sq.merge(mv, on=["player_id", "ey"], how="left")
+    age = con.execute("select player_id, birth from fm_profiles where birth is not null").fetchdf()
+    sq = sq.merge(age, on="player_id", how="left"); bd = pd.to_datetime(sq.birth, errors="coerce")
+    sq["age"] = sq.ey - 0.5 - bd.dt.year - (bd.dt.month - 1) / 12       # age around the turn of the year in the season
+    pos = s[["player_id", "role"]].drop_duplicates("player_id").rename(columns={"role": "pos_role"})
+    sq = sq.merge(pos, on="player_id", how="left")
+    return sq, out
+
+
+def main() -> None:
+    con = duckdb.connect("data/speider.duckdb", read_only=True)
+    sq, out = prep(con)
     rows = []
     for (lid, ey, tid), grp in sq.groupby(["league_id", "ey", "team_id"]):
         lv = grp[grp.level.notna()]

@@ -83,3 +83,9 @@ Hitting the fee is a sanity check only. A value estimate earns its place if buys
 - How much sell-on clauses shift the ground truth for young players from small leagues.
 - Wages: no free source found.
 - Whether scripts can reach the sources directly from the owner's machine (`scripts/check_access.py`).
+
+
+## 45. The squad half is judged against results
+
+Any statement that a team gets better or worse comes from a model tested against goal difference out of time (test 22).
+Descriptions that have not shown predictive value (collective attributes, weakest line) are shown as descriptions and labelled so.
