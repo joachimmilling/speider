@@ -7,7 +7,8 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 1. Does balance matter (a ball winner helping most where the team lacks one)? Not detectable with season aggregates (test 22). Needs match-level data: who played together and the result per match. Blocked on the paced SofaScore crawl.
 2. The squad model is linear with 3,570 team seasons. Interactions are untested.
 3. Outcome is goal difference from player goals and keeper totals, not league tables or points. No table data is loaded.
-4. The best eleven is picked by market value in fixed slots (4-2-3-1-like). Real formations are unknown.
+4. The squad model still picks its eleven by market value in fixed slots (4-2-3-1-like), while the pitch shows players by their own position. A formation-free eleven for the model is untested.
+9. 3,806 players have no position code in `fm_players` (they default to central midfield). Possibly the same players as the ~3,800 without a value.
 5. The Premier League shows 18 teams on the team page: two teams fall out of the calculation. Not investigated.
 6. Collective attributes average all ten outfield players equally on every attribute; they should be weighted by role.
 7. Keepers have no level.

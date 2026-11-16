@@ -136,6 +136,7 @@ def main() -> None:
     # most similar players by style: distance between percentile profiles within the role
     pv = st[st.stat != "big_chance_created"].pivot_table(index="player_id", columns="stat", values="pct").fillna(50)
     info = base.set_index("player_id")
+    posc = {int(k): int(v) for k, v in s.dropna(subset=["pos"]).drop_duplicates("player_id").set_index("player_id").pos.items()}   # primary position code, for the pitch
     # player type: the style group whose numbers the player ranks highest on within his role
     ptype = {}
     for pid_, row in pv.iterrows():
@@ -280,7 +281,7 @@ def main() -> None:
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
             if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
         if len(index[-1]) == 10: index[-1] += [None, None, None]
-        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None] + peak
+        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None] + peak + [posc.get(pid)]
         if pid in alt: d["alt"] = alt[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),

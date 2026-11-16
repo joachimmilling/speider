@@ -1,5 +1,9 @@
 # Changelog
 
+## Pitch without a fixed formation
+
+- Team page: the whole squad is placed where each player plays most (line from the role, side from the provider's position code, new field 23 in `players.js`). No fixed formation; the eleven the model counts as starters are drawn in full, the rest as names.
+
 ## Lab routine, scoreboard, squad on a pitch
 
 - `AGENTS.md` (read first every session), `docs/lab.md` (method and test template), `docs/lessons.md`, `docs/open-questions.md`. Decision 46.
