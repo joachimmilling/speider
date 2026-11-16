@@ -137,7 +137,7 @@ def main() -> None:
             lo_, md_, hi_ = (sm3([float(v[f"g{h}{k}"]) for h in range(1, 6)]) for k in ("_lo", "", "_hi"))
             d["path"] = [[h, lo_[h - 1], md_[h - 1], hi_[h - 1], r(v[f"play{h}"], 2)] for h in range(1, 6)]
             d["typ"] = sm3([float(smres["path"][str(h)]["typical"][v["band"]]) for h in range(1, 6)])
-            index[-1].append(int(v["sv"]))
+            index[-1] += [int(v["sv"]), md_[2], int(v["mv"])]
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)

@@ -38,6 +38,12 @@ def main() -> None:
 
     # 1. Speider value from fees
     con = duckdb.connect("data/speider.duckdb", read_only=True)
+    # The frame holds mid-year values. Start today's numbers from the latest third-party value instead,
+    # so the page agrees with the value history and a jump since the summer is not ignored.
+    latest = con.execute("select player_id, ln(arg_max(value, date)) lv_latest from fm_mv where value > 0 group by 1").fetchdf()
+    now = now.merge(latest, on="player_id", how="left")
+    shift = (now.lv_latest - now.lv).fillna(0.0)
+    now["lv"] += shift; now["mom1"] += shift; now["mom2"] += shift
     t = con.execute("""select player_id, year(date) yy, month(date) mo, fee, market_value mv from fm_transfers
                        where fee >= 50000 and not loan and not extension and market_value > 0 and year(date) >= 2016""").fetchdf()
     t["y"] = np.where(t.mo >= 6, t.yy, t.yy - 1)
