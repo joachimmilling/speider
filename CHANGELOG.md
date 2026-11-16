@@ -24,3 +24,14 @@
 - Test 8 dropout, test 9 price model v4, test 10 sell-on sensitivity.
 - Test 11: career curve with dropout (`analysis/career_curve_with_dropout.py`).
 - Earlier the same day: data model, ESF and FotMob parsers, CLI, 17 tests.
+
+## 2026-11-16
+
+- All 48,339 FotMob profiles loaded; SofaScore season statistics for 95
+  leagues and squad history back to 2001/02 loaded.
+- Reran dropout, career simulator, career curve with dropout and price model
+  v4 on the full data (`docs/results.md`).
+- Test 12: historical profile v1 against full squads
+  (`analysis/historical_profile_v1.py`).
+- SofaScore API answered 403 after an unpaced run; crawl stopped, 28 country
+  categories left to scan.

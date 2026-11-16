@@ -42,6 +42,9 @@ them are in `results.md`.
 
 | 29 | 2026-11-15 | Projections show both "if still playing" and expected value including dropout | Test 11: for a 21-year-old regular the two differ by 35 % up vs 7 % down at 25 | Survivor curve alone |
 
+| 30 | 2026-11-16 | Historical output is standardised against full SofaScore squads | Test 12: valid from 2001/02 in six leagues; replaces the survivor-based v0 and lifts decision 23 for goals | FotMob career lines as comparison group |
+| 31 | 2026-11-16 | Crawls run in a Web Worker and SofaScore is paced to about one request a second | Background tabs were throttled and discarded; an unpaced run got the API blocked (403) | Main-thread crawls, unpaced requests |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

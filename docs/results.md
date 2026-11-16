@@ -396,3 +396,67 @@ overstated and the expected curve is too low. Level is not conditioned on
 here (test 4 showed it matters); this is the average regular. Both are fixed
 by moving dropout into the simulator as a state, with SofaScore's wider
 league coverage.
+
+## Data complete for stage 1 (2026-11-16)
+
+- FotMob player profiles: all 48,339 loaded. 2.17M market value points,
+  979,000 career lines.
+- SofaScore season statistics: 352,957 player-seasons, 85,233 players, 95
+  leagues with detailed statistics (five latest seasons each). Bosnia (WWIN
+  Liga) and Cyprus are in, 2023/24 onwards; their season lists carry no xG.
+- SofaScore history: full squads with minutes, goals, penalties, assists and
+  shots for the big five and Eredivisie back to 2001/02, and 15 more leagues
+  back to 2013/14.
+- **Access note:** the SofaScore crawl was run without pauses near the end and
+  the API started answering 403. The crawl was stopped. 28 of 275 country
+  categories were not scanned. Future SofaScore runs must be paced (at most
+  about one request a second) and resumed later.
+- **Operational note:** Chrome throttles and discards background tabs. Crawls
+  now run inside a Web Worker on a plain page of the same origin, which holds
+  full speed while the tab is alive; the tab still has to be polled.
+
+## Reruns on the full profile set
+
+- **Test 8, dropout:** unchanged overall (65 % regular, 16 % fringe, 18 % out
+  next year); every cohort player now has an age, so no scaling. Out-rate
+  14–15 % a year from 21 to 26, 20 % at 29, 30 % at 34. A regular at 21 is
+  still in the data at 25 with 66 % and at 29 with 41 %.
+- **Test 4, career simulator** (122,711 training transitions, no longer
+  survivor-heavy): ten-year median error 85 % for age + level against 128 %
+  for a flat value; 80 % interval covers 81 %. Direction last year still adds
+  nothing (84 %). The chained age curve is flatter than first measured: peak
+  1.37 at 24–25 (was 1.58), 0.92 at 29, 0.66 at 31.
+- **Test 11, with dropout:** for a regular at 21 the value if still playing is
+  1.13 at 23 and 1.23 at 25, the share still playing 82 % and 67 %, so the
+  expected value is 0.93 at 23 and 0.82 at 25. Expected value of the average
+  21-year-old regular falls from day one; from 19 it peaks at 21 (1.22).
+- **Test 9, price model v4:** 69 % median error (was 71 %), blend 53 %,
+  market value 59 %. Under 23: 73 % vs 63 %. Small leagues 83 % vs 63 %.
+
+## Test 12: Historical profile v1, against full squads
+
+`python3 analysis/historical_profile_v1.py`
+
+Non-penalty goals per 90, standardised among all outfield regulars (≥ 900
+min) of the same league and season. 1,600–1,800 regulars a season in six
+leagues for 2002–2012, 4,600–6,400 in about 21 leagues for 2014–2021.
+
+- Cristiano Ronaldo 2007/08: 2,747 min, 31 goals (4 penalties), 0.88 per 90,
+  5.2 standard deviations above the Premier League mean, top of the league.
+  2006/07: 0.42 per 90, 97th percentile.
+- Antonio Nusa 2025/26: 2,035 min, 4 goals, 0.18 per 90, 69th percentile in
+  the Bundesliga.
+- Best seasons since 2001/02 come out as Messi 2012/13, Ibrahimović 2015/16,
+  Mbappé 2018/19, Messi 2018/19, Lewandowski 2020/21, Ronaldo 2014/15.
+- League scoring per regular is stable (0.11 per 90 in 2002–2014, 0.127 in
+  2026), so era adjustment is small for goals; standardising within the
+  season handles it.
+
+**Conclusion:** cross-era comparison on output is valid from 2001/02 for six
+leagues. Decision 23 is lifted for goals.
+
+**Limits:** no positions in this source, so wingers are compared with all
+outfield players; ages come from FotMob profiles and only exist for players
+still active after 2021; assists are missing for parts of 2006 and 2013;
+everything other than goals, assists, minutes and shots still needs
+reconstruction (model 11).
