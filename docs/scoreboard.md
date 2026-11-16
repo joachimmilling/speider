@@ -1,6 +1,6 @@
 # Scoreboard
 
-Rebuilt 2026-11-16 at commit `2e5ae6c` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-16 at commit `029e959` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
@@ -16,3 +16,7 @@ Rebuilt 2026-11-16 at commit `2e5ae6c` by `scripts/scoreboard.py`. History: `doc
 | Squads | Squad model: explained share | **0.421** | value and level of the eleven 0.353 |  |
 | Squads | Same with the seven attributes added | **0.419** | no gain = attributes add nothing |  |
 | Squads | Level of the best eleven alone: correlation with goal difference | **0.451** | value of top eleven 0.594, last season 0.508 | n=829 |
+
+## Changed since the previous row
+
+Nothing.
