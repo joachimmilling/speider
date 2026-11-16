@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-16 – Value ceiling and peer path by nearest neighbours
+
+- No quantile of a value path may exceed the highest value the provider has ever published (226m): untouched up to 60 % of that, then bending towards it. Before this, growth multiples learned on cheap teenagers put Yamal at 358m in three years with a band to 845m.
+- Peer path is the median of the 40 players closest in age and value today, replacing the age-and-value bins that fell back to age alone for rare players. Label changed to "peers of the same age and value".
+- Known: the path of the very top players now leans on the ceiling rather than on evidence (too few comparable players); the momentum penalty on top players is still in.
+
 ## 2026-11-16 – Survivorship handled instead of hidden
 
 - Corrected diagnosis: profiles and career lines cover players who have stopped (about four in five players per season have a profile). It is the value histories that exist almost only for players active today (86 % of those active now, 15 % of those last seen in 2022). So the value frame is the survivor sample, not the profile table.

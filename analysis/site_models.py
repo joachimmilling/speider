@@ -128,10 +128,23 @@ def main() -> None:
         res["path"][h]["typical"] = {int(a): round(float(np.median(out[f"g{h}"].values[out.age_i.values == a])), 3) for a in sorted(set(out.age_i))}
         # typical path for the player's own peer group: same age and about the same value today
         # (expensive players lose more in relative terms than cheap ones, so age alone is the wrong yardstick)
-        vb = np.floor(np.log10(out.mv.values) * 3)
-        gk = pd.Series(out[f"g{h}"].values)
-        peer = gk.groupby([out.age_i.values, vb]).transform("median"); n_peer = gk.groupby([out.age_i.values, vb]).transform("size")
-        out[f"t{h}"] = np.where(n_peer >= 15, peer, gk.groupby(out.age_i.values).transform("median")).astype(float)
+        pass
+    # Ceiling: no player has been valued above the highest value the provider has ever published, so no
+    # quantile of the path may exceed it (growth multiples learned on cheap teenagers do not carry to a 100m player).
+    vmax = float(con.execute("select max(value) from fm_mv").fetchone()[0]); res["value_ceiling"] = vmax
+    # soft: untouched up to 60 % of the ceiling, then bending towards it instead of being cut off flat
+    def soft(g):
+        v = g * out.sv.values; k = 0.6 * vmax
+        return np.where(v <= k, v, k + (vmax - k) * (1 - np.exp(-(v - k) / (vmax - k)))) / out.sv.values
+    capf = vmax / out.sv.values
+    for h in range(1, 6):
+        for col in (f"g{h}_lo", f"g{h}", f"g{h}_hi"): out[col] = soft(out[col].values)
+    # Peer path: median of the 40 players closest in age and value today (one year of age counts like a
+    # 40 % difference in value), then scaled to the player's own value. Age alone is the wrong yardstick.
+    from sklearn.neighbors import NearestNeighbors
+    Z = np.column_stack([now.age.values, np.log(out.mv.values) / 0.35])
+    idx = NearestNeighbors(n_neighbors=40).fit(Z).kneighbors(Z, return_distance=False)
+    for h in range(1, 6): out[f"t{h}"] = soft(np.median(out[f"g{h}"].values[idx], axis=1))
     out.to_pickle("data/site_models.pkl")
     json.dump(res, open("data/result_site_models.json", "w"), indent=1)
     print("done", len(out))
