@@ -100,6 +100,19 @@ def main() -> None:
     base["league"] = [f"{n} ({lcc.get(i)})" if dup.get(n, 1) > 1 and lcc.get(i) else n for n, i in zip(base.league, base.league_id)]
     ls = pd.read_csv("data/result_league_ranking.csv", index_col=0)["strength"]
     base["ls"] = base.league_id.map(ls)
+    # The numbers come from the latest season with 900+ minutes, but the club shown must be today's: a player who
+    # moved in the summer has his numbers from the old club and league (kept as ls_stat for the common scale).
+    base["ls_stat"] = base.ls
+    cur = s[s.stat == "mins_played"].sort_values(["ey", "m"]).groupby("player_id", as_index=False).last()[["player_id", "league_id", "league", "team_id"]]
+    cur.columns = ["player_id", "c_lid", "c_league", "c_tid"]
+    base = base.merge(cur, on="player_id", how="left")
+    mvd = (base.c_tid.notna() & (base.c_tid != base.team_id)).values
+    tn_ = teams.drop_duplicates("team_id").set_index("team_id").team
+    base.loc[mvd, "team"] = base.loc[mvd, "c_tid"].map(tn_).values
+    base.loc[mvd, "league"] = [f"{n} ({lcc.get(i)})" if dup.get(n, 1) > 1 and lcc.get(i) else n for n, i in zip(base.loc[mvd, "c_league"], base.loc[mvd, "c_lid"])]
+    base.loc[mvd, "ls"] = base.loc[mvd, "c_lid"].map(ls).values
+    base.loc[mvd, "team_id"] = base.loc[mvd, "c_tid"].values; base.loc[mvd, "league_id"] = base.loc[mvd, "c_lid"].values
+    print("players shown at a newer club than their numbers:", int(mvd.sum()))
 
     # chance of a big-five league within three years (test 17, without track record)
     w = pd.read_pickle("data/frame_wide.pkl")
@@ -182,7 +195,7 @@ def main() -> None:
     print(f"scale: {len(mv_)} league movers, slope {slope:.2f} z per strength unit, {LS_PER_SD:.2f} strength units per SD")
     def adj(pct, ls_):
         return ndtr(ndtri(np.clip(np.asarray(pct, float) / 100, 0.01, 0.99)) + ((0.0 if pd.isna(ls_) else ls_) - 0.30) / LS_PER_SD) * 100
-    dima = {k: [int(round(float(x))) for x in adj(v, info.at[k, "ls"])] for k, v in dimv.items() if k in info.index}
+    dima = {k: [int(round(float(x))) for x in adj(v, info.at[k, "ls_stat"])] for k, v in dimv.items() if k in info.index}
     level = {k: int(round(float(np.mean([v[i] for i in NEEDP[info.at[k, "role"]]])))) for k, v in dima.items() if info.at[k, "role"] in NEEDP}
     # Similar players, redone on the common scale: style AND level. Two players are only comparable if a coach could
     # consider both, so the distance uses the league-adjusted dimensions and counts the level three times one dimension.
@@ -216,8 +229,17 @@ def main() -> None:
     winter = (tf.mo < 6).values
     a1 = np.where(tf.sy + 1 <= 2026, atc(1), np.nan); a2 = np.where(tf.sy + 2 <= 2026, atc(2), np.nan)
     best_ = np.fmax(np.where(winter, a1 * 2, a1), a2)
-    tf["a1"], tf["a2"] = a1, a2
-    tf["sport"] = np.where(np.isnan(a1), -1, np.where(best_ >= 20, 2, np.where(best_ >= 10, 1, 0))).astype(int)
+    # Matches overstate a squad player who mostly comes off the bench, so league minutes for the buying club decide
+    # where they exist: regular 1,500+ in a season (half of that after a winter move), rotation 600+. Matches (25+ / 12+) only as fallback.
+    cm = con.execute("""select s.player_id, se.end_year y, s.team_id, max(s.minutes) m from fm_stats s join fm_seasons se using (league_id, season_id)
+                        where s.stat = 'mins_played' group by 1,2,3""").fetchdf().set_index(["player_id", "y", "team_id"]).m
+    atm = lambda k_: cm.reindex(pd.MultiIndex.from_arrays([tf.player_id, tf.sy + k_, tf.to_id])).values
+    m1 = np.where(tf.sy + 1 <= 2026, atm(1), np.nan); m2 = np.where(tf.sy + 2 <= 2026, atm(2), np.nan)
+    bestm = np.fmax(np.where(winter, m1 * 2, m1), m2); has_m = ~np.isnan(bestm)
+    by_m = np.where(bestm >= 1500, 2, np.where(bestm >= 600, 1, 0)); by_a = np.where(best_ >= 25, 2, np.where(best_ >= 12, 1, 0))
+    tf["unit"] = np.where(has_m, "m", "k")
+    tf["a1"] = np.where(has_m, np.nan_to_num(m1), a1); tf["a2"] = np.where(has_m, np.where(np.isnan(a2), np.nan, np.nan_to_num(m2)), a2)
+    tf["sport"] = np.where(np.isnan(a1), -1, np.where(has_m, by_m, by_a)).astype(int)
     club_ls = teams.drop_duplicates("team_id").set_index("team_id").league_id.map(ls)
     tf["dls"] = tf.to_id.map(club_ls).values - mls.reindex(pd.MultiIndex.from_arrays([tf.player_id, tf.sy])).values
     tfg = {k: v for k, v in tf.groupby("player_id")}
@@ -256,11 +278,11 @@ def main() -> None:
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
             if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
         if len(index[-1]) == 10: index[-1] += [None, None, None]
-        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id)]
+        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None]
         if pid in alt: d["alt"] = alt[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
-                        int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1), None if pd.isna(x.a2) else int(x.a2)] for _, x in tfg[pid].iterrows()]
+                        int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1), None if pd.isna(x.a2) else int(x.a2), x.unit] for _, x in tfg[pid].iterrows()]
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)

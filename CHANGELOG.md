@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-16 – Squad builder, club advice per player, minutes-based sporting verdict, real flags
+
+- Team view: full squad by role with level, value and Speider's advice to the club per player (sell now, extend or sell, sell or loan out, sell on an offer, keep and extend, keep). Sell and sign players to see profile, gaps, squad value and net spend change. Nothing is saved.
+- Player page: club picker lists who is in the role at that club and can drop him into its squad; price cell shows the Speider price coloured by the assessment; advice to the current club uses the same rule set as the squad table.
+- Sporting verdict uses league minutes for the buying club (regular 1,500+ in a season), matches only as fallback. Regular share is now 54-59 % by price verdict and 63 / 59 / 55 / 44 % from a step down to the largest step up. Norgaard at Arsenal: 360 minutes, did not make it.
+- The club shown is today's club even when the numbers come from last season at another club (Konsa, Guimaraes).
+- No injury data: a club's two most valuable players in a role are treated as regulars even with few minutes, and the text says so.
+- Flags are real drawings from the flag-icons package (MIT), 206 countries, loaded on demand from web/flags.js.
+
 ## 2026-11-16 – Role mapping fixed, similarity on style and level, club fit check
 
 - Role mapping was wrong for wide attackers: position codes 83 and 87 are the wide players of the attacking-midfield line, not central attacking midfielders. Wingers went from 1,814 to 4,237 players; Saka, Martinelli, Trossard and Vinicius are wingers now. This was why squads had too few players per role.
