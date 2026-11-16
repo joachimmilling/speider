@@ -159,7 +159,7 @@ def main() -> None:
             sm3 = lambda xs: [round(float(np.exp(0.25 * a_ + 0.5 * b_ + 0.25 * c_)), 3) for a_, b_, c_ in zip(np.log([1.0] + xs[:-1]), np.log(xs), np.log(xs[1:] + xs[-1:]))]
             lo_, md_, hi_ = (sm3([float(v[f"g{h}{k}"]) for h in range(1, 6)]) for k in ("_lo", "", "_hi"))
             d["path"] = [[h, lo_[h - 1], md_[h - 1], hi_[h - 1], r(v[f"play{h}"], 2)] for h in range(1, 6)]
-            d["typ"] = sm3([float(smres["path"][str(h)]["typical"][v["band"]]) for h in range(1, 6)])
+            d["typ"] = sm3([float(smres["path"][str(h)]["typical"][str(int(v["age_i"]))]) for h in range(1, 6)])
             index[-1] += [int(v["sv"]), md_[2], int(v["mv"])]
             # "Speider recommends": young regular whose Speider value is well above the market value and whose path points up
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)

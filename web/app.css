@@ -77,3 +77,7 @@ svg[data-ch]{cursor:crosshair}.ov{opacity:0;transition:opacity 160ms ease}.ov.on
 .plink{display:flex;flex-wrap:wrap;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}.plink:hover h2{text-decoration:underline;text-underline-offset:5px}
 .tag{display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:980px;background:var(--surface);font-size:14px;font-weight:600}
 .tag.rec{background:var(--signal);color:var(--ground)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--signal);margin-right:6px}
+.rp{transform-box:view-box;transform-origin:center;animation:pop 800ms var(--spring) both}@keyframes pop{from{transform:scale(.15);opacity:0}}
+.simg{display:grid;grid-template-columns:minmax(260px,400px) 1fr;gap:32px;align-items:center}@media (max-width:760px){.simg{grid-template-columns:1fr}}
+.simt{display:grid;grid-template-columns:1fr auto auto;gap:10px 24px;font-size:15px;align-items:center}.simt .r{min-width:64px}.simt .dot{margin-right:6px}
+.card .chip{background:color-mix(in srgb,var(--ink) 9%,transparent)}.card .chip[aria-pressed=true]{background:var(--ink)}

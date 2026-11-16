@@ -66,7 +66,7 @@ def main() -> None:
     q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PF], m.target) for a in (0.1, 0.5, 0.9)}
     now["val"] = now.lv
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(q[0.5].predict(now[PF])),
-                            sv_lo=np.exp(q[0.1].predict(now[PF]) + lo_off), sv_hi=np.exp(q[0.9].predict(now[PF]) + hi_off), band=now.band.values))
+                            sv_lo=np.exp(q[0.1].predict(now[PF]) + lo_off), sv_hi=np.exp(q[0.9].predict(now[PF]) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
     # Speider value back in time: the same model applied to each earlier mid-year (in-sample for the training years)
     hist = b[b.y < 2026].copy(); hist["val"] = hist.lv
     pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(q[0.5].predict(hist[PF])) * hist.y.map(INDEX).fillna(70).values / 100)).to_pickle("data/site_models_hist.pkl")
@@ -83,11 +83,15 @@ def main() -> None:
         m1 = fit_q(g[g.y <= T - 1]); off = offsets(m1, g[g.y == T])
         mf = fit_q(g)
         lo, md, hi = apply(mf, now, off)
-        cf = HGBC(**KW).fit(b[b.y <= T][FEATS], b[b.y <= T].playing)
+        # older players are never more likely to still be playing than younger ones with the same record
+        cf = HGBC(**KW, monotonic_cst=[-1 if f == "age" else 0 for f in FEATS]).fit(b[b.y <= T][FEATS], b[b.y <= T].playing)
         out[f"g{h}_lo"], out[f"g{h}"], out[f"g{h}_hi"] = np.exp(lo), np.exp(md), np.exp(hi)
         out[f"play{h}"] = cf.predict_proba(now[FEATS])[:, 1]
-        res["path"][h] = dict(n=len(g), typical={bn: round(float(np.exp(np.median(md[(now.band == bn).values]))), 3) for _, _, bn in BANDS})
+        # typical path by exact age, not by band: a 39-year-old is not a typical 30-year-old
+        res["path"][h] = dict(n=len(g), typical={int(a): round(float(np.exp(np.median(md[out.age_i.values == a]))), 3) for a in sorted(set(out.age_i))})
         print("h", h, json.dumps(res["path"][h]), flush=True)
+    # the chance of still playing cannot rise with the horizon
+    for h in range(2, 6): out[f"play{h}"] = np.minimum(out[f"play{h}"], out[f"play{h-1}"])
     out.to_pickle("data/site_models.pkl")
     json.dump(res, open("data/result_site_models.json", "w"), indent=1)
     print("done", len(out))

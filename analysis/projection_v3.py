@@ -23,13 +23,13 @@ from projection_young import C
 
 KW = dict(max_iter=160, learning_rate=0.08, max_leaf_nodes=20, min_samples_leaf=40, l2_regularization=1.0, random_state=0)
 FEATS = C + ["role_c", "league_strength", "team_q", "lmin"] + STATS
-BANDS = [(16, 19.999, "17-19"), (20, 21.999, "20-21"), (22, 24.999, "22-24"), (25, 28.999, "25-28"), (29, 40, "29+")]
+BANDS = [(16, 19.999, "17-19"), (20, 21.999, "20-21"), (22, 24.999, "22-24"), (25, 28.999, "25-28"), (29, 32.999, "29-32"), (33, 60, "33+")]
 
 
 def band(a: float) -> str:
     for lo, hi, n in BANDS:
         if lo <= a <= hi: return n
-    return "29+"
+    return "33+"
 
 
 def fit_q(tr):
@@ -72,7 +72,7 @@ def main() -> None:
     lo, md, hi = apply(m, te, off)
     y = te.growth.values
     rows = []
-    for bname in ["17-19", "20-21", "22-24", "25-28", "29+", "all"]:
+    for bname in ["17-19", "20-21", "22-24", "25-28", "29-32", "33+", "all"]:
         i = np.ones(len(te), bool) if bname == "all" else (te.band == bname).values
         rows.append(dict(h=h, band=bname, n=int(i.sum()), actual_x=round(float(np.exp(np.median(y[i]))), 2),
                          bias_raw_pct=round(100 * (np.exp(np.median(raw[0.5][i] - y[i])) - 1)), bias_pct=round(100 * (np.exp(np.median(md[i] - y[i])) - 1)),

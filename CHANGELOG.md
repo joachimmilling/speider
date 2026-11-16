@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-16 – Survivorship found; radar for playing style
+
+- Found: the profile table only holds players who are in today's squads, so every player-year in the frame belongs to someone still active in 2026. "Still playing" rates and value growth are therefore biased upwards, most for older players (a 37-year-old in the data appears 60 % likely to play five years later). The dropout numbers in tests 9 and 18 carry the same bias.
+- Removed the "chance of still playing" row from the player page until dropout can be measured on full historical squads with birth dates.
+- Typical path is now by exact age instead of age band and is hidden from age 30, where the bias dominates. Calibration bands split into 29-32 and 33+. Still-playing model made monotone in age.
+- Player page: radar of seven style dimensions with a similar player overlaid; tapping a name swaps the overlay.
+
 ## 2026-11-16 – Player types, "Speider recommends", players over 35
 
 - Frame extended from age 35 to 45, so older players (Messi, Ronaldo, Modrić) get a value and a path. After the rebuild: Speider 49 % vs third party 45 % typical miss; under 23: 48 % vs 49 %.
