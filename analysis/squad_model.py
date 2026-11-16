@@ -19,6 +19,8 @@ from sklearn.linear_model import RidgeCV
 
 from team_strength_backtest import SLOTS, prep
 
+import os
+SIDED = os.environ.get("SQUAD_SIDED", "1") == "1"      # test 23: the eleven respects left and right
 LINE = {"CB": "def", "FB": "def", "DM": "mid", "CM": "mid", "AM": "att", "W": "att", "ST": "att"}
 
 
@@ -26,7 +28,19 @@ def features(grp: pd.DataFrame) -> dict | None:
     g = grp[grp.mv.notna()].assign(lmv=lambda d: np.log(d.mv))
     role = g.role.fillna(g.pos_role)
     g = g.assign(role=role)
-    first = pd.concat([g[g.role == r].nlargest(k, "lmv") for r, k in SLOTS.items()])
+    if SIDED:
+        # one left and one right full-back and wide player; an empty side is filled by the best remaining player of the role
+        parts = []
+        for r, k in SLOTS.items():
+            x = g[g.role == r]
+            if r in ("FB", "W"):
+                pick = pd.concat([x[x.left == 1].nlargest(1, "lmv"), x[x.left == 0].nlargest(1, "lmv")])
+                if len(pick) < 2: pick = pd.concat([pick, x.drop(pick.index).nlargest(2 - len(pick), "lmv")])
+                parts.append(pick)
+            else: parts.append(x.nlargest(k, "lmv"))
+        first = pd.concat(parts)
+    else:
+        first = pd.concat([g[g.role == r].nlargest(k, "lmv") for r, k in SLOTS.items()])
     if len(first) < 8: return None
     gk = g[g.role == "GK"].nlargest(1, "lmv")
     rest = g.drop(first.index.union(gk.index)).nlargest(7, "lmv")
@@ -80,6 +94,7 @@ def main() -> None:
     last = z[z.ey == z.ey.max()]
     res["gd_last"] = {str(int(a)): round(float(b), 2) for a, b in zip(last.team_id, last.gd)}
     res["age_sd"] = round(float(t.groupby(["league_id", "ey"]).age.std().median()), 2)
+    res["sided"] = SIDED
     json.dump(res, open("data/result_squad_model.json", "w"), indent=1)
     res.pop("gd_last"); print(json.dumps(res, indent=1))
 

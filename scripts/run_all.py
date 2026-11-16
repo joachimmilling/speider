@@ -16,6 +16,7 @@ STEPS = [
     ("buy_test", ["python3", "analysis/buy_verdict_backtest.py"], {}),
     ("team_strength", ["python3", "analysis/team_strength_backtest.py"], {}),
     ("squad_model", ["python3", "analysis/squad_model.py"], {}),
+    ("form_fee", ["python3", "analysis/form_fee_test.py"], {}),
     ("site", ["python3", "scripts/build_site.py"], {"SITE_LOGOS": "1"}),
     ("site_pub", ["python3", "scripts/build_site.py"], {"SITE_OUT": "data/site_pub", "SITE_SHARDS": "32"}),
     ("scoreboard", ["python3", "scripts/scoreboard.py"], {}),

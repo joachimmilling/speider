@@ -103,8 +103,24 @@ def main() -> None:
     # The numbers come from the latest season with 900+ minutes, but the club shown must be today's: a player who
     # moved in the summer has his numbers from the old club and league (kept as ls_stat for the common scale).
     base["ls_stat"] = base.ls
-    cur = s[s.stat == "mins_played"].sort_values(["ey", "m"]).groupby("player_id", as_index=False).last()[["player_id", "league_id", "league", "team_id"]]
-    cur.columns = ["player_id", "c_lid", "c_league", "c_tid"]
+    # Today's club: the latest season row with ANY minutes (a striker with 227 minutes at his new club has moved), then the
+    # latest transfer since June if it points somewhere else (signed, not yet played). The 270-minute floor is for numbers only.
+    cur = con.execute(f"""
+        select s.player_id, s.league_id c_lid, l.name c_league, s.team_id c_tid, se.end_year ey, s.minutes m
+        from fm_stats s join fm_seasons se using (league_id, season_id) join fm_leagues l using (league_id)
+        where l.gender='male' and {CUPS} and l.name not ilike '%champions league%' and l.name not ilike '%europa%' and l.name not ilike '%conference%'
+          and s.stat = 'mins_played' and se.end_year >= 2025
+    """).fetchdf()
+    # a first-team player with a rehab match for the reserves is still a first-team player: senior rows from this or last season win
+    cur["senior"] = ~(cur.c_tid.map(teams.drop_duplicates("team_id").set_index("team_id").team).fillna("").str.contains(r"U\d\d| II$| 2$| B$|NXT|Jong ") | cur.c_league.str.contains(r"Premier League 2|U\d\d|Youth|Reserve", case=False)) & (cur.ey >= 2026)
+    cur = cur.sort_values(["senior", "ey", "m"]).groupby("player_id", as_index=False).last()[["player_id", "c_lid", "c_league", "c_tid"]]
+    tl = cur.groupby("c_tid").agg(c_lid=("c_lid", lambda x: x.mode().iloc[0]), c_league=("c_league", lambda x: x.mode().iloc[0]))
+    tr_ = con.execute("select player_id, arg_max(to_id, date) to_id from fm_transfers where date >= '2026-06-01' and to_id is not null group by 1").fetchdf()
+    cur = cur.merge(tr_, on="player_id", how="left")
+    mvt = cur.to_id.notna() & (cur.to_id != cur.c_tid) & cur.to_id.isin(tl.index)
+    cur.loc[mvt, "c_lid"] = cur.loc[mvt, "to_id"].map(tl.c_lid).values; cur.loc[mvt, "c_league"] = cur.loc[mvt, "to_id"].map(tl.c_league).values
+    cur.loc[mvt, "c_tid"] = cur.loc[mvt, "to_id"].values; cur = cur.drop(columns=["to_id"])
+    print("club taken from a transfer since June:", int(mvt.sum()))
     base = base.merge(cur, on="player_id", how="left")
     mvd = (base.c_tid.notna() & (base.c_tid != base.team_id)).values
     tn_ = teams.drop_duplicates("team_id").set_index("team_id").team

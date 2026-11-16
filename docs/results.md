@@ -826,3 +826,57 @@ Hypothesis: moving the fee model to a ratio target (B2) and adding the tail line
 hurt the buy test; a gain was not expected because few transfers are above 40m.
 Result: next-fee rank B 0.538, B2 0.536, B3 0.536; C2 0.548, C3 0.548. Rank against the three-year outcome: B 0.362, B2 0.362, B3 0.362.
 Resale rank among resold players: B 0.296, B2 0.275. Reading: no measurable change. The two changes correct the extremes and nothing else.
+
+
+## Test 23: does an eleven that respects left and right predict results as well as one that does not?
+
+Written before the run (2026-11-16). Reason: the owner pointed out that the eleven had two right wingers (Saka, Madueke) starting.
+
+Hypothesis: picking one left and one right full-back and one left and one right wide player (side from the provider's position
+code, best remaining player of the role if a side is empty) predicts goal difference at least as well as the two most valuable per role.
+A small loss is expected at most, because the second-most valuable wide player is usually worth more than the best on the other side.
+Data, split, metric: as test 22 (fit to 2024, test 2025-26, correlation and R2 of the site model against standardised goal difference).
+Counts as better: correlation not lower than 0.645 (test 22: 0.650). If it holds, the side-aware eleven replaces the old one on the site and in the model.
+Could mislead us: position codes are today's codes applied to past seasons; 3,806 players have no code.
+
+Result (2026-11-16): correlation 0.649 with sides against 0.650 without; R2 0.420 against 0.421 (1,071 team seasons). The condition holds.
+Reading: nothing is lost by making the eleven respect left and right, so the site and the model now do. Arsenal's eleven gets
+Tzolis on the left instead of Madueke as a second right winger.
+Lesson: a sided eleven predicts as well as an unsided one; use the one that looks like a team.
+
+
+## Test 24: does performance leading up to a sale move the fee, beyond the market value on the day?
+
+Written before the run (2026-11-16). Reason: the owner finds it odd that the Speider value leans so much on the market value, and asks
+whether recent performance (Odegaard after his injury) decides the price.
+
+Hypothesis: the market value on the day already contains most of what last season's numbers say, so removing all performance inputs from
+the fee model costs little (under 2 points of typical miss). A rise in form from the season before (rating, minutes, goals) is expected
+to push the fee above the market value a little, and adding it should help slightly.
+Data: fee transfers with the value on the day (`analysis/transfers.py`), joined to the player's season before the transfer.
+Split: fit to 2024, test on 2025-26. Target: log fee / market value. Metric: typical miss on the fee (median absolute percentage error).
+Variants: (0) market value and age only; (1) site inputs without performance (season statistics, rating, minutes, last season's matches and goals);
+(2) site inputs; (3) site inputs plus change from the season before in rating, minutes and goal threat.
+Counts as "performance matters": (2) beats (1) by 2 points or more. Counts as "form matters": (3) beats (2) by 1 point or more.
+Could mislead us: season totals only, no match-level form; a transfer in January is matched to the season that ended the summer before;
+the market value itself may have reacted to the same form.
+
+Result (2026-11-16), typical miss on fees in 2025-26 (3,409 transfers; 2,189 with season statistics):
+
+| Fee model inputs | All | With statistics |
+|---|---|---|
+| (0) Market value and age | 51.0 % | 45.9 % |
+| (1) Site inputs without performance | 46.5 % | 42.9 % |
+| (2) Site inputs | 44.9 % | 40.2 % |
+| (3) Site inputs plus change in form | 45.2 % | 40.6 % |
+| Third-party market value alone | 42.4 % | 39.6 % |
+
+Fee over market value (median), players with numbers in both seasons (3,612): rating low / middle / high third 0.91 / 1.07 / 1.23;
+rating fell / same / rose 0.98 / 1.06 / 1.18; minutes fell / same / rose 0.98 / 1.09 / 1.15; goals per 90 fell / same / rose 1.03 / 1.11 / 1.17.
+
+Reading: performance does move the price. A player in the top third on rating sells for 1.23 times his market value, one in the bottom third
+for 0.91, and the fee model gets 1.6 points better with performance inputs (2.7 among players with statistics; the pre-set bar of 2 is met
+there and missed overall). A rise in form goes with a higher fee in the raw table, but adds nothing once last season's level is in the model
+(45.2 against 44.9): the bar for "form matters" is not met. What the model cannot see is the current season: the inputs are the last
+finished season, so a comeback in the first months of a new season (Odegaard) is invisible to it.
+Lesson: last season's level moves the fee (0.91 to 1.23 times market value); the change in form adds nothing on top. The current, unfinished season is not an input.

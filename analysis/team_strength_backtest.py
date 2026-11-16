@@ -66,7 +66,9 @@ def prep(con):
     age = con.execute("select player_id, birth from fm_profiles where birth is not null").fetchdf()
     sq = sq.merge(age, on="player_id", how="left"); bd = pd.to_datetime(sq.birth, errors="coerce")
     sq["age"] = sq.ey - 0.5 - bd.dt.year - (bd.dt.month - 1) / 12       # age around the turn of the year in the season
-    pos = s[["player_id", "role"]].drop_duplicates("player_id").rename(columns={"role": "pos_role"})
+    pos = s[["player_id", "role", "pos"]].drop_duplicates("player_id").rename(columns={"role": "pos_role"})
+    u = pos.pos.fillna(5).astype(int) % 10                               # last digit of the position code: low = right, high = left
+    pos["left"] = np.where(u >= 6, 1, np.where(u <= 4, 0, pos.player_id % 2 == 0)).astype(int); pos = pos.drop(columns=["pos"])
     sq = sq.merge(pos, on="player_id", how="left")
     return sq, out
 

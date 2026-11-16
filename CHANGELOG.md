@@ -1,5 +1,12 @@
 # Changelog
 
+## Today's club, sided eleven, sell from the pitch, tests 23 and 24
+
+- `scripts/build_site.py`: today's club is the latest senior season row with any minutes, then the latest transfer since June (Gabriel Jesus is at Barcelona, Martinelli at Al Hilal; Saliba stays at Arsenal despite a reserve match).
+- Test 23: the eleven now takes one left and one right full-back and wide player; prediction unchanged (0.649 vs 0.650). Site and squad model updated.
+- Team page: a tap on a player on the pitch opens a menu to sell him (or undo a signing) or open his page.
+- Test 24 (`analysis/form_fee_test.py`): performance inputs improve the fee model by 1.6 points; change in form adds nothing on top; the current season is not an input.
+
 ## Pitch as a depth chart
 
 - Team page: the pitch is now one card per position (left and right for full-backs and wide players) listing everyone who plays there, starters in bold first, with the chosen tag and a signal dot per player. Short money format on the cards.

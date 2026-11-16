@@ -5,6 +5,7 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Squads
 
+- An eleven that respects left and right predicts as well as one that does not (0.649 vs 0.650); the sided eleven is used (test 23).
 - A team's goal difference follows the market value of its best eleven (0.45 of the model), then depth, last season and age; out-of-time correlation 0.65 (test 22).
 - The level from last season's per-90 numbers adds almost nothing once value is known (test 22). Retry only if: match-level data or a level that is not built from season aggregates.
 - The mix of the seven collective attributes and the "weakest line" add nothing out of time (tests 21, 22). Retry only if: match-level data, or attributes cleaned of team style.
@@ -13,6 +14,9 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Value and price
 
+- Performance moves the fee: top third on last season's rating sells for 1.23 times market value, bottom third 0.91; performance inputs improve the fee model by 1.6 points (2.7 with statistics) (test 24).
+- The change in form from the season before adds nothing once the level is in the model (test 24). Retry only if: in-season or match-level form.
+- The fee model only sees the last finished season. A strong start to the current season is invisible to it (test 24).
 - Matching the fee is the wrong goal: a perfect fee model calls every buy fair. The target is what happens next (decision 44, test 20).
 - Expected value in three years against the fee sorts buys: cheapest fifth resold for 1.41 times the fee, dearest 0.89; largest fees 1.05 vs 0.52 (test 20).
 - The Speider value does not beat the third-party value at hitting fees (miss 44.9 % vs 42.4 %) and does not beat the fee itself at predicting the next fee (rank 0.54-0.55 vs 0.59). Its use is the gap to the market value.
@@ -36,6 +40,7 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Measuring players
 
+- Today's club is the latest senior season row with any minutes, then the latest transfer since June; a minutes floor or a reserve-team rehab match puts players at the wrong club (Gabriel Jesus, Saliba).
 - Shrink every per-90 number towards the role average by minutes (test 1).
 - League strength from players who change league works; cups must be left out (test 3).
 - One scale across leagues: 0.23 units of league strength per standard deviation of player quality, fitted on 1,609 movers.
