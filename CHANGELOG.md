@@ -1,5 +1,9 @@
 # Changelog
 
+## Pitch as a depth chart
+
+- Team page: the pitch is now one card per position (left and right for full-backs and wide players) listing everyone who plays there, starters in bold first, with the chosen tag and a signal dot per player. Short money format on the cards.
+
 ## Pitch without a fixed formation
 
 - Team page: the whole squad is placed where each player plays most (line from the role, side from the provider's position code, new field 23 in `players.js`). No fixed formation; the eleven the model counts as starters are drawn in full, the rest as names.
