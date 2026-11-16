@@ -61,6 +61,26 @@ function countUp() { document.querySelectorAll('[data-n]').forEach(el => { const
   const step = now => { const k = Math.min(1, (now - t0) / 900), e = 1 - Math.pow(1 - k, 3); el.textContent = nf(end * e, d) + suf; if (k < 1) requestAnimationFrame(step) }; requestAnimationFrame(step) }) }
 const tile = (label, n, d, suf, sub, g) => `<div class="tile rise"><span class="sub">${label}</span><b class="${g ? 'g' : ''}" data-n="${n}" data-d="${d}" data-s="${suf}">${nf(n, d)}${suf}</b><span class="sub">${sub}</span></div>`;
 
+/* Small drawn flags (no emoji). Stripes and crosses only: flags with a coat of arms or emblem are drawn without it, and countries not listed get no flag. */
+const FL = { v: { France: '0055A4,fff,EF4135', Italy: '009246,fff,CE2B37', Belgium: '000,FDDA24,EF3340', Ireland: '169B62,fff,FF883E', 'Republic of Ireland': '169B62,fff,FF883E', Nigeria: '008751,fff,008751', 'Ivory Coast': 'F77F00,fff,009E60', Mali: '14B53A,FCD116,CE1126',
+    Guinea: 'CE1126,FCD116,009460', Romania: '002B7F,FCD116,CE1126', Peru: 'D91023,fff,D91023', Mexico: '006847,fff,CE1126', Senegal: '00853F,FDEF42,E31B23', Cameroon: '007A5E,CE1126,FCD116', Portugal: '046A38,DA291C,DA291C', Canada: 'D80621,fff,fff,D80621', Algeria: '006233,fff' },
+  h: { Germany: '000,DD0000,FFCE00', Netherlands: 'AE1C28,fff,21468B', Austria: 'ED2939,fff,ED2939', Russia: 'fff,0039A6,D52B1E', Hungary: 'CE2939,fff,477050', Bulgaria: 'fff,00966E,D62612', Poland: 'fff,DC143C', Ukraine: '0057B7,FFD700', Colombia: 'FCD116,FCD116,003893,CE1126',
+    Ecuador: 'FFDD00,FFDD00,034EA2,ED1C24', Estonia: '0072CE,000,fff', Lithuania: 'FDB913,006A44,C1272D', Armenia: 'D90012,0033A0,F2A800', Spain: 'AA151B,F1BF00,F1BF00,AA151B', Argentina: '74ACDF,fff,74ACDF', Indonesia: 'FF0000,fff', Egypt: 'CE1126,fff,000', Ghana: 'CE1126,FCD116,006B3F',
+    Croatia: 'FF0000,fff,171796', Serbia: 'C6363C,0C4076,fff', Slovakia: 'fff,0B4EA2,EE1C25', Slovenia: 'fff,005DA4,ED1C24', Paraguay: 'D52B1E,fff,0038A8', Venezuela: 'FFCC00,00247D,CF142B', Luxembourg: 'EA141D,fff,51ADDA', Bolivia: 'D52B1E,F9E300,007934', Gabon: '009E60,FCD116,3A75C4', Latvia: '9E3039,9E3039,fff,9E3039,9E3039', Uruguay: 'fff,0038A8,fff,0038A8,fff', Gambia: 'CE1126,0C1C8C,3A7728', 'The Gambia': 'CE1126,0C1C8C,3A7728', 'Sierra Leone': '1EB53A,fff,0072C6' },
+  n: { Norway: 'BA0C2F,fff,00205B', Sweden: '006AA7,FECC00', Denmark: 'C8102E,fff', Finland: 'fff,003580', Iceland: '02529C,fff,DC1E35', 'Faroe Islands': 'fff,0065BD,ED2939' } };
+function flag(c) {
+  const W = 28, H = 20, wrap = x => `<svg viewBox="0 0 ${W} ${H}" width="28" height="20" role="img" aria-label="${esc(c)}" style="border-radius:4px;flex:none;box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 12%,transparent)">${x}</svg>`;
+  if (FL.v[c]) { const a = FL.v[c].split(','); return wrap(a.map((k, i) => `<rect x="${i * W / a.length}" width="${W / a.length + .1}" height="${H}" fill="#${k}"/>`).join('')) }
+  if (FL.h[c]) { const a = FL.h[c].split(','); return wrap(a.map((k, i) => `<rect y="${i * H / a.length}" width="${W}" height="${H / a.length + .1}" fill="#${k}"/>`).join('')) }
+  if (FL.n[c]) { const a = FL.n[c].split(','); return wrap(`<rect width="${W}" height="${H}" fill="#${a[0]}"/><rect x="8" width="5" height="${H}" fill="#${a[1]}"/><rect y="7.5" width="${W}" height="5" fill="#${a[1]}"/>${a[2] ? `<rect x="9.25" width="2.5" height="${H}" fill="#${a[2]}"/><rect y="8.75" width="${W}" height="2.5" fill="#${a[2]}"/>` : ''}`) }
+  if (c === 'Japan') return wrap(`<rect width="${W}" height="${H}" fill="#fff"/><circle cx="14" cy="10" r="6" fill="#BC002D"/>`);
+  if (c === 'Switzerland') return wrap(`<rect width="${W}" height="${H}" fill="#DA291C"/><rect x="11.5" y="4" width="5" height="12" fill="#fff"/><rect x="8" y="7.5" width="12" height="5" fill="#fff"/>`);
+  if (c === 'England') return wrap(`<rect width="${W}" height="${H}" fill="#fff"/><rect x="11.5" width="5" height="${H}" fill="#CE1124"/><rect y="7.5" width="${W}" height="5" fill="#CE1124"/>`);
+  if (c === 'Scotland') return wrap(`<rect width="${W}" height="${H}" fill="#005EB8"/><path d="M0 0L28 20M28 0L0 20" stroke="#fff" stroke-width="3.4"/>`);
+  if (c === 'Brazil') return wrap(`<rect width="${W}" height="${H}" fill="#009C3B"/><path d="M14 2.5L25 10L14 17.5L3 10Z" fill="#FFDF00"/><circle cx="14" cy="10" r="4.2" fill="#002776"/>`);
+  if (c === 'Czech Republic' || c === 'Czechia') return wrap(`<rect width="${W}" height="10" fill="#fff"/><rect y="10" width="${W}" height="10" fill="#D7141A"/><path d="M0 0L13 10L0 20Z" fill="#11457E"/>`);
+  return '';
+}
 let F = { role: '', type: '', rec: false, nat: '', league: '', club: '', amin: '', amax: '', sort: 'sv' };
 const uniq = k => [...new Set(P.map(p => p[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 const SORTS = { sv: p => p[10], level: p => p[7] >= 600 ? p[17] : null, p5: p => p[9] >= 0.25 ? null : p[8], grow: p => p[10] && p[7] >= 600 ? p[11] : null, under: p => p[10] && p[12] >= 5e5 ? p[10] / p[12] : null };
@@ -164,7 +184,7 @@ async function showPlayer(id) {
     ident = t('ident').replace('{type}', ty(p.type) || ROLE[p.role][li()]).replace('{hi}', DIM[hiK][li()].toLowerCase()).replace('{hv}', nf(Math.min(99, da[hiK]))).replace('{lo}', DIM[loK][li()].toLowerCase()).replace('{lv}', nf(da[loK])) }
   const needK = NEED[p.role] || [0, 1, 2, 3, 4, 5, 6], sd = da ? [0, 1, 2, 3, 4, 5, 6].sort((a, b) => da[b] - da[a]).slice(0, 3) : [], wd = da ? needK.slice().sort((a, b) => da[a] - da[b]).filter(k => !sd.includes(k) || da[k] < 50).slice(0, 3) : [];
   const rowf = k => `<div class="bar" style="grid-template-columns:minmax(90px,130px) 1fr 36px;margin-top:14px"><span>${DIM[k][li()]}</span><div class="track"><div class="fill ${da[k] >= 70 ? 'g' : ''}" style="width:${Math.max(3, da[k])}%;${da[k] < 40 ? 'background:var(--alert)' : ''}"></div></div><span class="r"><strong>${nf(Math.min(99, da[k]))}</strong></span></div>`;
-  const c0 = (p.career || [])[0], facts = [[t('position'), ROLE[p.role][li()]], [t('age'), nf(p.age, 1) + ' ' + t('yrs')], p.height ? [t('height'), nf(p.height) + ' cm'] : null, p.country ? [t('nat'), esc(p.country)] : null,
+  const c0 = (p.career || [])[0], facts = [[t('position'), ROLE[p.role][li()]], [t('age'), nf(p.age, 1) + ' ' + t('yrs')], p.height ? [t('height'), nf(p.height) + ' cm'] : null, p.country ? [t('nat'), `<span style="display:inline-flex;align-items:center;gap:10px">${flag(p.country)}${esc(p.country)}</span>`] : null,
     [t('club'), esc(p.team || '–')], [t('league'), esc(p.league)], p.contract ? [t('until'), p.contract.slice(0, 4)] : null, [t('min') + ' ' + (p.season - 1) + '/' + String(p.season).slice(2), nf(p.minutes)],
     c0 ? [t('thisSeason') + ' ' + esc(c0[0]), nf(c0[3]) + ' ' + t('matches').toLowerCase() + ' · ' + nf(c0[4]) + ' ' + t('goals').toLowerCase() + ' · ' + nf(c0[5]) + ' ' + t('assists').toLowerCase()] : null].filter(Boolean);
   const vcells = [];
