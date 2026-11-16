@@ -40,7 +40,7 @@ def track_record(df, key, name):
     return pd.concat(out)
 
 
-def frame(con) -> pd.DataFrame:
+def frame(con, amin: float = 16, amax: float = 23.5) -> pd.DataFrame:
     val = con.execute("""
       with g as (select unnest(range(2013, 2027)) y),
       s as (select m.player_id, g.y, arg_min(m.value, abs(datediff('day', m.date, make_date(g.y,6,30)))) v,
@@ -50,7 +50,7 @@ def frame(con) -> pd.DataFrame:
     prof = con.execute("select player_id, name, birth, height, country from fm_profiles where birth is not null and gender='male'").fetchdf()
     b = val.merge(prof, on="player_id")
     b["age"] = b.y + 0.5 - pd.to_datetime(b.birth).dt.year - pd.to_datetime(b.birth).dt.dayofyear / 365.25
-    b = b[b.age.between(16, 23.5)].copy()
+    b = b[b.age.between(amin, amax)].copy()
     for k in (1, 2):
         p = val.rename(columns={"lv": f"lv_m{k}"}).assign(y=lambda x: x.y + k)[["player_id", "y", f"lv_m{k}"]]
         b = b.merge(p, on=["player_id", "y"], how="left"); b[f"mom{k}"] = b.lv - b[f"lv_m{k}"]
@@ -74,6 +74,16 @@ def frame(con) -> pd.DataFrame:
     c["avg_strength"] = c.sw / c.swn.replace(0, np.nan); c = c.drop(columns=["sw", "swn"])
     b = b.merge(c, on=["player_id", "y"], how="left")
     b["apps_per_age"] = b.sen_apps / (b.age - 15)
+    # outcome flags from career lines: senior matches h years later, and the level played at
+    sen = car[~car.youth].groupby(["player_id", "end_year"]).agg(apps_f=("apps", "sum"), str_f=("strength", "max")).reset_index()
+    top5 = car[car.league_id.isin([47, 87, 54, 55, 53])].groupby(["player_id", "end_year"]).apps.sum().rename("top5_f").reset_index()
+    for h in (1, 2, 3, 4, 5):
+        f_ = sen.assign(y=sen.end_year - h).rename(columns={"apps_f": f"apps_f{h}", "str_f": f"str_f{h}"})[["player_id", "y", f"apps_f{h}", f"str_f{h}"]]
+        b = b.merge(f_, on=["player_id", "y"], how="left")
+        t_ = top5.assign(y=top5.end_year - h).rename(columns={"top5_f": f"top5_f{h}"})[["player_id", "y", f"top5_f{h}"]]
+        b = b.merge(t_, on=["player_id", "y"], how="left")
+        vf = val.rename(columns={"lv": f"lv_f{h}"}).assign(y=lambda x: x.y - h)[["player_id", "y", f"lv_f{h}"]]
+        b = b.merge(vf, on=["player_id", "y"], how="left")
 
     nat = con.execute("select player_id, level, start_date as st, end_date, apps from fm_national where start_date is not null").fetchdf()
     n = b[["player_id", "y", "birth"]].merge(nat, on="player_id"); n["cut"] = pd.to_datetime(n.y.astype(str) + "-06-30")

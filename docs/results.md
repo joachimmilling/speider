@@ -654,3 +654,69 @@ record" may partly capture how that provider revalues certain leagues rather
 than real development; growth is only measured for players still valued three
 years later; one test year. The track record must be checked against actual
 transfer fees before it is trusted.
+
+## Test 17: Is the track record real?
+
+`PYTHONPATH=analysis python3 analysis/build_wide_frame.py` then
+`PYTHONPATH=analysis python3 analysis/track_record_check.py`
+
+Test 16 measured growth with third-party values. Here the same inputs are
+scored on outcomes that do not come from the value provider, for players of
+23 or younger, three years ahead (train to 2021, test 2023).
+
+| Outcome | Without track record | With track record |
+|---|---|---|
+| Plays in a big-five league (base rate 5.6 %), AUC | 0.837 | 0.855 |
+| Same, hit rate in the top tenth | 25.0 % | 27.1 % |
+| Change in league strength, explained | 27.3 % | 28.0 % |
+| Fee paid within three years, explained | 38.2 % | 39.2 % |
+
+Among the 2,156 players sold, a club's track record correlates negatively
+with the fee relative to the starting value (−0.14): fee/value is 3.2 in the
+lowest quarter of clubs and 1.8 in the highest.
+
+- **The track record is mostly an artefact.** It raised explained value
+  growth from −5 % to 24 % for 17–19 in test 16, but adds one point or less on
+  real outcomes. It describes how the provider revalues players at certain
+  clubs and leagues more than how they develop.
+- **Decision 37 is partly reversed:** the wide sample and career lines stay,
+  the track record goes.
+- Career lines and age alone already predict a big-five move well (AUC 0.84;
+  one in four of the top tenth get there against one in eighteen overall).
+
+## Test 18: One merged, calibrated projection
+
+`PYTHONPATH=analysis python3 analysis/projection_v3.py H [names]`
+
+All ages, wide sample (278,965 player-years), career lines and season
+statistics, no track record; quantile models per horizon; calibration per
+age band on a held-out year; separate still-playing model. Growth is measured
+relative to the market that year.
+
+| Horizon | Bias before → after calibration | Inside 80 % before → after | Explained | Rank |
+|---|---|---|---|---|
+| 1 year | −12 % → −7 % | 82 → 82 % | 0 % | 0.35 |
+| 2 years | −17 % → −18 % | 80 → 87 % | 13 % | 0.48 |
+| 3 years | −6 % → +2 % | 70 → 82 % | 45 % | 0.68 |
+| 4 years | −13 % → +4 % | 70 → 80 % | 45 % | 0.68 |
+| 5 years | −26 % → −15 % | 72 → 81 % | 43 % | 0.68 |
+
+Players of 17–19 at three years: bias −61 % → −16 %, inside 65 → 80 %, rank 0.39.
+Still playing (at least five senior matches in the season): AUC 0.83 at one
+year, 0.74 at three, 0.72 at five; predicted about 87 % against 81–84 % actual.
+
+- Calibration works at three and four years, the horizons a buyer cares most
+  about. It is unstable at two and five years and for the youngest.
+- **The larger finding is about the target.** The median value change of all
+  players from one year to the next was x1.42 from 2023, x0.83 from 2024 and
+  x0.94 from 2025. A market does not move like that; the provider's model
+  does. One- and two-year "growth" in these values is dominated by the
+  provider's own revisions, which is why short horizons look unpredictable.
+- Tests 13–18 therefore say how a player's *third-party value* will move.
+  That is not yet what Speider should project.
+
+**Conclusion and next step:** the projection machinery (wide sample, career
+lines, per-horizon quantiles, calibration, still-playing model) is in place.
+The target has to change from third-party value to outcomes: fee-equivalent
+value from the price model, league level reached and minutes played.
+Per-player numbers from this test are not shown in the product.

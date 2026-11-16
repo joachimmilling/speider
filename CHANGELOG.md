@@ -37,6 +37,7 @@
 - Test 14: per-player projection over 1–5 years (`analysis/player_projection.py`).
 - Test 15: projection diagnosis and calibration (`analysis/projection_calibration.py`, `analysis/projection_v2.py`).
 - Test 16: young-player projection on the wide sample (`analysis/projection_young.py`, `scripts/load_national.py`).
+- Test 17 track-record check, test 18 merged calibrated projection (`analysis/track_record_check.py`, `analysis/projection_v3.py`, `analysis/build_wide_frame.py`).
 - New logo (design system and UI mockup, not in the repository).
 - SofaScore API answered 403 after an unpaced run; crawl stopped, 28 country
   categories left to scan.

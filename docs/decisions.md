@@ -57,6 +57,9 @@ them are in `results.md`.
 
 | 38 | 2026-11-16 | Logo is a pair of angular sunglasses, black, with one thin green reflection per lens | Owner: the two rings with dots looked like Tripadvisor; chose this after several rounds | Binocular rings, rounded sunglasses, green lenses |
 
+| 39 | 2026-11-16 | The club/league/nation track record is removed from the projection | Test 17: large effect on third-party value growth, one point or less on big-five moves, league step and fees; negative relation with fee/value | Keeping it for its effect on the value metric |
+| 40 | 2026-11-16 | Third-party market value is no longer the projection target; projections will target outcomes (fee-equivalent value, league level, minutes) | Test 18: the provider's values move x1.42 and x0.83 market-wide in consecutive years; tests 13–18 predict the provider, not the player | Continuing to tune projections of third-party value |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.
