@@ -261,7 +261,7 @@ def main() -> None:
         if pid in stg: d["stats"] = [[x.stat, r(x.shr, 2), r(x.v, 2), r(x.pct, 0), int(x.n)] for x in stg[pid].itertuples()]
         if pid in carg: d["career"] = [[x.season_name, x.league_name, x.team, r(x.apps, 0), r(x.goals, 0), r(x.assists, 0), r(x.rating, 2)] for x in carg[pid].head(40).itertuples()]
         if pid in mvg: d["mv"] = [[int(x.y), int(x.v)] for x in mvg[pid].itertuples()]
-        rec = 0
+        rec = 0; peak = [None, None]
         if pid in sim: d["sim"] = sim[pid]
         if pid in ptype: d["type"] = ptype[pid]
         if pid in sm:
@@ -274,11 +274,13 @@ def main() -> None:
             d["path"] = [[h, lo_[h - 1], md_[h - 1], hi_[h - 1], r(v[f"play{h}"], 2)] for h in range(1, 6)]
             d["typ"] = sm3([float(v[f"t{h}"]) for h in range(1, 6)])
             index[-1] += [int(v["sv"]), md_[2], int(v["mv"])]
+            # expected peak: the highest point of the median path, today included, and the year it falls in
+            pk = [1.0] + md_; peak = [int(v["sv"] * max(pk)), 2026 + int(np.argmax(pk))]
             # "Speider recommends": young regular whose Speider value is well above the market value and whose path points up
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
             if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
         if len(index[-1]) == 10: index[-1] += [None, None, None]
-        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None]
+        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None] + peak
         if pid in alt: d["alt"] = alt[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),

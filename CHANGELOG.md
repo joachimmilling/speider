@@ -1,5 +1,11 @@
 # Changelog
 
+## Team attributes, expected peak value, test 21
+
+- Team page: collective attributes (mean of the ten outfield starters on each of the seven dimensions) with rank in the league; a signing is counted as a starter and the verdict weighs the change by where the team is weakest.
+- Finder: sort by expected peak value (highest point of the median path, with the year). New fields 21-22 in `players.js`.
+- Test 21 (`analysis/team_strength_backtest.py`): level of the best eleven vs goal difference, correlation 0.45; value of the top eleven 0.59. See `docs/results.md`.
+
 ## Squad builder answers whether the team gets better
 
 - Team page: new tiles for the best eleven (average level of ten outfield players by role slots) and depth (second choices), with the change after sales and signings.

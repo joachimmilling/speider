@@ -758,3 +758,28 @@ For the largest third of fees: dearest 0.52 (36 % profit), cheapest 1.05 (53 %).
 Limits: only players sold on for a fee; a stale provider value (far below the fee) makes the verdict meaningless and such buys are left out of the lists.
 
 `PYTHONPATH=analysis python3 analysis/buy_verdict_backtest.py`
+
+
+## Test 21: the best eleven against how teams actually do
+
+`analysis/team_strength_backtest.py`, result in `data/result_team_strength.json`.
+
+Question: does the level of the best eleven (as the team page picks it) say anything about results?
+Setup: 1,011 team seasons in 75 league seasons (2018-2026, leagues with 10+ teams). The eleven is picked by level per role slot
+from players with 450+ minutes for the team that season, using only their numbers from the season before. Outcome: goal
+difference per match (players' goals minus keepers' goals conceded). Everything standardised within the league season.
+
+| Known before the season | Correlation with goal difference (829 team seasons) | Big five (403) |
+|---|---|---|
+| Level of the best eleven | 0.45 | 0.53 |
+| Value of the eleven most valuable players | 0.59 | 0.80 |
+| Last season's goal difference | 0.51 | 0.68 |
+
+Out of time (fit to 2024, test 2025-26, 252 team seasons), R2: level 0.23, seven attributes 0.24, value 0.20, last season 0.26,
+value + last season 0.28, value + last season + level 0.31.
+
+Reading: the level is a real signal and adds to value and last season, but on its own it is weaker than the market value of the
+eleven. The seven collective attributes add nothing beyond the level out of time. Their fitted weights (finishing 0.19,
+creating 0.07, dribbling 0.09, passing 0.32, duels -0.08, ball winning 0.14, clearing -0.15) are confounded by team style:
+teams that defend a lot make more tackles and clearances. The "does the team get better" verdict on the team page is therefore
+a description of what changes, not a tested prediction of results.
