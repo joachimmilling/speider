@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-16 – Survivorship handled instead of hidden
+
+- Corrected diagnosis: profiles and career lines cover players who have stopped (about four in five players per season have a profile). It is the value histories that exist almost only for players active today (86 % of those active now, 15 % of those last seen in 2022). So the value frame is the survivor sample, not the profile table.
+- `analysis/dropout_career.py` (test 19): still playing by age and horizon from career lines. Regular at 30: 55 % still playing five years on; at 35: 16 %; at 39: 6 %.
+- Still-playing model now trained on career lines (age, matches in the last three seasons, rating; monotone in age). Messi: 93 % next year, 18 % in 2031.
+- Value path is a mixture: with probability 1 - p the player has stopped and is worth nothing, otherwise the survivor path applies. The shown quantiles are those of the mixture.
+- "Typical" line compares with players of the same age and about the same value today, not age alone (expensive players lose more in relative terms).
+- Momentum features are measured relative to the market-wide move that year.
+- Check on elite players (value 25m+, age 26-29): three years on the provider's value is typically 0.42 of today's relative to the market (10-90 %: 0.15-0.97), and a two-year fall beforehand makes no difference (0.43 vs 0.42). The model gives Odegaard 0.24, so it still overweights momentum for top players.
+- `analysis/dropout_true.py` is kept as a record of the stable-age-mix estimate; it measures "has a profile", not "still playing", and is not used.
+- Decision 43 is replaced by this entry. Player page shows still-playing chances again; radar layout fixed.
+
 ## 2026-11-16 – Survivorship found; radar for playing style
 
 - Found: the profile table only holds players who are in today's squads, so every player-year in the frame belongs to someone still active in 2026. "Still playing" rates and value growth are therefore biased upwards, most for older players (a 37-year-old in the data appears 60 % likely to play five years later). The dropout numbers in tests 9 and 18 carry the same bias.

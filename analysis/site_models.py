@@ -33,6 +33,9 @@ def err(pred, fee):
 def main() -> None:
     b = pd.read_pickle("data/frame_wide.pkl").drop_duplicates(["player_id", "y"], keep="last")
     b["band"] = b.age.map(band)
+    # momentum relative to the market: the provider's values swing market-wide from year to year,
+    # and a player should not be marked as falling because every value fell that year
+    for k in ("mom1", "mom2"): b[k] = b[k] - b.groupby("y")[k].transform("median")
     now = b[b.y == 2026].copy()
     res: dict = {}
 
@@ -90,8 +93,45 @@ def main() -> None:
         # typical path by exact age, not by band: a 39-year-old is not a typical 30-year-old
         res["path"][h] = dict(n=len(g), typical={int(a): round(float(np.exp(np.median(md[out.age_i.values == a]))), 3) for a in sorted(set(out.age_i))})
         print("h", h, json.dumps(res["path"][h]), flush=True)
-    # the chance of still playing cannot rise with the horizon
-    for h in range(2, 6): out[f"play{h}"] = np.minimum(out[f"play{h}"], out[f"play{h-1}"])
+    # 3. Survivorship correction. Value histories exist almost only for players who are active today, so the
+    # frame is a sample of survivors: its still-playing rates are too high and its growth is growth given that
+    # the player is still around. Career lines do not have that problem (analysis/dropout_career.py), so:
+    #  - the base rate of still playing comes from career lines by age and horizon, and the survivor-trained
+    #    model only tilts it up or down for the individual (odds ratio against the average for his age);
+    #  - the value path becomes a mixture: with probability 1 - p the player has left and is worth nothing,
+    #    otherwise the survivor path applies. Quantiles of the mixture replace the conditional ones.
+    from scipy.special import ndtri
+    base = pd.DataFrame(json.load(open("data/result_dropout_career.json"))); base.index = base.index.astype(float).astype(int); base.columns = base.columns.astype(int)
+    a_floor = np.clip(np.floor(now.age.values), 16, 42).astype(int)
+    # still-playing model on career lines (no survivorship): age, matches in the last three seasons, rating
+    cl = con.execute("select player_id, end_year y, sum(apps) apps, avg(rating) rating from fm_career where end_year is not null group by 1,2").fetchdf()
+    pb = con.execute("select player_id, birth from fm_profiles where birth is not null and gender='male'").fetchdf()
+    cl = cl.merge(pb, on="player_id"); cl["age"] = cl.y - 0.5 - pd.to_datetime(cl.birth).dt.year - pd.to_datetime(cl.birth).dt.dayofyear / 365.25
+    for k in (1, 2): cl = cl.merge(cl[["player_id", "y", "apps"]].rename(columns={"apps": f"apps_m{k}"}).assign(y=lambda x: x.y + k), on=["player_id", "y"], how="left")
+    CF = ["age", "apps", "apps_m1", "apps_m2", "rating"]
+    cur = cl[cl.y == 2026].drop_duplicates("player_id").set_index("player_id")
+    for h in range(1, 6):
+        d = cl.merge(cl[["player_id", "y", "apps"]].rename(columns={"apps": "fut"}).assign(y=lambda x: x.y - h), on=["player_id", "y"], how="left")
+        d = d[(d.y <= 2026 - h) & (d.y >= 2015) & (d.apps >= 5)]
+        m_ = HGBC(**KW, monotonic_cst=[-1, 0, 0, 0, 0]).fit(d[CF], (d.fut.fillna(0) >= 5).astype(int))
+        pc = pd.Series(m_.predict_proba(cur[CF])[:, 1], index=cur.index)
+        p_ = pc.reindex(out.player_id.values).values
+        p_ = np.where(np.isnan(p_), base[h].reindex(a_floor).values, p_)
+        if h > 1: p_ = np.minimum(p_, out[f"play{h-1}"].values)
+        out[f"play{h}"] = p_
+        lo_, md_, hi_ = np.log(out[f"g{h}_lo"].values), np.log(out[f"g{h}"].values), np.log(out[f"g{h}_hi"].values)
+        for q_, col in ((0.1, f"g{h}_lo"), (0.5, f"g{h}"), (0.9, f"g{h}_hi")):
+            qc = (q_ - (1 - p_)) / p_                      # the quantile to read off the survivor distribution
+            z = ndtri(np.clip(qc, 1e-4, 1 - 1e-4)) / 1.2816
+            v = np.exp(np.where(z < 0, md_ + z * (md_ - lo_), md_ + z * (hi_ - md_)))
+            out[col] = np.where(qc <= 0.01, 0.02, np.maximum(v, 0.02))
+        res["path"][h]["typical"] = {int(a): round(float(np.median(out[f"g{h}"].values[out.age_i.values == a])), 3) for a in sorted(set(out.age_i))}
+        # typical path for the player's own peer group: same age and about the same value today
+        # (expensive players lose more in relative terms than cheap ones, so age alone is the wrong yardstick)
+        vb = np.floor(np.log10(out.mv.values) * 3)
+        gk = pd.Series(out[f"g{h}"].values)
+        peer = gk.groupby([out.age_i.values, vb]).transform("median"); n_peer = gk.groupby([out.age_i.values, vb]).transform("size")
+        out[f"t{h}"] = np.where(n_peer >= 15, peer, gk.groupby(out.age_i.values).transform("median")).astype(float)
     out.to_pickle("data/site_models.pkl")
     json.dump(res, open("data/result_site_models.json", "w"), indent=1)
     print("done", len(out))

@@ -68,9 +68,9 @@ The first runnable version is a static site built by `scripts/build_site.py` int
 
 Replaces the display part of decision 20. An empty player page is worse than an uncertain estimate. The page shows the fee-trained Speider value with its interval, the third-party value beside it, and the value path with an 80 % band, and states the out-of-time result (Speider 50 % typical miss, third party 44 %). Speider does not yet beat the third-party value; that stays the target.
 
-## 43. Survivorship in the profile data must be fixed before any dropout or old-age claim
+## 43. Survivorship is modelled, not hidden
 
-Profiles were crawled from current squads, so retired players are missing and every historical row is a survivor. Nothing about dropout, or about value paths past age 30, is shown as a tested result until dropout is estimated from full historical squads (SofaScore season lists) joined to birth dates. Tests 9 and 18 are marked as biased on this point.
+Value histories exist almost only for players active today, so anything trained on them describes survivors. Dropout is therefore estimated from career lines, which cover players who have stopped, and every value path shown is a mixture of "stopped, worth nothing" and the survivor path. Nothing is removed from the page because of this bias; it is corrected for. (An earlier version of this decision blamed the profile table and hid the affected numbers; both were wrong.)
 
 ## Open questions
 
