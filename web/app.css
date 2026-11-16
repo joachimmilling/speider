@@ -49,4 +49,10 @@ section{display:flex;flex-direction:column;gap:20px}
 svg text{fill:var(--muted);font-size:12px}
 .draw{stroke-dasharray:1;animation:draw 1400ms var(--ease) both}@keyframes draw{from{stroke-dashoffset:1}}
 .empty{padding:48px 0;color:var(--muted);font-size:17px}
+.wipe{transform-box:fill-box;transform-origin:left;animation:grow 1700ms var(--ease) both}
+.card:not(.in) .fill,.card:not(.in) .wipe{animation-play-state:paused}
+.hp .hd,.hp .hl{opacity:0;transition:opacity 120ms ease}.hp:hover .hd,.hp:hover .hl{opacity:1}
+.bar,.duo{border-radius:10px;transition:background 160ms ease}.bar:hover{background:var(--surface)}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--ground);font-size:13px;line-height:18px;padding:8px 12px;border-radius:12px;max-width:260px;opacity:0;transform:translateY(4px) scale(.96);transition:opacity 140ms ease,transform 220ms var(--spring);white-space:pre-line}
+#tip.on{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
