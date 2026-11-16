@@ -566,3 +566,38 @@ runs from 0.65x to 3.6x.
 five-year model has 18,000 training rows; training outcomes overlap the test
 period in calendar time; values are not yet deflated by the price index; this
 is still the third-party value, to be replaced by Speider's own.
+
+## Test 15: Fixing the three-year projection
+
+`PYTHONPATH=analysis python3 analysis/projection_calibration.py` (the diagnosis)
+`PYTHONPATH=analysis python3 analysis/projection_v2.py` (the fixes)
+
+Diagnosis on season 2022/23 → 2026 (14,426 players): the model ranks well
+(predicted deciles line up with actual, 0.24x → 0.19x at the bottom, 2.2x →
+2.7x at the top) but pulls towards the middle: the youngest are
+under-predicted, the oldest over-predicted, and the upside is too narrow for
+young players (17–19: 20 % ended above the 90th percentile line).
+
+| Age band | Bias V0 | Bias V3 | Inside 80 % V0 | Inside 80 % V3 | Above the upper line V0 → V3 |
+|---|---|---|---|---|---|
+| 17–19 | −31 % | 0 % | 75 % | 81 % | 20 % → 10 % |
+| 20–21 | +1 % | +10 % | 78 % | 81 % | 13 % → 8 % |
+| 22–24 | −2 % | +4 % | 76 % | 80 % | 12 % → 9 % |
+| 25–28 | +13 % | +3 % | 74 % | 81 % | 9 % → 9 % |
+| 29+ | +18 % | +7 % | 77 % | 85 % | 5 % → 8 % |
+| All | +9 % | +5 % | 76 % | 82 % | 10 % → 9 % |
+
+- **V1, momentum and career path as inputs: no effect.**
+- **V2, young players weighted three times: small gain** in explained growth
+  for 17–19 (6 % → 12 %), nothing elsewhere.
+- **V3, calibration per age band on a held-out year: fixes what the plot
+  showed.** Bias for 17–19 goes from −31 % to 0, for 29+ from +18 % to +7 %;
+  every band now has 80–85 % inside the interval and the misses are split
+  evenly above and below.
+- V3 costs a little sharpness (explained growth 46 % → 43 %) because one year
+  is held out for calibration; 20–21 moved from +1 % to +10 % bias.
+
+**What is not fixed:** telling young players apart. Explained growth for
+17–19 is 14 %, median error about 100 %. Calibration makes the level and the
+interval honest; it does not add information. That needs data on the players
+before they are regulars (youth national teams, academy level, minutes at 16–17).
