@@ -43,8 +43,8 @@ def role(c: int) -> str:
     return "CM"
 
 
-def main() -> None:
-    con = duckdb.connect("data/speider.duckdb", read_only=True)
+def build(con):
+    """Feature table: one row per player-season with value, profile and context."""
     s = con.execute(f"""
         select s.stat, s.league_id, se.end_year ey, s.player_id, s.team_id, s.value v, s.minutes m,
                cast(json_extract(p.positions,'$[0]') as int) pos
@@ -70,16 +70,28 @@ def main() -> None:
     prof = con.execute("select player_id, name, birth, height from fm_profiles where birth is not null and gender='male'").fetchdf()
     d = d.merge(prof, on="player_id").merge(val.rename(columns={"y": "ey"}), on=["player_id", "ey"])
     d["age"] = d.ey + 0.5 - pd.to_datetime(d.birth).dt.year - pd.to_datetime(d.birth).dt.dayofyear / 365.25
-    fut = val.rename(columns={"lv": "lv_f"}).assign(ey=lambda x: x.y - H)[["player_id", "ey", "lv_f"]]
-    d = d.merge(fut, on=["player_id", "ey"], how="left")
-    alive = mins[mins.m >= 270][["player_id", "ey"]].assign(ey=lambda x: x.ey - H, playing=1).drop_duplicates()
-    d = d.merge(alive, on=["player_id", "ey"], how="left").fillna({"playing": 0})
     ls = pd.read_csv("data/result_league_ranking.csv", index_col=0)["strength"]
     d["league_strength"] = d.league_id.map(ls)
     car = con.execute("select player_id, end_year, sum(apps) apps from fm_career where end_year is not null group by 1,2").fetchdf()
     c = d[["player_id", "ey"]].merge(car, on="player_id"); c = c[c.end_year <= c.ey].groupby(["player_id", "ey"]).apps.sum().rename("car_apps").reset_index()
     d = d.merge(c, on=["player_id", "ey"], how="left")
     d["lmin"] = np.log(d.m); d["role_c"] = d.role.astype("category").cat.codes
+    best = d[STATS].copy()
+    d["best_skill"] = best.max(axis=1); d["second_skill"] = best.apply(lambda r: r.nlargest(2).iloc[-1] if r.notna().sum() >= 2 else np.nan, axis=1)
+    d["n_standout"] = (best > 1.28).sum(axis=1); d["n_weak"] = (best < -0.84).sum(axis=1); d["profile_spread"] = best.std(axis=1)
+    return d, val, mins
+
+
+SHAPE = ["best_skill", "second_skill", "n_standout", "n_weak", "profile_spread"]
+
+
+def main() -> None:
+    con = duckdb.connect("data/speider.duckdb", read_only=True)
+    d, val, mins = build(con)
+    fut = val.rename(columns={"lv": "lv_f"}).assign(ey=lambda x: x.y - H)[["player_id", "ey", "lv_f"]]
+    d = d.merge(fut, on=["player_id", "ey"], how="left")
+    alive = mins[mins.m >= 270][["player_id", "ey"]].assign(ey=lambda x: x.ey - H, playing=1).drop_duplicates()
+    d = d.merge(alive, on=["player_id", "ey"], how="left").fillna({"playing": 0})
     d = d[d.ey.between(2018, 2023) & d.age.between(16, 33)].copy()
     d["growth"] = d.lv_f - d.lv
     base = ["age", "lv"]

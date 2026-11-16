@@ -47,6 +47,9 @@ them are in `results.md`.
 
 | 32 | 2026-11-16 | Career projections are conditioned on the player's profile; the fixed age curve is only a fallback | Test 13: for players of 21 or younger the profile explains 18 % of three-year growth against 5 % for age and level; same-value players split 1.4x vs 6.1x | One age curve for everyone |
 
+| 33 | 2026-11-16 | Projections are direct per-horizon models on the profile (1–5 years), with a separate still-playing probability | Test 14: 48 % of three-year value change explained against 35 % for age and level; 21 % against 8 % for young players | Chaining one fixed transition table |
+| 34 | 2026-11-16 | Profile-shape inputs are dropped | Test 14: no gain at any horizon | Best-skill and standout-count features |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

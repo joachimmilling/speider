@@ -519,3 +519,50 @@ causes; three years is one horizon.
 **Next:** explicit profile-shape inputs (best skill, number of skills above
 the 90th percentile, specialist vs all-rounder), several horizons, and this
 model as the transition step inside the career simulator.
+
+## Test 14: A projection per player, several horizons
+
+`PYTHONPATH=analysis python3 analysis/player_projection.py [player names]`
+
+For each horizon (1–5 years): quantile models for the value change if still
+playing and a classifier for still playing, on the player's profile today.
+Tested on the latest season whose outcome is known, fitted on earlier seasons.
+
+| Horizon | Age + level | With profile | 21 or younger: age + level → profile | 80 % interval hit | Still playing: actual / predicted |
+|---|---|---|---|---|---|
+| 1 year | −2 % | 17 % | −28 % → 12 % | 85 % | 80 / 80 % |
+| 2 years | 0 % | 22 % | −1 % → 25 % | 82 % | 73 / 76 % |
+| 3 years | 35 % | 48 % | 8 % → 21 % | 75 % | 68 / 70 % |
+| 4 years | 39 % | 50 % | 8 % → 22 % | 74 % | 64 / 66 % |
+| 5 years | 38 % | 46 % | 3 % → 14 % | 75 % | 60 / 66 % |
+
+(Share of the variance in value change explained.)
+
+- The profile helps at every horizon, most clearly for young players, where
+  age and level alone explain almost nothing.
+- **Explicit profile-shape inputs added nothing** (best skill, second-best,
+  number of standout and weak skills, spread): 48 % with or without them at
+  three years. The model already sees every statistic; the shape carries no
+  extra signal in season-level data. Standout skills need finer data
+  (match-level, or statistics this source lacks such as pace and carrying).
+- Intervals are slightly too narrow from three years out (75 % against 80 %),
+  and dropout is underestimated at five years (66 % predicted, 60 % actual).
+
+Example output, real data (values are third-party market values, current prices):
+
+Antonio Nusa, 21, winger, 2,035 min in 2025/26, value now 46m:
+
+| In | Age | Low | Likely | High | Still playing |
+|---|---|---|---|---|---|
+| 1 year | 22 | 34m | 48m | 73m | 98 % |
+| 3 years | 24 | 25m | 51m | 97m | 97 % |
+| 5 years | 26 | 10m | 41m | 93m | 93 % |
+
+Same age and value, different projections today: among 77 players aged 20 or
+younger valued 1.5–3m with at least 900 minutes, the three-year projection
+runs from 0.65x to 3.6x.
+
+**Weaknesses:** horizons stop at five years (features start in 2018); the
+five-year model has 18,000 training rows; training outcomes overlap the test
+period in calendar time; values are not yet deflated by the price index; this
+is still the third-party value, to be replaced by Speider's own.
