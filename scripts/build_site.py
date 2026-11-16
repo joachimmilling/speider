@@ -90,6 +90,27 @@ def main() -> None:
     base = base.merge(now[["player_id", "p5"]], on="player_id", how="left")
     base_rate = float(tr.top5_later.mean())
 
+    # Speider value and value path (analysis/site_models.py), if built
+    sm, smres = {}, {}
+    if Path("data/site_models.pkl").exists():
+        sm = pd.read_pickle("data/site_models.pkl").set_index("player_id").to_dict("index")
+        smres = json.load(open("data/result_site_models.json"))
+
+    # most similar players by style: distance between percentile profiles within the role
+    pv = st[st.stat != "big_chance_created"].pivot_table(index="player_id", columns="stat", values="pct").fillna(50)
+    info = base.set_index("player_id")
+    sim = {}
+    for role_, grp in info.groupby("role"):
+        ids_ = [i for i in grp.index if i in pv.index]
+        cand = [i for i in ids_ if info.at[i, "m"] >= 600]
+        if len(cand) < 6: continue
+        A, B = pv.loc[ids_].values, pv.loc[cand].values
+        for k0 in range(0, len(ids_), 500):
+            d2 = ((A[k0:k0 + 500, None, :] - B[None, :, :]) ** 2).mean(axis=2) ** 0.5
+            for j, row in enumerate(d2):
+                pid_ = ids_[k0 + j]; o = np.argsort(row)[:6]
+                sim[pid_] = [[int(cand[x]), info.at[cand[x], "name"], info.at[cand[x], "team"], round(float(info.at[cand[x], "age"]), 1), round(float(row[x]), 1)] for x in o if cand[x] != pid_][:5]
+
     car = con.execute("select player_id, season_name, end_year, league_name, team, apps, goals, assists, rating from fm_career where apps >= 1 and end_year is not null order by end_year desc").fetchdf()
     mv = con.execute("select player_id, year(date) y, arg_max(value, date) v from fm_mv where value > 0 group by 1,2 order by 2").fetchdf()
     ids = set(base.player_id)
@@ -107,6 +128,16 @@ def main() -> None:
         if pid in stg: d["stats"] = [[x.stat, r(x.shr, 2), r(x.v, 2), r(x.pct, 0), int(x.n)] for x in stg[pid].itertuples()]
         if pid in carg: d["career"] = [[x.season_name, x.league_name, x.team, r(x.apps, 0), r(x.goals, 0), r(x.assists, 0), r(x.rating, 2)] for x in carg[pid].head(40).itertuples()]
         if pid in mvg: d["mv"] = [[int(x.y), int(x.v)] for x in mvg[pid].itertuples()]
+        if pid in sim: d["sim"] = sim[pid]
+        if pid in sm:
+            v = sm[pid]
+            d["val"] = [int(v["sv"]), int(v["sv_lo"]), int(v["sv_hi"]), int(v["mv"])]
+            # light smoothing over horizons in log space (each horizon is a separate model), anchored at 1 today
+            sm3 = lambda xs: [round(float(np.exp(0.25 * a_ + 0.5 * b_ + 0.25 * c_)), 3) for a_, b_, c_ in zip(np.log([1.0] + xs[:-1]), np.log(xs), np.log(xs[1:] + xs[-1:]))]
+            lo_, md_, hi_ = (sm3([float(v[f"g{h}{k}"]) for h in range(1, 6)]) for k in ("_lo", "", "_hi"))
+            d["path"] = [[h, lo_[h - 1], md_[h - 1], hi_[h - 1], r(v[f"play{h}"], 2)] for h in range(1, 6)]
+            d["typ"] = sm3([float(smres["path"][str(h)]["typical"][v["band"]]) for h in range(1, 6)])
+            index[-1].append(int(v["sv"]))
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)
@@ -130,7 +161,7 @@ def main() -> None:
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", shards=SHARDS, counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 

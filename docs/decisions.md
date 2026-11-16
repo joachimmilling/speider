@@ -64,6 +64,10 @@ them are in `results.md`.
 
 The first runnable version is a static site built by `scripts/build_site.py` into `data/site/` and opened from disk. No server, no account, nothing leaves the machine. It shows only what has passed its test: top-league chance (step model), shrunk per-90 numbers, era comparison, price index and league strength. Speider's own player value stays hidden until the price model beats third-party value. Players already in a top-five league get no top-league chance.
 
+## 42. Show the Speider value and value path, with the test result next to them
+
+Replaces the display part of decision 20. An empty player page is worse than an uncertain estimate. The page shows the fee-trained Speider value with its interval, the third-party value beside it, and the value path with an 80 % band, and states the out-of-time result (Speider 50 % typical miss, third party 44 %). Speider does not yet beat the third-party value; that stays the target.
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

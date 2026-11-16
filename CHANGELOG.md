@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-16 – Player page: Speider value, value path, profile
+
+- `analysis/site_models.py`: fee-trained Speider value with interval, and a calibrated value path for 1 to 5 years per player (relative to the market, today's prices) with the chance of still playing.
+- Out-of-time test on 3,387 transfers in 2025–26: typical miss 50 % for Speider vs 44 % for the third-party value (under 23: 49 % vs 49 %). Shown on the page as a separate estimate with this result stated.
+- Player page now shows Speider value, third-party value, value in three years, the value path against a typical player of the same age, strengths and weaknesses, and the five most similar players by style.
+- Find lists the Speider value. Page titles made plain.
+- Known issues: percentiles are coarse early in a season (few players with 270+ minutes); horizons are separate models, so the path is lightly smoothed; similarity ignores league level.
+
 ## 2026-11-16 – First runnable local site
 
 - `scripts/build_site.py` builds a static site in `data/site/` (git-ignored) that opens straight from disk, no server.
