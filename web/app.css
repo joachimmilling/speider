@@ -75,3 +75,5 @@ svg[data-ch]{cursor:crosshair}.ov{opacity:0;transition:opacity 160ms ease}.ov.on
 .pc:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 14px 34px rgba(0,0,0,.12)}.pc:active{transform:scale(.95,.91)}
 .pc strong{font-size:19px;line-height:24px;font-weight:600}.pc b{font-size:38px;line-height:44px;font-weight:600;letter-spacing:-.02em;color:var(--signal);margin-top:14px}
 .plink{display:flex;flex-wrap:wrap;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}.plink:hover h2{text-decoration:underline;text-underline-offset:5px}
+.tag{display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:980px;background:var(--surface);font-size:14px;font-weight:600}
+.tag.rec{background:var(--signal);color:var(--ground)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--signal);margin-right:6px}

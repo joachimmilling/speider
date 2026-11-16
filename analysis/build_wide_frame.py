@@ -9,6 +9,6 @@ import duckdb
 from projection_young import frame
 
 con = duckdb.connect("data/speider.duckdb", read_only=True)
-b = frame(con, 16, 35)
+b = frame(con, 16, 45)
 b.to_pickle("data/frame_wide.pkl")
 print(len(b), "player-years", b.y.min(), "-", b.y.max(), "columns", len(b.columns))

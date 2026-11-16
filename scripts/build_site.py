@@ -21,6 +21,15 @@ from sklearn.ensemble import HistGradientBoostingClassifier as HGBC
 
 from projection_young import C
 
+TYPES = {
+    "ST": {"finisher": ["goals_per_90", "expected_goals_per_90", "ontarget_scoring_att"], "pressing_forward": ["poss_won_att_3rd", "total_tackle", "ball_recovery"], "link_forward": ["expected_assists_per_90", "accurate_pass", "won_contest"]},
+    "W": {"dribbler": ["won_contest"], "goal_winger": ["goals_per_90", "expected_goals_per_90", "total_scoring_att"], "creator": ["expected_assists_per_90", "accurate_pass"]},
+    "AM": {"creator": ["expected_assists_per_90", "accurate_pass"], "goal_threat": ["goals_per_90", "expected_goals_per_90", "total_scoring_att"], "dribbler": ["won_contest"]},
+    "CM": {"playmaker": ["accurate_pass", "accurate_long_balls", "expected_assists_per_90"], "box_to_box": ["total_tackle", "ball_recovery", "total_scoring_att", "expected_goals_per_90"], "ball_winner": ["total_tackle", "interception", "ball_recovery"]},
+    "DM": {"anchor": ["interception", "effective_clearance", "ball_recovery"], "deep_playmaker": ["accurate_pass", "accurate_long_balls"], "ball_winner": ["total_tackle", "poss_won_att_3rd", "ball_recovery"]},
+    "CB": {"ball_playing": ["accurate_pass", "accurate_long_balls"], "stopper": ["total_tackle", "interception"], "cover": ["effective_clearance", "ball_recovery"]},
+    "FB": {"attacking_back": ["expected_assists_per_90", "won_contest", "total_scoring_att"], "defensive_back": ["total_tackle", "interception", "effective_clearance"], "passing_back": ["accurate_pass", "accurate_long_balls"]},
+}
 OUT = Path(os.environ.get("SITE_OUT", "data/site"))
 SHARDS = int(os.environ.get("SITE_SHARDS", 256))
 STATS = ["rating", "goals_per_90", "expected_goals_per_90", "expected_assists_per_90", "total_scoring_att", "ontarget_scoring_att",
@@ -102,6 +111,14 @@ def main() -> None:
     # most similar players by style: distance between percentile profiles within the role
     pv = st[st.stat != "big_chance_created"].pivot_table(index="player_id", columns="stat", values="pct").fillna(50)
     info = base.set_index("player_id")
+    # player type: the style group whose numbers the player ranks highest on within his role
+    ptype = {}
+    for pid_, row in pv.iterrows():
+        role_ = info.at[pid_, "role"] if pid_ in info.index else None
+        groups = TYPES.get(role_, {})
+        if role_ == "GK": ptype[pid_] = "keeper"; continue
+        sc = {k: float(np.mean([row.get(c, 50) for c in cols])) for k, cols in groups.items()}
+        if sc: best = max(sc, key=sc.get); ptype[pid_] = best if sc[best] >= 58 else "all_round"
     sim = {}
     for role_, grp in info.groupby("role"):
         ids_ = [i for i in grp.index if i in pv.index]
@@ -131,7 +148,9 @@ def main() -> None:
         if pid in stg: d["stats"] = [[x.stat, r(x.shr, 2), r(x.v, 2), r(x.pct, 0), int(x.n)] for x in stg[pid].itertuples()]
         if pid in carg: d["career"] = [[x.season_name, x.league_name, x.team, r(x.apps, 0), r(x.goals, 0), r(x.assists, 0), r(x.rating, 2)] for x in carg[pid].head(40).itertuples()]
         if pid in mvg: d["mv"] = [[int(x.y), int(x.v)] for x in mvg[pid].itertuples()]
+        rec = 0
         if pid in sim: d["sim"] = sim[pid]
+        if pid in ptype: d["type"] = ptype[pid]
         if pid in sm:
             v = sm[pid]
             if pid in svh: d["svh"] = [[int(x.y), int(x.sv)] for x in svh[pid].itertuples()]
@@ -142,6 +161,11 @@ def main() -> None:
             d["path"] = [[h, lo_[h - 1], md_[h - 1], hi_[h - 1], r(v[f"play{h}"], 2)] for h in range(1, 6)]
             d["typ"] = sm3([float(smres["path"][str(h)]["typical"][v["band"]]) for h in range(1, 6)])
             index[-1] += [int(v["sv"]), md_[2], int(v["mv"])]
+            # "Speider recommends": young regular whose Speider value is well above the market value and whose path points up
+            rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
+            if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
+        if len(index[-1]) == 10: index[-1] += [None, None, None]
+        index[-1] += [ptype.get(pid), rec]
         shards[pid % SHARDS][pid] = d
     js(OUT / "data/players.js", "players", index)
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)

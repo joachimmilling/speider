@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-16 – Player types, "Speider recommends", players over 35
+
+- Frame extended from age 35 to 45, so older players (Messi, Ronaldo, Modrić) get a value and a path. After the rebuild: Speider 49 % vs third party 45 % typical miss; under 23: 48 % vs 49 %.
+- Player type per role (rule-based, from percentile profile): e.g. finisher, pressing forward, playmaker, ball winner, ball-playing defender. "All-rounder" when no group stands out.
+- "Speider recommends" flag: age 26 or younger, 600+ minutes, market value 300k+, Speider value at least 30 % above market value and expected three-year value at least x1.15. 620 players.
+- Find can filter on player type and on the flag; player landing has a "Speider recommends" carousel (reserve and youth sides left out of the carousel).
+
 ## 2026-11-16 – Charts, finder and player landing reworked
 
 - Charts: readout above the plot instead of a tooltip, crosshair and markers that follow the pointer, smooth curves, animation when scrolled into view.
