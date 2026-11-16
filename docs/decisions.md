@@ -53,6 +53,8 @@ them are in `results.md`.
 | 35 | 2026-11-16 | Projections are calibrated per age band on a held-out year (median shift and conformal interval) | Test 15: bias for 17–19 from −31 % to 0, coverage 76 → 82 % | Uncalibrated quantile models |
 | 36 | 2026-11-16 | Momentum and career-path inputs are not added to the projection | Test 15: no effect | – |
 
+| 37 | 2026-11-16 | Young-player projections use the wide sample (all valued players aged 16–23), career lines and the track record of club, league and nationality | Test 16: explained three-year growth for 17–19 from −13 % to 24 %; top tenth grew 11x, bottom tenth 1x | Regulars-only sample with season statistics |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

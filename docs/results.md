@@ -601,3 +601,56 @@ young players (17–19: 20 % ended above the 90th percentile line).
 17–19 is 14 %, median error about 100 %. Calibration makes the level and the
 interval honest; it does not add information. That needs data on the players
 before they are regulars (youth national teams, academy level, minutes at 16–17).
+
+## Test 16: Telling young players apart
+
+`python3 scripts/load_national.py <profiles>` then
+`PYTHONPATH=analysis python3 analysis/projection_young.py`
+
+Problem left by test 15: for players of 21 or younger the projection had the
+right level but could not say who would grow. Three changes:
+
+1. **Ten times more young players.** Every player-year with a value at age
+   16–23 from 2015, not only regulars in leagues with statistics: 63,837
+   training rows (2015–2021), 10,987 test rows (2023 → 2026). Only 35 % of the
+   test rows have season statistics.
+2. **The career before the breakthrough:** senior, reserve and youth matches,
+   goals, debut age, level of the leagues played in, matches before 19, last
+   season's matches, goals and rating, value change the last two years, height.
+3. **Track record of the environment:** how young players at the same club,
+   in the same league and of the same nationality developed in earlier years,
+   relative to their age and value. Only outcomes known at the time are used.
+
+Three-year value change, share explained and rank correlation:
+
+| Inputs | 17–19 | 20–21 | 22–23 |
+|---|---|---|---|
+| Age + level | −13 %, 0.37 | 6 %, 0.39 | 13 %, 0.40 |
+| + career lines | −5 %, 0.45 | 12 %, 0.40 | 19 %, 0.44 |
+| + national teams | −5 %, 0.45 | 13 %, 0.41 | 20 %, 0.45 |
+| + club, league and nation track record | 24 %, 0.53 | 24 %, 0.51 | 21 %, 0.50 |
+| + season statistics | 24 %, 0.53 | 25 %, 0.52 | 23 %, 0.51 |
+
+What actually happened to the players the full model ranked highest and
+lowest (median growth over three years):
+
+| Age | Top tenth | Bottom tenth | Everyone |
+|---|---|---|---|
+| 17–19 | 11.3x | 1.0x | 3.5x |
+| 20–21 | 5.2x | 0.7x | 2.0x |
+| 22–23 | 3.1x | 0.6x | 1.6x |
+
+- **The environment is the missing information.** Where a young player is
+  developing says more about his next three years than his season statistics
+  do. For 17–19 it moves the explained share from −5 % to 24 %.
+- Career lines help the ranking (0.37 → 0.45 for 17–19).
+- **National teams add nothing here**: the source lists almost only senior
+  teams for men (189 age-group spells in 15,408), so youth internationals are
+  still an untested idea.
+- Season statistics add little on top, and exist for a third of these players.
+
+**Weaknesses:** the outcome is third-party value, and a club or league "track
+record" may partly capture how that provider revalues certain leagues rather
+than real development; growth is only measured for players still valued three
+years later; one test year. The track record must be checked against actual
+transfer fees before it is trusted.
