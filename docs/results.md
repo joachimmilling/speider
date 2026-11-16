@@ -460,3 +460,62 @@ outfield players; ages come from FotMob profiles and only exist for players
 still active after 2021; assists are missing for parts of 2006 and 2013;
 everything other than goals, assists, minutes and shots still needs
 reconstruction (model 11).
+
+## Test 13: Growth conditioned on the player, not a fixed age curve
+
+`python3 analysis/growth_model.py`
+
+Objection (the owner's): two 18-year-olds with the same value can have very
+different expected paths; growth must depend on role, characteristics and
+standout skills, not on age alone.
+
+Setup: for each player-season, predict (a) the change in value three years
+ahead if still playing and (b) whether he is still playing, from age and
+level alone versus age, level and the player's profile (role, 14 shrunk
+role-relative statistics, league strength, team quality, minutes, height,
+career matches). Train on seasons ending 2018–2021 (29,244), test on
+2022–2023 (26,229).
+
+(a) Value change three years ahead:
+
+| Group | Explained by age + level | With the player's profile | Rank correlation |
+|---|---|---|---|
+| All | 30 % | 43 % | 0.58 → 0.66 |
+| 21 or younger | 5 % | 18 % | 0.31 → 0.48 |
+| 22–25 | 13 % | 27 % | 0.36 → 0.52 |
+| 26 or older | 19 % | 36 % | 0.54 → 0.63 |
+
+(b) Still playing after three years, AUC: 0.678 → 0.728 (21 or younger:
+0.652 → 0.695).
+
+Same age, same value, different futures: 116 players aged 20 or younger and
+valued 0.8–1.5m in the test seasons, split by predicted growth.
+
+| Quarter | Predicted growth | Actual growth (median) |
+|---|---|---|
+| Lowest | 1.0x | 1.4x |
+| Second | 1.4x | 1.6x |
+| Third | 2.0x | 2.6x |
+| Highest | 3.0x | 6.1x |
+
+What moves predicted growth for players of 21 or younger (strong vs weak on
+one input): league strength +60 %, shots +26 %, team quality +22 %, rating
++19 %, minutes +14 %, height +13 %, passes +11 %, high ball wins +7 %,
+dribbles +6 %. Tackles and interceptions: none. By role the top inputs are
+rating, passes and shots for wingers; shots, rating, passes and xG for
+strikers.
+
+- **The objection holds.** For young players age and level explain 5 % of
+  the growth; the profile more than triples that, and it separates players
+  the market values the same today.
+- A fixed age curve is only a fallback for players without data.
+
+**Weaknesses:** the target is third-party market value; growth is measured
+only for players still valued, with dropout modelled separately; "standout
+skills" are not yet explicit inputs (the model sees each statistic, not the
+shape of the profile); the effects per input are model sensitivities, not
+causes; three years is one horizon.
+
+**Next:** explicit profile-shape inputs (best skill, number of skills above
+the 90th percentile, specialist vs all-rounder), several horizons, and this
+model as the transition step inside the career simulator.

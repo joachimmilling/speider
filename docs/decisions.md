@@ -45,6 +45,8 @@ them are in `results.md`.
 | 30 | 2026-11-16 | Historical output is standardised against full SofaScore squads | Test 12: valid from 2001/02 in six leagues; replaces the survivor-based v0 and lifts decision 23 for goals | FotMob career lines as comparison group |
 | 31 | 2026-11-16 | Crawls run in a Web Worker and SofaScore is paced to about one request a second | Background tabs were throttled and discarded; an unpaced run got the API blocked (403) | Main-thread crawls, unpaced requests |
 
+| 32 | 2026-11-16 | Career projections are conditioned on the player's profile; the fixed age curve is only a fallback | Test 13: for players of 21 or younger the profile explains 18 % of three-year growth against 5 % for age and level; same-value players split 1.4x vs 6.1x | One age curve for everyone |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

@@ -33,5 +33,6 @@
   v4 on the full data (`docs/results.md`).
 - Test 12: historical profile v1 against full squads
   (`analysis/historical_profile_v1.py`).
+- Test 13: player-conditioned growth model (`analysis/growth_model.py`).
 - SofaScore API answered 403 after an unpaced run; crawl stopped, 28 country
   categories left to scan.
