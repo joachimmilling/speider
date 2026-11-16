@@ -60,6 +60,10 @@ them are in `results.md`.
 | 39 | 2026-11-16 | The club/league/nation track record is removed from the projection | Test 17: large effect on third-party value growth, one point or less on big-five moves, league step and fees; negative relation with fee/value | Keeping it for its effect on the value metric |
 | 40 | 2026-11-16 | Third-party market value is no longer the projection target; projections will target outcomes (fee-equivalent value, league level, minutes) | Test 18: the provider's values move x1.42 and x0.83 market-wide in consecutive years; tests 13–18 predict the provider, not the player | Continuing to tune projections of third-party value |
 
+## 41. First product is a static local site
+
+The first runnable version is a static site built by `scripts/build_site.py` into `data/site/` and opened from disk. No server, no account, nothing leaves the machine. It shows only what has passed its test: top-league chance (step model), shrunk per-90 numbers, era comparison, price index and league strength. Speider's own player value stays hidden until the price model beats third-party value. Players already in a top-five league get no top-league chance.
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-16 – First runnable local site
+
+- `scripts/build_site.py` builds a static site in `data/site/` (git-ignored) that opens straight from disk, no server.
+- `web/` holds the app (index.html, app.css, app.js), Norwegian and English from one translation table.
+- Views: Find (young players outside the big five ranked by chance of reaching one within three years), Player (shrunk per-90 numbers with percentile in role, career, third-party market value as background), Eras (non-penalty goals per 90 against full squads back to 2001/02), Market (price index with projection, league strength).
+- Only outputs that have passed their tests are shown. Speider's own value and price projection are not shown (gate 4 not passed).
+- Known issue: `big_chance_created` is a season total in the source, not per 90; hidden in the UI until fixed in the loader.
+
 ## 2026-11-15
 
 - Pre-study of the data foundation (`docs/pre-study.md`).
