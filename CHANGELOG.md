@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-16 – Common scale, sporting verdict, best fit, club report card, cheaper alternatives
+
+- One scale across leagues: rank within the own league moved by league strength and read as rank among big-five players. Assumption, not fitted: 0.35 strength units per standard deviation, reference 0.30. Used in the team view, best fit and the new "level" sort in Find.
+- The season shown per player is the latest with 900+ minutes, so ranks are no longer computed against a handful of players early in a season.
+- Sporting outcome of each transfer: matches in the two seasons after (any club): regular 20+, rotation 10-19, otherwise did not make it. Shown next to the price verdict.
+- Player page: "Best fit" (clubs at the same level or a step up where he beats the current players in the role on something the squad needs, his place in the role, how often a step that size ends as a regular) and "Like him, but cheaper".
+- Team view: report card for buys since 2022 (share good on price, share that became regulars, both verdicts per buy).
+- Known: the sporting outcome barely differs between price verdicts (81-84 % regulars) and is too lenient; it counts any club and the sample is players with a value history. Step success is 86 % for small steps and 78 % for the largest. Squad role groups are incomplete where positions are coded differently.
+
 ## 2026-11-16 – Value on the day corrected; buy verdicts; team view
 
 - Found and fixed a leak: `fm_transfers.market_value` is the value at crawl time, not on the day. `analysis/transfers.py` now takes the value on the day from the value history. Test 20 redone (the earlier table was wrong), fee model retrained: typical miss 45.5 % vs 42.4 % for the third-party value, rank 0.849 vs 0.838.
