@@ -1,5 +1,11 @@
 # Changelog
 
+## Fee model learns the ratio to market value; advice counts the pitch first
+
+- `analysis/site_models.py`: the Speider value models now predict the log ratio of fee to third-party value instead of the fee itself. Tree models cannot extrapolate, so the old target capped out near the largest fees seen and marked every 100m+ player as overpriced (median Speider/market 0.68 above 100m; now 1.21). Out-of-time miss 44.9 % (was 45.5 %), rank 0.852 (was 0.849).
+- Player page: the "ahead" cell shows expected value in three years and is coloured by how the player does against peers of the same age and value, not by raw direction.
+- Advice: new head "At the top" for regulars at a high level with no stronger club available; club action "Keep" for regulars at level 70+ (and first-choice keepers) even when resale value falls with age.
+
 ## 2026-11-16 – Squad builder, club advice per player, minutes-based sporting verdict, real flags
 
 - Team view: full squad by role with level, value and Speider's advice to the club per player (sell now, extend or sell, sell or loan out, sell on an offer, keep and extend, keep). Sell and sign players to see profile, gaps, squad value and net spend change. Nothing is saved.

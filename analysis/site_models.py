@@ -56,10 +56,15 @@ def main() -> None:
     t["y"] = np.where(t.mo >= 6, t.yy, t.yy - 1)
     m = t.merge(b, on=["player_id", "y"])
     m["val"] = np.log(m.mv); m["target"] = np.log(m.fee / m.yy.map(INDEX) * 100)
+    # The models learn the fee relative to the third-party value (log ratio), not the fee itself. Trees cannot
+    # extrapolate, so a model of the fee itself caps out near the largest fees seen and marks every
+    # 100m+ player as overpriced. A ratio carries over to values above anything in the training data.
+    m["ratio"] = m.target - m.val
+    pv = lambda mm, X: mm.predict(X[PF]) + X.val.values
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
-    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PF], tr.target) for a in (0.1, 0.5, 0.9)}
+    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PF], tr.ratio) for a in (0.1, 0.5, 0.9)}
     scale = te.yy.map(INDEX).values / 100
-    p = {a: np.exp(mm.predict(te[PF])) * scale for a, mm in q.items()}
+    p = {a: np.exp(pv(mm, te)) * scale for a, mm in q.items()}
     young = (te.age < 23).values
     res["value"] = dict(n_train=len(tr), n_test=len(te), speider_err=round(err(p[0.5], te.fee.values), 3), third_party_err=round(err(te.mv.values, te.fee.values), 3),
                         speider_err_u23=round(err(p[0.5][young], te.fee.values[young]), 3), third_party_err_u23=round(err(te.mv.values[young], te.fee.values[young]), 3),
@@ -68,15 +73,15 @@ def main() -> None:
                         rank_third_party=round(float(te.mv.corr(te.fee, method="spearman")), 3))
     # widen the interval so 80 % of held-out fees fall inside, then refit on everything
     r = np.log(te.fee.values / scale)
-    lo_off = float(np.quantile(r - q[0.1].predict(te[PF]), 0.10)); hi_off = float(np.quantile(r - q[0.9].predict(te[PF]), 0.90))
+    lo_off = float(np.quantile(r - pv(q[0.1], te), 0.10)); hi_off = float(np.quantile(r - pv(q[0.9], te), 0.90))
     res["value"]["interval_offsets"] = [round(lo_off, 3), round(hi_off, 3)]
-    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PF], m.target) for a in (0.1, 0.5, 0.9)}
+    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PF], m.ratio) for a in (0.1, 0.5, 0.9)}
     now["val"] = now.lv
-    out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(q[0.5].predict(now[PF])),
-                            sv_lo=np.exp(q[0.1].predict(now[PF]) + lo_off), sv_hi=np.exp(q[0.9].predict(now[PF]) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
+    out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),
+                            sv_lo=np.exp(pv(q[0.1], now) + lo_off), sv_hi=np.exp(pv(q[0.9], now) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
     # Speider value back in time: the same model applied to each earlier mid-year (in-sample for the training years)
     hist = b[b.y < 2026].copy(); hist["val"] = hist.lv
-    pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(q[0.5].predict(hist[PF])) * hist.y.map(INDEX).fillna(70).values / 100)).to_pickle("data/site_models_hist.pkl")
+    pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(pv(q[0.5], hist)) * hist.y.map(INDEX).fillna(70).values / 100)).to_pickle("data/site_models_hist.pkl")
     print("value", json.dumps(res["value"]), flush=True)
 
     # 2. Value path, relative to the market, in today's prices
