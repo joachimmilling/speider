@@ -86,6 +86,10 @@ def main() -> None:
     prof = con.execute("select player_id, name, birth, height, country, contract_end from fm_profiles where gender='male'").fetchdf()
     base = mins.merge(prof, on="player_id")
     base["age"] = (pd.Timestamp("2026-11-15") - pd.to_datetime(base.birth)).dt.days / 365.25
+    # league names repeat across countries (Premier League, Serie A): add the country code where a name is not unique
+    lcc = con.execute("select league_id, cc from fm_leagues").fetchdf().set_index("league_id").cc
+    dup = base.groupby("league").league_id.nunique()
+    base["league"] = [f"{n} ({lcc.get(i)})" if dup.get(n, 1) > 1 and lcc.get(i) else n for n, i in zip(base.league, base.league_id)]
     ls = pd.read_csv("data/result_league_ranking.csv", index_col=0)["strength"]
     base["ls"] = base.league_id.map(ls)
 

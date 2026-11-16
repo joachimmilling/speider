@@ -64,9 +64,12 @@ const tile = (label, n, d, suf, sub, g) => `<div class="tile rise"><span class="
 let F = { role: '', type: '', rec: false, nat: '', league: '', club: '', amin: '', amax: '', sort: 'sv' };
 const uniq = k => [...new Set(P.map(p => p[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 const SORTS = { sv: p => p[10], p5: p => p[9] >= 0.25 ? null : p[8], grow: p => p[10] && p[7] >= 600 ? p[11] : null, under: p => p[10] && p[12] >= 5e5 ? p[10] / p[12] : null };
+/* A filter that equals one of the listed values matches exactly (Premier League is not Premier League 2); a half-typed one matches from the start of the name. */
+const OPTS = {}, optset = k => OPTS[k] || (OPTS[k] = new Set(P.map(p => norm(p[k] || ''))));
+const hit = (v, q, k) => !q || (optset(k).has(q) ? norm(v || '') === q : norm(v || '').startsWith(q));
 function findList() {
   const f = SORTS[F.sort], nq = norm(F.nat), lq = norm(F.league), cq = norm(F.club);
-  let rows = P.filter(p => f(p) != null && (F.amin === '' || p[2] >= F.amin) && (F.amax === '' || p[2] < F.amax + 1) && (!F.role || p[4] === F.role) && (!F.type || p[13] === F.type) && (!F.rec || p[14]) && (!nq || norm(p[3] || '').includes(nq)) && (!lq || norm(p[6] || '').includes(lq)) && (!cq || norm(p[5] || '').includes(cq)));
+  let rows = P.filter(p => f(p) != null && (F.amin === '' || p[2] >= F.amin) && (F.amax === '' || p[2] < F.amax + 1) && (!F.role || p[4] === F.role) && (!F.type || p[13] === F.type) && (!F.rec || p[14]) && hit(p[3], nq, 3) && hit(p[6], lq, 6) && hit(p[5], cq, 5));
   const total = rows.length; rows = rows.sort((a, b) => f(b) - f(a)).slice(0, 100);
   const G = 'grid-template-columns:minmax(200px,2.2fr) minmax(150px,1.5fr) .6fr 1fr .9fr 1fr';
   document.getElementById('fcount').textContent = nf(total) + ' ' + t('found') + (total > 100 ? ' · ' + t('top100') : '');
