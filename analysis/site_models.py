@@ -23,6 +23,10 @@ from sklearn.ensemble import HistGradientBoostingClassifier as HGBC, HistGradien
 from price_model_v4 import INDEX
 from projection_v3 import BANDS, FEATS, KW, apply, band, fit_q, offsets
 
+# Momentum is left out everywhere (test 20): it adds nothing out of time, it punished top players for a
+# fall that does not predict anything, and the mid-year value can postdate a summer transfer and leak the fee.
+import projection_v3 as _pv
+FEATS = [f for f in FEATS if f not in ("mom1", "mom2")]; _pv.FEATS = FEATS
 PF = [f for f in dict.fromkeys(FEATS + ["age"]) if f != "lv"] + ["val"]
 
 

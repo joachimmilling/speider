@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-16 – Test 20: judging buys by what happens next
+
+- `analysis/buy_verdict_backtest.py`: walk-forward test of which estimate on the day predicts the next fee. Third-party value 0.72, Speider outcome model 0.69, Speider fee model 0.61, the fee paid 0.59.
+- The gap between Speider value and third-party value sorts later sales: furthest above x1.76 of the year's typical, furthest below x0.57 (1,647 sales, every year 2018-2023).
+- Momentum inputs removed from the value model and the path models. Player page text now states this result.
+
 ## 2026-11-16 – Ceiling removed; path anchored on realised outcomes of comparables
 
 - The fixed value ceiling is gone: the record value has risen from 99m (2014) to 226m (2026), so a cap at today's record is wrong.

@@ -72,6 +72,10 @@ Replaces the display part of decision 20. An empty player page is worse than an 
 
 Value histories exist almost only for players active today, so anything trained on them describes survivors. Dropout is therefore estimated from career lines, which cover players who have stopped, and every value path shown is a mixture of "stopped, worth nothing" and the survivor path. Nothing is removed from the page because of this bias; it is corrected for. (An earlier version of this decision blamed the profile table and hid the affected numbers; both were wrong.)
 
+## 44. The goal is to sort buys by what happens next, not to match the fee
+
+Hitting the fee is a sanity check only. A value estimate earns its place if buys it calls cheap do better afterwards than buys it calls expensive, measured in money the provider does not set (the next fee). By that test (test 20) the gap between the Speider value and the third-party value is a real signal and is kept as the basis for "Speider recommends"; the Speider value alone is not better than the third-party value. Momentum inputs are removed from all models.
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.

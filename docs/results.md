@@ -720,3 +720,35 @@ lines, per-horizon quantiles, calibration, still-playing model) is in place.
 The target has to change from third-party value to outcomes: fee-equivalent
 value from the price model, league level reached and minutes played.
 Per-player numbers from this test are not shown in the product.
+
+
+## Test 20: can a signal known on the day tell good buys from bad ones?
+
+Matching the fee is the wrong goal for judging buys: a model that predicts fees perfectly calls every buy fair. The test is whether a signal known on the day sorts buys by what happened afterwards.
+
+Outcome: the next fee paid for the same player (same price level), for 1,994 buys in 2018-2023 that were later sold on for a fee at least a year later. Walk-forward, every model only sees what was known. Outcomes measured in the provider's own later value are not used as evidence: they are circular for the provider's value.
+
+Rank correlation with the next fee, of each estimate of the player's worth on the day:
+
+| Estimate on the day | Rank corr. with next fee |
+|---|---|
+| Third-party value | 0.72 |
+| Speider outcome model blended with comparables | 0.69 |
+| Speider fee model | 0.61 |
+| The fee actually paid | 0.59 |
+
+- The fee paid is the worst predictor of the next fee; the third-party value is the best single one. Speider's models do not beat it.
+- Momentum inputs add nothing out of time (0.681 vs 0.682) and are removed everywhere. They also risked leaking the fee, since the mid-year value can postdate a summer transfer.
+- The provider's values and fees drift apart over the years (median fee / value on the day: x7 in 2016, x1.4 in 2022, x0.9 in 2025), so anything trained across years on that ratio is unstable.
+
+The "Speider above market value" flag (fee-model value / third-party value, players of 26 or younger, 1,647 later sales, within-year fifths, next fee / value on the day against the year's typical):
+
+| Fifth | Next fee vs the year's typical | Share above typical |
+|---|---|---|
+| Speider furthest above market value | x1.76 | 72 % |
+| Middle three fifths | x1.04 | |
+| Speider furthest below | x0.57 | 20 % |
+
+It holds every year 2018-2023 (weakest in 2023: 1.27 vs 0.82) and among buys priced near the third-party value (1.32 vs 0.67). Limits: only players who were sold on for a fee; players who left for free or stayed are not in it.
+
+`PYTHONPATH=analysis python3 analysis/buy_verdict_backtest.py`
