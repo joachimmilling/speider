@@ -55,6 +55,8 @@ them are in `results.md`.
 
 | 37 | 2026-11-16 | Young-player projections use the wide sample (all valued players aged 16–23), career lines and the track record of club, league and nationality | Test 16: explained three-year growth for 17–19 from −13 % to 24 %; top tenth grew 11x, bottom tenth 1x | Regulars-only sample with season statistics |
 
+| 38 | 2026-11-16 | Logo is a pair of angular sunglasses, black, with one thin green reflection per lens | Owner: the two rings with dots looked like Tripadvisor; chose this after several rounds | Binocular rings, rounded sunglasses, green lenses |
+
 ## Open questions
 
 - Dropout is measured (test 8) but not yet a state inside the simulator.
