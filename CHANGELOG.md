@@ -1,5 +1,11 @@
 # Changelog
 
+## All missing profiles loaded, match crawl started, tests 28 and 29 registered
+
+- The remaining 10,564 profiles are loaded (`profiler-5.ndjson.gz` holds all 16,789 from this download). 65,128 profiles in all; the site has 38,126 players, 3,672 of them without a 270-minute season.
+- Fee model on the larger test set (3,595 transfers): typical miss 46.3 % against 43.2 % for the market value alone.
+- Tests 28 (injury history) and 29 (line-up balance) are written down in `docs/results.md` before the data is in. The match crawl for the big five leagues, 2022/23 to 2026/27 (7,583 finished matches), is running in the browser.
+
 ## More profiles, current club and injury from the profile, low-minute players on the site
 
 - 6,225 missing profiles downloaded (players active this season, Max Dowman among them) into `data/raw/fotmob/profiler-4.ndjson.gz`; the rest is being downloaded.

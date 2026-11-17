@@ -58,6 +58,7 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Process
 
+- Chrome blocks a second automatic download from the same tab without any message. Export each file from a fresh tab on the same origin.
 - A leak sat in the team tests for a day: the squad's market value was taken at the end of the season being predicted. Check every "before" value against the calendar (correction to tests 21-23).
 - Changing a model after one odd-looking player, without rerunning the tests, is how circles start. Hypothesis first, scoreboard after (this file exists because of 2026-11-16).
 - The site and the backtest ran different model code for a day. One definition per model.

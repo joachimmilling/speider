@@ -982,3 +982,38 @@ is better than age and value imply are paid about 12 % above the model; the othe
 0.5 point bar, so this is a real but modest improvement, resting on 413 test transfers.
 Decision: adopted. The Speider price is multiplied by exp(0.60 x form excess); a form lift of +9 % in expected value moves the price about +5 %.
 Lesson: fit small adjustments on out-of-fold errors and without an intercept; the first attempt hid a real signal.
+
+
+## Test 28: does injury history say something the minutes do not?
+
+Written before the data is in (2026-11-17). Data being collected: FotMob match details for the big five leagues, 2022/23 to 2026/27
+(about 7,600 matches): per match the players listed as unavailable with the reason (injury or suspension) and both line-ups.
+
+Hypothesis: matches missed through injury in a season carry information beyond minutes played. Two players with the same minutes differ:
+the one who missed matches injured is (a) more likely to miss matches injured the next season, and (b) not valued lower by buyers to the
+same degree as one who was fit and left out.
+Variables per player season: matches his team played, matches started, matches as substitute, matches listed injured, matches listed otherwise unavailable,
+matches fit but not used; injury spells and their length.
+Tests, fit on seasons to 2024/25, test on 2025/26 (and the part of 2026/27 played):
+(a) share of matches missed injured next season; reference: last season's minutes share and age only. Counts as better: rank correlation up by 0.05 or more.
+(b) the fee model's error on transfers (fee over model price) by injured share in the season before; and the site fee model with and without the
+injury variables. Counts as better: typical miss down by 0.5 points or more on transfers where the data exists.
+(c) the "regular after a transfer" outcome: do injured-then players make it as often as benched-then players?
+Could mislead us: the unavailable lists may be incomplete in early seasons; only five leagues; long-term injured players may not be listed every match;
+few transfers have a covered season before them.
+
+
+## Test 29: does the balance of a line-up matter for the result, beyond how good the players are?
+
+Written before the data is in (2026-11-17). Same match data: both starting elevens with positions, the score, and the players' season numbers from the season before.
+
+Hypothesis (the owner's): a team that lacks a quality gets more out of a player who has it. In data terms: given the summed quality of the starters
+(market value before the season and level from the season before), match goal difference is higher when the eleven covers the seven attributes
+more evenly, and the gain from a strong ball winner (or creator, finisher) is larger in elevens that are weak on that attribute.
+Unit: one team in one match (about 15,000 team matches), with the opponent's summed quality as a control and home advantage.
+Variants: (1) quality of own and opposing eleven; (2) plus the eleven's seven attribute means; (3) plus the lowest attribute and the spread;
+(4) plus interactions between a player's best attribute and the rest of the eleven's level on it.
+Split: seasons to 2024/25 to fit, 2025/26 and 2026/27 to test. Metric: explained share of goal difference per match and rank correlation.
+Counts as "balance matters": (3) or (4) beats (1) out of time by 0.5 points of explained share or more, with the sign the hypothesis says.
+Could mislead us: attributes are per-90 numbers coloured by the team's own style (test 21); match results are noisy (expect low explained shares);
+line-ups reflect injuries and rotation, not only the coach's best eleven.

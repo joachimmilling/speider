@@ -30,7 +30,8 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 
 ## Data and plumbing
 
-- Profiles: 6,225 of 16,793 missing ones (active since 2024/25) are loaded; the remaining 10,568 are downloading in the browser. Another 16,000 players with older seasons only have no profile.
+- Profiles: all 16,789 missing ones with matches since 2024/25 are loaded. About 16,000 players with older seasons only still have no profile.
+- The Speider price of a player with almost no numbers moves with every retrain (Dowman 95m -> 104m after more profiles were added). The range shown should say so.
 - Players without a 270-minute season are shown without level and attributes; their value path rests on age, value and career only (Dowman: upper outcome 396m in three years looks too wide).
 - Injury history and match-level line-ups: FotMob match pages list unavailable players with injury type and both line-ups (checked on one 2022/23 match). Crawl planned for the big five leagues 2022/23-2026/27; pre-register the injury and squad-balance tests before running them.
 - SofaScore returned 403 after an unpaced crawl. Resume slowly.
