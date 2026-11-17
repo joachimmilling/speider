@@ -30,8 +30,9 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 
 ## Data and plumbing
 
-- 13,333 of 46,234 players active since 2025/26 have no profile (birth date, contract), so they are not on the site (Max Dowman). The profile download must be resumed; the device shell has no network.
-- Players need 270 league minutes in a season to be shown. Young players with fewer (Dowman: 19 league minutes this season) fall out even with a profile.
+- Profiles: 6,225 of 16,793 missing ones (active since 2024/25) are loaded; the remaining 10,568 are downloading in the browser. Another 16,000 players with older seasons only have no profile.
+- Players without a 270-minute season are shown without level and attributes; their value path rests on age, value and career only (Dowman: upper outcome 396m in three years looks too wide).
+- Injury history and match-level line-ups: FotMob match pages list unavailable players with injury type and both line-ups (checked on one 2022/23 match). Crawl planned for the big five leagues 2022/23-2026/27; pre-register the injury and squad-balance tests before running them.
 - SofaScore returned 403 after an unpaced crawl. Resume slowly.
 - Club and league logo URLs are unverified; logos only in the local build.
 - Country names are English in the Norwegian UI.

@@ -45,6 +45,8 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Measuring players
 
+- The provider's profile carries the current club and the current injury; use them before inferring either from minutes.
+- A minutes floor for showing players hides the most interesting young ones. Show them without numbers instead.
 - Today's club is the latest senior season row with any minutes, then the latest transfer since June; a minutes floor or a reserve-team rehab match puts players at the wrong club (Gabriel Jesus, Saliba).
 - Shrink every per-90 number towards the role average by minutes (test 1).
 - League strength from players who change league works; cups must be left out (test 3).

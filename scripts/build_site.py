@@ -81,6 +81,20 @@ def main() -> None:
     # the season shown is the latest one with 900+ minutes (a few weeks into a new season the comparison group
     # is a handful of players and every rank is 99 or 33); players without such a season keep their latest
     mins = s[s.stat == "mins_played"].assign(ok=lambda d_: d_.m >= 900).sort_values(["ok", "ey", "m"]).groupby("player_id", as_index=False).last()[["player_id", "league_id", "league", "ey", "team_id", "m", "role"]]
+    # Players with a market value but no season of 270 league minutes (a 16-year-old with a few substitute appearances) are shown
+    # too, without numbers on the pitch: latest senior row from this or last season.
+    low = con.execute(f"""
+        select s.player_id, s.league_id, l.name league, se.end_year ey, s.team_id, s.minutes m, cast(json_extract(p.positions,'$[0]') as int) pos
+        from fm_stats s join fm_seasons se using (league_id, season_id) join fm_leagues l using (league_id) join fm_players p using (player_id)
+        where l.gender='male' and {CUPS} and s.stat = 'mins_played' and se.end_year >= 2026
+          and s.player_id in (select player_id from fm_mv where value > 0)
+    """).fetchdf()
+    low = low[~low.player_id.isin(mins.player_id)]
+    low["role"] = low.pos.fillna(0).astype(int).map(role)
+    low["youth"] = low.league.str.contains(r"Premier League 2|U\d\d|Youth|Reserve", case=False)
+    low = low.sort_values(["youth", "ey", "m"], ascending=[False, True, True]).groupby("player_id", as_index=False).last()[["player_id", "league_id", "league", "ey", "team_id", "m", "role"]]
+    print("players shown without a 270-minute season:", len(low))
+    mins = pd.concat([mins, low], ignore_index=True)
     st = s[s.stat != "mins_played"].merge(mins[["player_id", "league_id", "ey"]], on=["player_id", "league_id", "ey"])
     full = s[s.stat != "mins_played"]
     g = full.groupby(["stat", "league_id", "ey", "role"]).v
@@ -91,7 +105,8 @@ def main() -> None:
     st = full.merge(mins[["player_id", "league_id", "ey"]], on=["player_id", "league_id", "ey"])
     teams = con.execute("select league_id, team_id, any_value(name) team from fm_teams group by 1,2").fetchdf()
     mins = mins.merge(teams, on=["league_id", "team_id"], how="left")
-    prof = con.execute("select player_id, name, birth, height, country, contract_end from fm_profiles where gender='male'").fetchdf()
+    pcols = [c[0] for c in con.execute("describe fm_profiles").fetchall()]
+    prof = con.execute("select player_id, name, birth, height, country, contract_end" + (", cur_team_id, injury" if "cur_team_id" in pcols else ", null::bigint cur_team_id, null::varchar injury") + " from fm_profiles where gender='male'").fetchdf()
     base = mins.merge(prof, on="player_id")
     base["age"] = (pd.Timestamp("2026-11-15") - pd.to_datetime(base.birth)).dt.days / 365.25
     # league names repeat across countries (Premier League, Serie A): add the country code where a name is not unique
@@ -121,6 +136,12 @@ def main() -> None:
     cur.loc[mvt, "c_lid"] = cur.loc[mvt, "to_id"].map(tl.c_lid).values; cur.loc[mvt, "c_league"] = cur.loc[mvt, "to_id"].map(tl.c_league).values
     cur.loc[mvt, "c_tid"] = cur.loc[mvt, "to_id"].values; cur = cur.drop(columns=["to_id"])
     print("club taken from a transfer since June:", int(mvt.sum()))
+    # the provider's own "current team" on the profile (profiles downloaded from 2026-11-17) is the best source where it exists
+    cur = cur.merge(prof[["player_id", "cur_team_id"]], on="player_id", how="left")
+    mvp = cur.cur_team_id.notna() & (cur.cur_team_id != cur.c_tid) & cur.cur_team_id.isin(tl.index)
+    cur.loc[mvp, "c_lid"] = cur.loc[mvp, "cur_team_id"].map(tl.c_lid).values; cur.loc[mvp, "c_league"] = cur.loc[mvp, "cur_team_id"].map(tl.c_league).values
+    cur.loc[mvp, "c_tid"] = cur.loc[mvp, "cur_team_id"].values; cur = cur.drop(columns=["cur_team_id"])
+    print("club taken from the profile:", int(mvp.sum()))
     base = base.merge(cur, on="player_id", how="left")
     mvd = (base.c_tid.notna() & (base.c_tid != base.team_id)).values
     tn_ = teams.drop_duplicates("team_id").set_index("team_id").team
@@ -296,6 +317,8 @@ def main() -> None:
         index.append([pid, b.name, r(b.age, 1), b.country, b.role, b.team, b.league, int(b.m), r(b.p5, 3), r(b.ls, 2)])
         d = dict(id=pid, name=b.name, age=r(b.age, 1), country=b.country, height=r(b.height, 0), role=b.role, team=b.team, league=b.league, season=int(b.ey),
                  minutes=int(b.m), contract=str(b.contract_end)[:10] if pd.notna(b.contract_end) else None, p5=r(b.p5, 3), ls=r(b.ls, 2))
+        if isinstance(getattr(b, "injury", None), str):
+            ij = json.loads(b.injury); d["inj"] = [ij.get("name"), ((ij.get("expectedReturn") or {}).get("expectedReturnFallback"))]
         if pid in stg: d["stats"] = [[x.stat, r(x.shr, 2), r(x.v, 2), r(x.pct, 0), int(x.n)] for x in stg[pid].itertuples()]
         if pid in carg: d["career"] = [[x.season_name, x.league_name, x.team, r(x.apps, 0), r(x.goals, 0), r(x.assists, 0), r(x.rating, 2)] for x in carg[pid].head(40).itertuples()]
         if pid in mvg: d["mv"] = [[int(x.y), int(x.v)] for x in mvg[pid].itertuples()]

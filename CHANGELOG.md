@@ -1,5 +1,13 @@
 # Changelog
 
+## More profiles, current club and injury from the profile, low-minute players on the site
+
+- 6,225 missing profiles downloaded (players active this season, Max Dowman among them) into `data/raw/fotmob/profiler-4.ndjson.gz`; the rest is being downloaded.
+- `scripts/load_profiles.py`: new columns `cur_team_id`, `cur_team`, `injury`, `status` (profiles from 2026-11-17); later files win.
+- `scripts/build_site.py`: players with a market value but no season of 270 league minutes are shown (2,068); the profile's current club wins over season rows and transfers; current injury in the shard (`inj`).
+- Player page: "Injured now" tag; an injured player is not told to find playing time elsewhere.
+- Site now has 35,285 players (was 32,010).
+
 ## Form in the price (test 27), form cell, "like him but better", attributes beside the pitch
 
 - Test 27 (`analysis/form_slope_test.py`): one slope (0.60) for running form on out-of-fold errors; adopted. The Speider price and its range are multiplied by exp(0.60 x form excess) in `scripts/build_site.py`.

@@ -1,4 +1,8 @@
-"""Load player profiles (NDJSON, gzip) into DuckDB: fm_profiles, fm_mv, fm_career."""
+"""Load player profiles (NDJSON, gzip) into DuckDB: fm_profiles, fm_mv, fm_career.
+
+Files from 2026-11-17 on also carry the current club (team), the current injury (inj) and the status (st); older files leave them empty.
+Later files win: a player downloaded again replaces his earlier profile.
+"""
 from __future__ import annotations
 
 import csv, gzip, json, re, sys, tempfile
@@ -24,17 +28,20 @@ def main(paths):
     f = {n: open(tmp / f"{n}.csv", "w", newline="") for n in ["profiles", "mv", "career"]}
     w = {n: csv.writer(x) for n, x in f.items()}
     seen = set()
-    for p in paths:
+    for p in sorted(paths, reverse=True):
         for line in gzip.open(p, "rt"):
             o = json.loads(line)
             if o["id"] in seen or "err" in o:
                 continue
             seen.add(o["id"])
             info = {k: v for k, v in (o.get("info") or []) if isinstance(k, str)}
+            team = o.get("team") if isinstance(o.get("team"), list) and len(o["team"]) == 2 else [None, None]   # current club, files from 2026-11-17
             h = re.findall(r"\d+", str(info.get("Height") or ""))
             w["profiles"].writerow([o["id"], o.get("name"), (o.get("b") or "")[:10] or None, (o.get("ce") or "")[:10] or None,
                                     o.get("gender"), h[0] if h else None, info.get("Preferred foot"), info.get("Country"),
-                                    json.dumps(o.get("pos") or [])])
+                                    json.dumps(o.get("pos") or []),
+                                    team[0], team[1],
+                                    json.dumps(o["inj"]) if o.get("inj") else None, o.get("st")])
             for v in ((o.get("mv") or {}).get("values") or []):
                 w["mv"].writerow([o["id"], v["date"][:10], v.get("value"), v.get("lowerBound"), v.get("upperBound"), v.get("teamId")])
             for s in o.get("seasons") or []:
@@ -48,7 +55,7 @@ def main(paths):
         x.close()
     con = duckdb.connect("data/speider.duckdb")
     spec = {
-        "profiles": "player_id BIGINT, name VARCHAR, birth DATE, contract_end DATE, gender VARCHAR, height INT, foot VARCHAR, country VARCHAR, positions VARCHAR",
+        "profiles": "player_id BIGINT, name VARCHAR, birth DATE, contract_end DATE, gender VARCHAR, height INT, foot VARCHAR, country VARCHAR, positions VARCHAR, cur_team_id BIGINT, cur_team VARCHAR, injury VARCHAR, status VARCHAR",
         "mv": "player_id BIGINT, date DATE, value DOUBLE, lo DOUBLE, hi DOUBLE, team_id BIGINT",
         "career": "player_id BIGINT, season_name VARCHAR, end_year INT, league_id INT, league_name VARCHAR, team_id BIGINT, team VARCHAR, apps DOUBLE, goals DOUBLE, assists DOUBLE, rating DOUBLE",
     }
