@@ -16,7 +16,7 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 
 ## Pricing
 
-0. The current, unfinished season is not an input to the value models (Odegaard's comeback is invisible). Test: add season-to-date numbers, shrunk by minutes, and see whether fees in winter windows are hit better.
+0. The season in progress is shown as a form nowcast but is not in the Speider price: two attempts did not improve fee prediction (tests 25, 26). Open: should the one-year value path use the nowcast (same kind of target)? Not tested.
 1. The Speider value does not beat the third-party value on fees or the fee on the next fee. What would: wages, contract length at the time, injury history, match-level performance.
 2. Injury history is missing. Step 1: availability from minutes share per season. Step 2: a real injury source (Transfermarkt), crawled slowly and kept local.
 3. The backtest (test 20) and the site do not yet share model code: the site's transfer verdicts come from the backtest's outcome model (C2), the live player values from `analysis/site_models.py`.
@@ -30,6 +30,8 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 
 ## Data and plumbing
 
+- 13,333 of 46,234 players active since 2025/26 have no profile (birth date, contract), so they are not on the site (Max Dowman). The profile download must be resumed; the device shell has no network.
+- Players need 270 league minutes in a season to be shown. Young players with fewer (Dowman: 19 league minutes this season) fall out even with a profile.
 - SofaScore returned 403 after an unpaced crawl. Resume slowly.
 - Club and league logo URLs are unverified; logos only in the local build.
 - Country names are English in the Norwegian UI.

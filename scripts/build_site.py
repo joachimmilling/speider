@@ -145,6 +145,13 @@ def main() -> None:
     if Path("data/site_models.pkl").exists():
         sm = pd.read_pickle("data/site_models.pkl").set_index("player_id").to_dict("index")
         smres = json.load(open("data/result_site_models.json"))
+    # form nowcast (analysis/form_nowcast.py): expected value change over the running season with and without this season's numbers,
+    # what has already happened since the summer, minutes and rating so far
+    formd, formlift = {}, {}
+    if Path("data/form_now.pkl").exists():
+        for x in pd.read_pickle("data/form_now.pkl").itertuples():
+            formd[int(x.player_id)] = [round(float(x.exp), 3), round(float(x.base), 3), None if pd.isna(x.real) else round(float(x.real), 3), int(x.cur_min), None if pd.isna(x.cur_rating) else round(float(x.cur_rating), 2)]
+            if x.cur_min >= 450: formlift[int(x.player_id)] = round(float(x.exp - x.base), 3)
     svh = {}
     if Path("data/site_models_hist.pkl").exists():
         svh = {k: v.sort_values("y") for k, v in pd.read_pickle("data/site_models_hist.pkl").groupby("player_id")}
@@ -297,7 +304,8 @@ def main() -> None:
             rec = int(b.age <= 26 and b.m >= 600 and v["mv"] >= 3e5 and v["sv"] / v["mv"] >= 1.3 and md_[2] >= 1.15)
             if rec: d["rec"] = [round(float(v["sv"] / v["mv"]), 2), md_[2]]
         if len(index[-1]) == 10: index[-1] += [None, None, None]
-        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None] + peak + [posc.get(pid)]
+        index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None] + peak + [posc.get(pid), formlift.get(pid)]
+        if pid in formd: d["form"] = formd[pid]
         if pid in alt: d["alt"] = alt[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
@@ -308,7 +316,7 @@ def main() -> None:
     squad = None
     if Path("data/result_squad_model.json").exists():
         sq_ = json.load(open("data/result_squad_model.json")); sm_ = sq_["site_model"]
-        squad = dict(features=sm_["features"], coef=sm_["coef"], intercept=sm_["intercept"], sd=sq_["sd_goal_difference_per_match"], gd_last=sq_["gd_last"],
+        squad = dict(features=sm_["features"], coef=sm_["coef"], intercept=sm_["intercept"], sd=sq_["sd_goal_difference_per_match"], gd_last=sq_["gd_last"], corr=sq_["out_of_time"]["xi+depth+age + last season"]["corr"],
                      test=sq_["out_of_time"]["xi+depth+age + last season"], n_test=sq_["n_test"])
     for i, d in shards.items(): js(OUT / f"data/shard/{i}.js", f"shard{i}", d)
 

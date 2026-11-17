@@ -1,5 +1,12 @@
 # Changelog
 
+## Form this season, tests 25 and 26, leak fix in the team tests
+
+- Tests 25 and 26: the season in progress does not improve fee prediction (trees, a two-input line, a scaled nowcast). The Speider price is unchanged.
+- `analysis/form_nowcast.py`: where the third-party value is heading by the summer given the running season (tested: R2 0.27 vs 0.15). Shown on the player page ("Form this season") and as a sort in the finder (field 24 in `players.js`, `form` in the shards).
+- Fixed a leak: the team tests used the market value at the end of the season being predicted. Squad model correlation 0.61 (was 0.65); coefficients and site text updated.
+- New: `analysis/current_season.py`, `analysis/current_season_test.py`, `analysis/form_adjust_test.py`.
+
 ## Today's club, sided eleven, sell from the pitch, tests 23 and 24
 
 - `scripts/build_site.py`: today's club is the latest senior season row with any minutes, then the latest transfer since June (Gabriel Jesus is at Barcelona, Martinelli at Al Hilal; Saliba stays at Arsenal despite a reserve match).

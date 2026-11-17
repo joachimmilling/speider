@@ -5,15 +5,18 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Squads
 
-- An eleven that respects left and right predicts as well as one that does not (0.649 vs 0.650); the sided eleven is used (test 23).
-- A team's goal difference follows the market value of its best eleven (0.45 of the model), then depth, last season and age; out-of-time correlation 0.65 (test 22).
+- An eleven that respects left and right predicts as well as one that does not (0.610 vs 0.609 after the leak fix); the sided eleven is used (test 23).
+- A team's goal difference follows the market value of its best eleven (0.35 of the model), then last season (0.22), depth (0.15), level (0.09) and age (0.06); out-of-time correlation 0.61 after the leak fix (test 22).
 - The level from last season's per-90 numbers adds almost nothing once value is known (test 22). Retry only if: match-level data or a level that is not built from season aggregates.
 - The mix of the seven collective attributes and the "weakest line" add nothing out of time (tests 21, 22). Retry only if: match-level data, or attributes cleaned of team style.
 - Per-90 defensive volume (tackles, clearances) goes with weaker teams: it measures how much a team defends, not how well (test 21).
-- The best eleven picked by level alone is a weaker signal than the value of the eleven most valuable players (0.45 vs 0.59; big five 0.53 vs 0.80) (test 21).
+- The best eleven picked by level alone is a weaker signal than the value of the eleven most valuable players (0.45 vs 0.54; big five 0.53 vs 0.75) (test 21).
 
 ## Value and price
 
+- Feeding the running season into the fee trees, or adding a two-parameter form adjustment, made fee prediction for mid-season transfers worse (tests 25, 26). Retry only if: many more mid-season fees, or match-level form.
+- What a player does in a season explains much of how his market value moves during it (R2 0.27 vs 0.15 for age and value) (test 26). Shown as "form this season", not folded into the price.
+- Mid-season transfers are the hardest to price: every method misses by about 50 %.
 - Performance moves the fee: top third on last season's rating sells for 1.23 times market value, bottom third 0.91; performance inputs improve the fee model by 1.6 points (2.7 with statistics) (test 24).
 - The change in form from the season before adds nothing once the level is in the model (test 24). Retry only if: in-season or match-level form.
 - The fee model only sees the last finished season. A strong start to the current season is invisible to it (test 24).
@@ -51,6 +54,7 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Process
 
+- A leak sat in the team tests for a day: the squad's market value was taken at the end of the season being predicted. Check every "before" value against the calendar (correction to tests 21-23).
 - Changing a model after one odd-looking player, without rerunning the tests, is how circles start. Hypothesis first, scoreboard after (this file exists because of 2026-11-16).
 - The site and the backtest ran different model code for a day. One definition per model.
 - Hiding a number is not a fix; find the technique that handles the data properly.

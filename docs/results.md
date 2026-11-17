@@ -880,3 +880,78 @@ there and missed overall). A rise in form goes with a higher fee in the raw tabl
 (45.2 against 44.9): the bar for "form matters" is not met. What the model cannot see is the current season: the inputs are the last
 finished season, so a comeback in the first months of a new season (Odegaard) is invisible to it.
 Lesson: last season's level moves the fee (0.91 to 1.23 times market value); the change in form adds nothing on top. The current, unfinished season is not an input.
+
+
+## Test 25: does the season in progress improve the price, so the Speider value rises when a player is doing very well?
+
+Written before the run (2026-11-17). Reason: test 24 showed the fee model only sees the last finished season; the owner's point is that
+the value must move when a player performs.
+
+Hypothesis: for a transfer made while a season is running, the player's numbers so far that season at the selling club (minutes, rating,
+goals, expected goals and assists per 90) carry information the last finished season and the market value on the day do not.
+Data: fee transfers from clubs in leagues with split-year seasons, joined to the selling club's row for the season in progress
+(July to May; the row holds what he did there before leaving). Calendar-year leagues are left out: their running season is already the model's latest season.
+Split: fit to 2024, test on 2025-26. Target and metric as test 24.
+Variants: (A) site inputs; (B) site inputs plus the season in progress (missing where there is none).
+Counts as better: on test transfers with 270+ minutes in the running season, (B) has a typical miss at least 1 point lower than (A), and is not worse over all test transfers.
+If it holds: (B) becomes the site model, and the page shows how much the season in progress moves the price.
+Could mislead us: most summer transfers have almost no running-season minutes, so the signal is learned mainly from winter windows and applied
+in November; the market value on the day may already have reacted; the rating is the provider's own.
+
+Result (2026-11-17): typical miss, (A) site inputs against (B) plus the season in progress: all test transfers 44.9 % / 45.3 %;
+test transfers with 270+ running-season minutes (413) 49.1 % / 51.7 %; winter windows (316) 53.0 % / 52.1 %. Third-party value: 42.4 / 49.2 / 51.5 %.
+Only 699 training transfers have a running season. Raw table (450+ minutes, rating in both seasons, n=261): fee over market value 1.25 / 1.22 / 1.37
+for running form worse / same / better, and 1.22 / 1.10 / 1.43 for running rating low / middle / high.
+Reading: the condition is not met; (B) is not adopted. The raw table points the expected way, but 699 examples are too few for the tree model
+to use six extra inputs without adding noise. Transfers made mid-season are also the hardest to price for everyone (miss near 50 %).
+Lesson: feeding the running season straight into the fee trees makes it worse (too few mid-season fees). Retry only with a few-parameter adjustment or a data-rich target.
+
+
+## Test 26: a few-parameter form adjustment
+
+Written before the run (2026-11-17), directly after test 25 failed.
+
+Hypothesis: the signal in the raw table of test 25 is real but needs a model with very few parameters. Two candidates on top of the site model (A):
+(C1) a ridge line on the fee residual with two inputs, the minute-shrunk change in rating and in goal threat (goals + expected assists per 90) against the last finished season;
+(C2) a revaluation nowcast: a model of how a player's third-party value moves during a season given what he does in it (rates and his share of the
+team's minutes, so that a half-played season does not look like a benched player), trained on every player season (data-rich), then scaled by one
+parameter fitted on the mid-season fees.
+Split and metric: as test 25. Counts as better: typical miss at least 1 point lower than (A) on the 413 test transfers with a running season, and not worse over all.
+Also reported: the nowcast's own out-of-time skill against a model with age and value only.
+Could mislead us: the nowcast target is the provider's value (lessons: provider revisions); the mid-season test set is small.
+
+Result (2026-11-17):
+
+Nowcast on its own target (how the third-party value moves during a season, against the market; 52,547 player seasons to fit, 24,709 to test, 2025-26):
+age and value alone R2 0.15, rank 0.38; with what the player did in the season R2 0.27, rank 0.52.
+
+On fees (699 mid-season transfers to fit the adjustment, 413 to test): typical miss on transfers with a running season (A) 49.1 %,
+(C1) 51.9 %, (C2) 51.3 %; over all test transfers 44.9 / 44.9 / 45.0 %.
+
+Reading: the condition is not met for either candidate; the Speider price is left as it is. The season in progress clearly moves where the
+third-party value is heading (the nowcast is a real, tested model of that), but on the few mid-season fees we have it does not make the fee
+prediction better. Mid-season transfers are priced badly by every method here, including the market value (49 %).
+Decision: the nowcast is shown on the site as its own signal ("form this season": expected change in value by the summer with and without
+this season's numbers), and is not folded into the Speider price.
+Lesson: what a player does in a season explains much of how his market value moves during it (R2 0.27 vs 0.15), but no form adjustment improved fee prediction for mid-season transfers.
+
+During this test a leak was found in the team tests: see the correction below.
+
+
+## Correction to tests 21, 22 and 23 (2026-11-17): the squad value was the value at the end of the season
+
+`analysis/team_strength_backtest.py` joined each player's market value on the season it falls in, which is the value at the END of the
+season being predicted, not before it. Fixed to the latest value before the season. Reruns:
+
+| | With the leak | Corrected |
+|---|---|---|
+| Test 21: value of the top eleven vs goal difference (all / big five) | 0.59 / 0.80 | 0.54 / 0.75 |
+| Test 21: level of the best eleven (not affected) | 0.45 / 0.53 | 0.45 / 0.53 |
+| Test 22: site model, correlation out of time | 0.65 | 0.61 |
+| Test 22: R2 | 0.42 | see `data/result_squad_model.json` |
+| Test 23: sided against unsided eleven | 0.649 / 0.650 | 0.610 / 0.609 |
+
+Coefficients of the site model after the fix: value of the eleven 0.35, last season 0.22, depth 0.15, level 0.09, age 0.06 (was 0.45, 0.15, 0.20, 0.03, 0.14).
+The conclusions stand (value first; attributes and the weakest line add nothing; the sided eleven is as good), but the model is weaker than
+reported, the level counts for more and age for less. Test set is 1,026 team seasons.
+Lesson: a value "before the season" must be checked against the calendar; the season a value falls in is not the season it precedes.

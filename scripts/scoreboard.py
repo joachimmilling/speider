@@ -37,6 +37,12 @@ def main() -> None:
     if ts:
         c = ts["corr_with_goal_difference"]
         rows.append(("xi_level_corr", "Squads", "Level of the best eleven alone: correlation with goal difference", c["level"], f'value of top eleven {c["value"]}, last season {c["gd_prev"]}', f'n={ts["n_all_three"]}'))
+    fa = load("result_form_adjust.json")
+    if fa:
+        n = fa["nowcast"]
+        rows.append(("nowcast_r2", "Pricing", "Form nowcast: explained share of value change during a season", n["plus the season"]["r2"], f'age and value {n["age and value"]["r2"]}', f'n={n["n_test"]}'))
+        m_ = fa["fees"]["miss"]
+        rows.append(("midseason_miss", "Pricing", "Miss on mid-season fees, site model", m_["A site model"]["running_season"], f'with form line {m_["C1 two-input line"]["running_season"]}, with nowcast {m_["C2 scaled nowcast"]["running_season"]}', f'n={fa["fees"]["n_test_running"]}, form not adopted'))
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
     today = datetime.date.today().isoformat()
     md = ["# Scoreboard", "", f"Rebuilt {today} at commit `{commit}` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.", "",

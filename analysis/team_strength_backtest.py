@@ -62,7 +62,9 @@ def prep(con):
     # squads: players with 450+ minutes for the team that season
     sq = s[(s.stat == "mins_played") & (s.m >= 450)][["league_id", "ey", "team_id", "player_id", "m"]].merge(prior, on=["player_id", "ey"], how="left")
     mv = con.execute("select player_id, year(date) + (month(date) >= 8)::int ey, arg_max(value, date) mv from fm_mv where value > 0 group by 1, 2").fetchdf()   # latest value before 1 August
-    sq = sq.merge(mv, on=["player_id", "ey"], how="left")
+    # mv.ey is the season a value falls in (August to July), so the latest value of season ey - 1 is the value going INTO season ey.
+    # Until 2026-11-17 this merged on ey itself, which is the value at the END of the season being predicted: a leak (tests 21-23 rerun).
+    sq = sq.merge(mv.assign(ey=mv.ey + 1), on=["player_id", "ey"], how="left")
     age = con.execute("select player_id, birth from fm_profiles where birth is not null").fetchdf()
     sq = sq.merge(age, on="player_id", how="left"); bd = pd.to_datetime(sq.birth, errors="coerce")
     sq["age"] = sq.ey - 0.5 - bd.dt.year - (bd.dt.month - 1) / 12       # age around the turn of the year in the season
