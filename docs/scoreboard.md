@@ -1,13 +1,13 @@
 # Scoreboard
 
-Rebuilt 2026-11-17 at commit `8efff7c` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-17 at commit `70e8f6d` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
-| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.449** | third-party value 0.424 | n=3409, lower is better |
-| Pricing | Speider value: rank correlation with fees | **0.852** | third-party value 0.838 |  |
-| Pricing | Share of fees inside the 80 % range | **0.75** | target 0.80 |  |
-| Pricing | Miss on fees for players worth 40m+ | **0.236** | trees alone 0.227 | n=81 |
+| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.455** | third-party value 0.429 | n=3516, lower is better |
+| Pricing | Speider value: rank correlation with fees | **0.849** | third-party value 0.837 |  |
+| Pricing | Share of fees inside the 80 % range | **0.755** | target 0.80 |  |
+| Pricing | Miss on fees for players worth 40m+ | **0.241** | trees alone 0.241 | n=81 |
 | Pricing | Predicting the next fee: Speider outcome model (rank) | **0.548** | fee paid 0.593, third-party value 0.501 | higher is better |
 | Pricing | Buys judged cheapest: resale / fee (median) | **1.41** | dearest fifth 0.89 | n=429 |
 | Pricing | Same, largest third of fees | **1.05** | dearest fifth 0.52 | n=191 |
@@ -22,4 +22,7 @@ Rebuilt 2026-11-17 at commit `8efff7c` by `scripts/scoreboard.py`. History: `doc
 
 ## Changed since the previous row
 
-Nothing.
+- `fee_miss`: 0.449 -> 0.455
+- `fee_rank`: 0.852 -> 0.849
+- `fee_inside80`: 0.75 -> 0.755
+- `fee_miss_40m`: 0.236 -> 0.241
