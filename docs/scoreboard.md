@@ -1,6 +1,6 @@
 # Scoreboard
 
-Rebuilt 2026-11-17 at commit `bb3cea0` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-17 at commit `8efff7c` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
@@ -18,9 +18,8 @@ Rebuilt 2026-11-17 at commit `bb3cea0` by `scripts/scoreboard.py`. History: `doc
 | Squads | Level of the best eleven alone: correlation with goal difference | **0.451** | value of top eleven 0.544, last season 0.508 | n=829 |
 | Pricing | Form nowcast: explained share of value change during a season | **0.267** | age and value 0.152 | n=24709 |
 | Pricing | Miss on mid-season fees, site model | **0.491** | with form line 0.519, with nowcast 0.513 | n=413, form not adopted |
+| Pricing | Form slope in the price (fee above model per unit of form excess) | **0.597** | 90 % interval 0.253 to 0.922 | mid-season miss 0.491 -> 0.486, n=413 |
 
 ## Changed since the previous row
 
-- `squad_corr`: 0.649 -> 0.61
-- `squad_r2`: 0.42 -> 0.372
-- `squad_attr_r2`: 0.419 -> 0.372
+Nothing.
