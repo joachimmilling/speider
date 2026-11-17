@@ -19,6 +19,7 @@ STEPS = [
     ("form_fee", ["python3", "analysis/form_fee_test.py"], {}),
     ("current_season", ["python3", "analysis/current_season_test.py"], {}),
     ("form_adjust", ["python3", "analysis/form_adjust_test.py"], {}),
+    ("form_slope", ["python3", "analysis/form_slope_test.py"], {}),
     ("form_nowcast", ["python3", "analysis/form_nowcast.py"], {}),
     ("site", ["python3", "scripts/build_site.py"], {"SITE_LOGOS": "1"}),
     ("site_pub", ["python3", "scripts/build_site.py"], {"SITE_OUT": "data/site_pub", "SITE_SHARDS": "32"}),

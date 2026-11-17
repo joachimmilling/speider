@@ -16,7 +16,7 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 
 ## Pricing
 
-0. The season in progress is shown as a form nowcast but is not in the Speider price: two attempts did not improve fee prediction (tests 25, 26). Open: should the one-year value path use the nowcast (same kind of target)? Not tested.
+0. The form slope in the price rests on 413 test transfers and sits exactly on the adoption bar (test 27). Recheck when the winter window adds fees. Open: should the one-year value path use the nowcast too? Not tested.
 1. The Speider value does not beat the third-party value on fees or the fee on the next fee. What would: wages, contract length at the time, injury history, match-level performance.
 2. Injury history is missing. Step 1: availability from minutes share per season. Step 2: a real injury source (Transfermarkt), crawled slowly and kept local.
 3. The backtest (test 20) and the site do not yet share model code: the site's transfer verdicts come from the backtest's outcome model (C2), the live player values from `analysis/site_models.py`.

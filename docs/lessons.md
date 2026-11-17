@@ -14,8 +14,10 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Value and price
 
-- Feeding the running season into the fee trees, or adding a two-parameter form adjustment, made fee prediction for mid-season transfers worse (tests 25, 26). Retry only if: many more mid-season fees, or match-level form.
-- What a player does in a season explains much of how his market value moves during it (R2 0.27 vs 0.15 for age and value) (test 26). Shown as "form this season", not folded into the price.
+- Running form does move the fee: players in form are paid about 12 % above the model, others about 17 % below (test 27). One slope (0.60) on the form excess is in the Speider price; gain in typical miss is small (49.1 -> 48.6 % mid-season).
+- Feeding the running season straight into the fee trees made it worse (test 25): 699 mid-season fees are too few for six tree inputs.
+- Tests 25-26 hid the signal: the adjustment was fitted on in-sample tree residuals with an intercept. Fit small adjustments on out-of-fold errors, slope only.
+- What a player does in a season explains much of how his market value moves during it (R2 0.27 vs 0.15 for age and value) (test 26). It feeds the form excess used in the price (test 27).
 - Mid-season transfers are the hardest to price: every method misses by about 50 %.
 - Performance moves the fee: top third on last season's rating sells for 1.23 times market value, bottom third 0.91; performance inputs improve the fee model by 1.6 points (2.7 with statistics) (test 24).
 - The change in form from the season before adds nothing once the level is in the model (test 24). Retry only if: in-season or match-level form.

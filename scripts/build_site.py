@@ -152,6 +152,14 @@ def main() -> None:
         for x in pd.read_pickle("data/form_now.pkl").itertuples():
             formd[int(x.player_id)] = [round(float(x.exp), 3), round(float(x.base), 3), None if pd.isna(x.real) else round(float(x.real), 3), int(x.cur_min), None if pd.isna(x.cur_rating) else round(float(x.cur_rating), 2)]
             if x.cur_min >= 450: formlift[int(x.player_id)] = round(float(x.exp - x.base), 3)
+    # Test 27: fees run above the model for players in form. One slope on the form excess moves the Speider price (and its range).
+    fs = json.load(open("data/result_form_slope.json")) if Path("data/result_form_slope.json").exists() else {}
+    if fs.get("adopted"):
+        for pid_, f_ in formd.items():
+            if pid_ in sm:
+                k_ = float(np.exp(fs["slope"] * (f_[0] - f_[1])))
+                for c_ in ("sv", "sv_lo", "sv_hi"): sm[pid_][c_] = sm[pid_][c_] * k_
+                f_.append(round(k_, 3))
     svh = {}
     if Path("data/site_models_hist.pkl").exists():
         svh = {k: v.sort_values("y") for k, v in pd.read_pickle("data/site_models_hist.pkl").groupby("player_id")}
@@ -242,6 +250,12 @@ def main() -> None:
         if k not in sm or sm[k]["sv"] < 2e6: continue
         c_ = [c for c in ids_ if c in sm and sm[c]["sv"] <= 0.6 * sm[k]["sv"] and info.at[c, "age"] <= info.at[k, "age"] + 1 and level.get(c, 0) >= level.get(k, 0) - 10][:5]
         if c_: alt[k] = [[c, info.at[c, "name"], info.at[c, "team"], round(float(info.at[c, "age"]), 1), int(sm[c]["sv"]), level.get(c)] for c in c_]
+    # "like him, but better": the closest in style who are at least five points higher on level, whatever they cost
+    better = {}
+    for k, ids_ in near.items():
+        if k not in level: continue
+        c_ = [c for c in ids_ if c in sm and level.get(c, 0) >= level[k] + 5 and info.at[c, "m"] >= 900][:5]
+        if c_: better[k] = [[c, info.at[c, "name"], info.at[c, "team"], round(float(info.at[c, "age"]), 1), int(sm[c]["sv"]), level.get(c)] for c in c_]
     # Sporting outcome of a transfer: senior matches in the two seasons after it (any club, so a loan counts).
     # Sporting outcome of a transfer: matches FOR THE BUYING CLUB in the two seasons after it (a loan elsewhere does
     # not count). Regular: 20+ in one of them (10+ in the half season after a winter move); rotation: 10+; else not.
@@ -307,6 +321,7 @@ def main() -> None:
         index[-1] += [ptype.get(pid), rec, dimv.get(pid), dima.get(pid), level.get(pid), int(b.team_id) if pd.notna(b.team_id) else None, int(b.league_id), int(str(b.contract_end)[:4]) if pd.notna(b.contract_end) else None] + peak + [posc.get(pid), formlift.get(pid)]
         if pid in formd: d["form"] = formd[pid]
         if pid in alt: d["alt"] = alt[pid]
+        if pid in better: d["better"] = better[pid]
         if pid in tfg:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
                         int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1), None if pd.isna(x.a2) else int(x.a2), x.unit] for _, x in tfg[pid].iterrows()]

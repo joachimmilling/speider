@@ -955,3 +955,30 @@ Coefficients of the site model after the fix: value of the eleven 0.35, last sea
 The conclusions stand (value first; attributes and the weakest line add nothing; the sided eleven is as good), but the model is weaker than
 reported, the level counts for more and age for less. Test set is 1,026 team seasons.
 Lesson: a value "before the season" must be checked against the calendar; the season a value falls in is not the season it precedes.
+
+
+## Test 27: is there a relationship at all between running form and the fee, measured properly?
+
+Written before the run (2026-11-17). Reason: the owner does not accept that form has nothing to say for the fee, and test 26 had a flaw:
+the adjustment was fitted on in-sample residuals of the tree model (which understate the real errors) and with an intercept, which moved
+every mid-season prediction up by 6-8 %. The rank correlation between the nowcast and the model's error on the test transfers was +0.16, which
+that set-up could not turn into a gain.
+
+Hypothesis: transfers where the running season says "better than age and value imply" are paid above what the site model expects.
+Method: the site model's errors on the training transfers are taken out of fold (five folds), so they are honest; one slope, no intercept, is
+fitted for the form excess (nowcast minus what age and value alone say, zero without 270 running-season minutes). Fit to 2024, test on 2025-26.
+Reported: the slope with a bootstrap interval, the rank correlation with the error on test transfers, and the typical miss with and without.
+Counts as a relationship: the 90 % interval of the slope excludes zero and the test rank correlation is positive.
+Counts as adoptable: in addition the typical miss on test transfers with a running season falls by at least 0.5 points (the bar is lower than
+the 1 point of tests 25-26 because a single slope cannot overfit the way six tree inputs can), and is not worse over all.
+If adopted: the Speider price is multiplied by exp(slope x form excess), so it moves with the season in progress.
+
+Result (2026-11-17): slope 0.60 (90 % interval 0.25 to 0.92) on 699 mid-season transfers; rank correlation with the model's error on the 413 test
+transfers +0.12. Test transfers split in thirds by form excess: the model's fee was beaten by a factor 0.84 / 0.82 / 1.12 (low / middle / high form).
+Typical miss on test transfers with a running season 49.1 % -> 48.6 %; over all 44.9 % -> 44.9 %.
+
+Reading: there is a relationship, and tests 25-26 missed it because of how they were built, not because it is absent. Players whose running season
+is better than age and value imply are paid about 12 % above the model; the others about 17 % below it. The gain in typical miss is exactly at the
+0.5 point bar, so this is a real but modest improvement, resting on 413 test transfers.
+Decision: adopted. The Speider price is multiplied by exp(0.60 x form excess); a form lift of +9 % in expected value moves the price about +5 %.
+Lesson: fit small adjustments on out-of-fold errors and without an intercept; the first attempt hid a real signal.

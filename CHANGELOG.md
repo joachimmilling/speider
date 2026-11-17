@@ -1,5 +1,11 @@
 # Changelog
 
+## Form in the price (test 27), form cell, "like him but better", attributes beside the pitch
+
+- Test 27 (`analysis/form_slope_test.py`): one slope (0.60) for running form on out-of-fold errors; adopted. The Speider price and its range are multiplied by exp(0.60 x form excess) in `scripts/build_site.py`.
+- Player page: "Form this season" is a verdict cell (lift in expected value, effect on the price, minutes, rating) instead of a line among the facts. New carousel "Like him, but better" after "Like him, but cheaper" (`better` in the shards).
+- Team page: the verdict and the team's attributes sit beside the pitch (below it on a phone) and update with every sale and signing.
+
 ## Form this season, tests 25 and 26, leak fix in the team tests
 
 - Tests 25 and 26: the season in progress does not improve fee prediction (trees, a two-input line, a scaled nowcast). The Speider price is unchanged.

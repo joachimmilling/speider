@@ -43,6 +43,8 @@ def main() -> None:
         rows.append(("nowcast_r2", "Pricing", "Form nowcast: explained share of value change during a season", n["plus the season"]["r2"], f'age and value {n["age and value"]["r2"]}', f'n={n["n_test"]}'))
         m_ = fa["fees"]["miss"]
         rows.append(("midseason_miss", "Pricing", "Miss on mid-season fees, site model", m_["A site model"]["running_season"], f'with form line {m_["C1 two-input line"]["running_season"]}, with nowcast {m_["C2 scaled nowcast"]["running_season"]}', f'n={fa["fees"]["n_test_running"]}, form not adopted'))
+    sl = load("result_form_slope.json")
+    if sl: rows.append(("form_slope", "Pricing", "Form slope in the price (fee above model per unit of form excess)", sl["slope"], f'90 % interval {sl["slope_90"][0]} to {sl["slope_90"][1]}', f'mid-season miss {sl["miss"]["site_model"]["running"]} -> {sl["miss"]["with_slope"]["running"]}, n={sl["n_test_running"]}'))
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
     today = datetime.date.today().isoformat()
     md = ["# Scoreboard", "", f"Rebuilt {today} at commit `{commit}` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.", "",
