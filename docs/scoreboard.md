@@ -1,13 +1,13 @@
 # Scoreboard
 
-Rebuilt 2026-11-17 at commit `88e0e39` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-17 at commit `eba5d8d` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
-| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.463** | third-party value 0.432 | n=3595, lower is better |
-| Pricing | Speider value: rank correlation with fees | **0.85** | third-party value 0.836 |  |
-| Pricing | Share of fees inside the 80 % range | **0.752** | target 0.80 |  |
-| Pricing | Miss on fees for players worth 40m+ | **0.243** | trees alone 0.246 | n=81 |
+| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.451** | third-party value 0.432 | n=3595, lower is better |
+| Pricing | Speider value: rank correlation with fees | **0.851** | third-party value 0.836 |  |
+| Pricing | Share of fees inside the 80 % range | **0.747** | target 0.80 |  |
+| Pricing | Miss on fees for players worth 40m+ | **0.211** | trees alone 0.219 | n=81 |
 | Pricing | Predicting the next fee: Speider outcome model (rank) | **0.548** | fee paid 0.593, third-party value 0.501 | higher is better |
 | Pricing | Buys judged cheapest: resale / fee (median) | **1.41** | dearest fifth 0.89 | n=429 |
 | Pricing | Same, largest third of fees | **1.05** | dearest fifth 0.52 | n=191 |
@@ -19,10 +19,12 @@ Rebuilt 2026-11-17 at commit `88e0e39` by `scripts/scoreboard.py`. History: `doc
 | Pricing | Form nowcast: explained share of value change during a season | **0.267** | age and value 0.152 | n=24709 |
 | Pricing | Miss on mid-season fees, site model | **0.491** | with form line 0.519, with nowcast 0.513 | n=413, form not adopted |
 | Pricing | Form slope in the price (fee above model per unit of form excess) | **0.597** | 90 % interval 0.253 to 0.922 | mid-season miss 0.491 -> 0.486, n=413 |
+| Pricing | Predicting next season's share out of the squad (rank) | **0.296** | minutes and age 0.235 | n=1890 |
+| Squads | Match goal difference explained by both elevens' quality | **0.1895** | with attribute means 0.1975, with balance terms 0.1964 | n=2058 |
 
 ## Changed since the previous row
 
-- `fee_miss`: 0.455 -> 0.463
-- `fee_rank`: 0.849 -> 0.85
-- `fee_inside80`: 0.755 -> 0.752
-- `fee_miss_40m`: 0.241 -> 0.243
+- `fee_miss`: 0.463 -> 0.451
+- `fee_rank`: 0.85 -> 0.851
+- `fee_inside80`: 0.752 -> 0.747
+- `fee_miss_40m`: 0.243 -> 0.211
