@@ -4,7 +4,7 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 
 ## Squad building
 
-1. Does balance matter (a ball winner helping most where the team lacks one)? Not detectable with season aggregates (test 22). Needs match-level data: who played together and the result per match. Blocked on the paced SofaScore crawl.
+1. Balance as evenness or "filling the weakest spot" is not visible at match level either (test 29). What is visible: more ball winning, passing and finishing in the eleven goes with better results at equal quality. Next: put those weights in the squad model and show them on the team page.
 2. The squad model is linear with 3,570 team seasons. Interactions are untested.
 3. Outcome is goal difference from player goals and keeper totals, not league tables or points. No table data is loaded.
 4. The squad model still picks its eleven by market value in fixed slots (4-2-3-1-like), while the pitch shows players by their own position. A formation-free eleven for the model is untested.
@@ -33,7 +33,9 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 - Profiles: all 16,789 missing ones with matches since 2024/25 are loaded. About 16,000 players with older seasons only still have no profile.
 - The Speider price of a player with almost no numbers moves with every retrain (Dowman 95m -> 104m after more profiles were added). The range shown should say so.
 - Players without a 270-minute season are shown without level and attributes; their value path rests on age, value and career only (Dowman: upper outcome 396m in three years looks too wide).
-- Injury history and match-level line-ups: FotMob match pages list unavailable players with injury type and both line-ups (checked on one 2022/23 match). Crawl planned for the big five leagues 2022/23-2026/27; pre-register the injury and squad-balance tests before running them.
+- Match data covers the big five leagues from 2022/23 only (7,583 matches). Extending it to more leagues widens the fee-model gain of test 28 (only 1,521 transfers have a covered season).
+- Real injury history (type, days out) is still missing; the per-match lists are incomplete. Transfermarkt remains the candidate.
+- The match-level attribute weights (test 29) are not in the squad model; the team page still calls the attributes a description.
 - SofaScore returned 403 after an unpaced crawl. Resume slowly.
 - Club and league logo URLs are unverified; logos only in the local build.
 - Country names are English in the Norwegian UI.

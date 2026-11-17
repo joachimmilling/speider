@@ -1017,3 +1017,66 @@ Split: seasons to 2024/25 to fit, 2025/26 and 2026/27 to test. Metric: explained
 Counts as "balance matters": (3) or (4) beats (1) out of time by 0.5 points of explained share or more, with the sign the hypothesis says.
 Could mislead us: attributes are per-90 numbers coloured by the team's own style (test 21); match results are noisy (expect low explained shares);
 line-ups reflect injuries and rotation, not only the coach's best eleven.
+
+
+## Results of tests 28 and 29 (2026-11-17)
+
+Data: 7,583 matches, 321,046 line-up rows, 21,717 "unavailable" rows (20,065 injuries). Loader: `scripts/load_matches.py`.
+
+Deviation from the plan, found in the sanity check before any test ran: the provider's unavailable lists are incomplete. Odegaard missed seven league
+matches with an ankle injury in autumn 2024 and is listed in none of them. "Out of the matchday squad" (neither starter nor on the bench), counted from the
+line-ups, was therefore added next to "listed injured". `analysis/availability.py`.
+
+### Test 28 (`analysis/injury_test.py`)
+
+(a) Next season, 3,932 player seasons to fit, 1,890 to test. Rank correlation between prediction and outcome:
+
+| Outcome next season | Minutes share and age | Plus out of squad, bench, listed injured, starts |
+|---|---|---|
+| Share of matches out of the squad | 0.24 | 0.30 |
+| Share listed injured | 0.02 | 0.13 |
+| Minutes share | 0.48 | 0.50 |
+
+The bar (+0.05) is met for "out of the squad". Players with under half the minutes who were mostly out of the squad were out of the squad 36 % of the
+next season, those mostly on the bench 24 %.
+
+(b) Fees, 839 test transfers with a covered season before them (682 to fit). Typical miss:
+
+| Fee model inputs | With match data | All 3,595 |
+|---|---|---|
+| Site inputs | 36.9 % | 46.3 % |
+| Plus starts share and minutes share from matches | 34.7 % | 45.6 % |
+| Plus out of squad and bench shares | 34.1 % | 45.1 % |
+| Plus listed injured | 34.3 % | 45.4 % |
+| Third-party market value alone | 32.5 % | 43.2 % |
+
+The bar (0.5 points) is met by far. Most of the gain comes from knowing the share of the team's matches a player started and played; why he was
+missing (out of the squad or on the bench) adds a little; the incomplete injury lists add nothing. Fee over market value does not differ between
+low-minute players who were mostly out of the squad (1.00, n=454) and mostly on the bench (1.01, n=140).
+
+(c) Of transferred players with under half the minutes before, 31 % of those mostly out of the squad became regulars the next season (n=280) against
+25 % of those mostly on the bench (n=89). The direction fits the hypothesis; the bench group is small.
+
+Decision: starts share, minutes share, out-of-squad share and bench share from the season before go into the site fee model (`AV` in `analysis/site_models.py`).
+Typical miss on all test transfers 46.3 % -> 45.1 %. Real injury history (type, length) is still missing; the lists here cannot supply it.
+Lesson: match line-ups improve the fee model by 2.8 points where they exist; "out of the squad" predicts next season's absence; the provider's injury lists are too incomplete to use.
+
+### Test 29 (`analysis/lineup_balance_test.py`)
+
+9,242 team matches with enough known starters (7,184 to fit, 2,058 to test). Explained share of match goal difference, out of time (ridge):
+
+| Inputs | Explained | Rank |
+|---|---|---|
+| (1) Quality of both elevens, home advantage | 19.0 % | 0.41 |
+| (2) Plus the eleven's seven attribute means | 19.8 % | 0.42 |
+| (3) Plus lowest attribute and spread | 19.6 % | 0.42 |
+| (4) Plus specialist interactions | 18.9 % | 0.41 |
+
+Weights of the attribute means in (2), per standard deviation: finishing +0.10, creating -0.01, dribbling -0.01, passing +0.19, duels -0.02, ball winning +0.12, clearing -0.15.
+
+Reading: by the letter the bar is met ((3) beats (1) by 0.7 points and the lowest attribute has a positive weight), but the gain comes from (2), the
+levels of the attributes, not from evenness: adding the lowest attribute and the spread takes a little away, and the specialist interactions add nothing.
+So the owner's point holds in one form and not in another. An eleven with more ball winning, better passing and more finishing wins by more, given
+the same market value and level (and one that makes many clearances wins by less). That a ball winner helps MORE in a team that lacks one is not visible.
+Not adopted into the squad model yet: that model is fitted on seasons, this on matches; joining them is the next step.
+Lesson: at match level the attribute mix of the eleven adds a little beyond quality (ball winning, passing, finishing up; clearing down); evenness and "filling the weakest spot" add nothing.

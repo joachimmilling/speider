@@ -28,6 +28,8 @@ from projection_v3 import BANDS, FEATS, KW, apply, band, fit_q, offsets
 import projection_v3 as _pv
 FEATS = [f for f in FEATS if f not in ("mom1", "mom2")]; _pv.FEATS = FEATS
 PF = [f for f in dict.fromkeys(FEATS + ["age"]) if f != "lv"] + ["val"]
+AV = ["starts_sh", "min_sh", "absent_sh", "bench_sh"]
+PFA = PF + AV
 
 
 # Above about 40m the data thins out (145 fees at 40-70m, 24 above), and trees fill the gap with patterns learned
@@ -74,19 +76,24 @@ def main() -> None:
     t = load_transfers(con).drop(columns=["name"])          # value on the day from the value history, not the crawl-time field
     t["y"] = np.where(t.mo >= 6, t.yy, t.yy - 1)
     m = t.merge(b, on=["player_id", "y"])
+    # Test 28: availability from match line-ups (big five leagues from 2022/23): share of the team's matches started, minutes share,
+    # share out of the matchday squad and share on the bench unused, in the season before. Missing elsewhere.
+    from availability import table as _avail
+    av = _avail(con); av = av.sort_values("squad").groupby(["player_id", "ey"], as_index=False).last(); av = av[av.squad + av.inj >= 5][["player_id", "ey"] + AV].rename(columns={"ey": "y"})
+    m = m.merge(av, on=["player_id", "y"], how="left"); now = now.merge(av[av.y == 2026].drop(columns=["y"]), on="player_id", how="left")
     m["val"] = np.log(m.mv); m["target"] = np.log(m.fee / m.yy.map(INDEX) * 100)
     # The models learn the fee relative to the third-party value (log ratio), not the fee itself. Trees cannot
     # extrapolate, so a model of the fee itself caps out near the largest fees seen and marks every
     # 100m+ player as overpriced. A ratio carries over to values above anything in the training data.
     m["ratio"] = m.target - m.val
-    pv0 = lambda mm, X: mm.predict(X[PF]) + X.val.values
+    pv0 = lambda mm, X: mm.predict(X[PFA]) + X.val.values
     TL = {}
     def pv(mm, X):
         # the tail line moves the median; the 10 % and 90 % models move by the same amount
         d = tail_w(X.val.values) * (TL["f"](X.age.values, X.val.values) + X.val.values - pv0(TL["med"], X))
         return pv0(mm, X) + d
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
-    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PF], tr.ratio) for a in (0.1, 0.5, 0.9)}
+    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PFA], tr.ratio) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(tr.age.values, tr.val.values, tr.ratio.values, 20e6), q[0.5]
     scale = te.yy.map(INDEX).values / 100
     big = (te.mv >= 40e6).values
@@ -103,13 +110,13 @@ def main() -> None:
     r = np.log(te.fee.values / scale)
     lo_off = float(np.quantile(r - pv(q[0.1], te), 0.10)); hi_off = float(np.quantile(r - pv(q[0.9], te), 0.90))
     res["value"]["interval_offsets"] = [round(lo_off, 3), round(hi_off, 3)]
-    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PF], m.ratio) for a in (0.1, 0.5, 0.9)}
+    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PFA], m.ratio) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(m.age.values, m.val.values, m.ratio.values, 20e6), q[0.5]
     now["val"] = now.lv
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),
                             sv_lo=np.exp(pv(q[0.1], now) + lo_off), sv_hi=np.exp(pv(q[0.9], now) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
     # Speider value back in time: the same model applied to each earlier mid-year (in-sample for the training years)
-    hist = b[b.y < 2026].copy(); hist["val"] = hist.lv
+    hist = b[b.y < 2026].merge(av, on=["player_id", "y"], how="left"); hist["val"] = hist.lv
     pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(pv(q[0.5], hist)) * hist.y.map(INDEX).fillna(70).values / 100)).to_pickle("data/site_models_hist.pkl")
     print("value", json.dumps(res["value"]), flush=True)
 

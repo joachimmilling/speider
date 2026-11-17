@@ -5,6 +5,8 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Squads
 
+- At match level (9,242 team matches) the eleven's attribute levels add a little beyond market value and level: ball winning +0.12, passing +0.19, finishing +0.10, clearing -0.15 per SD. Evenness, the weakest attribute and specialist interactions add nothing (test 29).
+- The quality of both elevens explains about 19 % of a match's goal difference out of time.
 - An eleven that respects left and right predicts as well as one that does not (0.610 vs 0.609 after the leak fix); the sided eleven is used (test 23).
 - A team's goal difference follows the market value of its best eleven (0.35 of the model), then last season (0.22), depth (0.15), level (0.09) and age (0.06); out-of-time correlation 0.61 after the leak fix (test 22).
 - The level from last season's per-90 numbers adds almost nothing once value is known (test 22). Retry only if: match-level data or a level that is not built from season aggregates.
@@ -14,6 +16,8 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 
 ## Value and price
 
+- Match line-ups improve the fee model: starts share and minutes share of the team's matches, then out-of-squad and bench shares (typical miss 36.9 -> 34.1 % where the data exists, 46.3 -> 45.1 % over all) (test 28). In the site model.
+- The provider's per-match injury lists are incomplete (Odegaard autumn 2024 missing) and add nothing. "Out of the matchday squad" from line-ups is the usable signal; it predicts next season's absence (rank 0.24 -> 0.30).
 - Running form does move the fee: players in form are paid about 12 % above the model, others about 17 % below (test 27). One slope (0.60) on the form excess is in the Speider price; gain in typical miss is small (49.1 -> 48.6 % mid-season).
 - Feeding the running season straight into the fee trees made it worse (test 25): 699 mid-season fees are too few for six tree inputs.
 - Tests 25-26 hid the signal: the adjustment was fitted on in-sample tree residuals with an intercept. Fit small adjustments on out-of-fold errors, slope only.

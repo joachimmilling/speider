@@ -1,5 +1,11 @@
 # Changelog
 
+## Match data, availability in the fee model, tests 28 and 29
+
+- `scripts/load_matches.py`: 7,583 big-five matches (2022/23-2026/27) into `fm_matches`, `fm_lineups`, `fm_unavailable`.
+- `analysis/availability.py`, `analysis/injury_test.py` (test 28): starts, minutes, out-of-squad and bench shares from line-ups go into the fee model; typical miss 46.3 % -> 45.1 %. The provider's injury lists are incomplete and unused.
+- `analysis/lineup_balance_test.py` (test 29): attribute levels of the eleven add a little to match results; evenness does not.
+
 ## All missing profiles loaded, match crawl started, tests 28 and 29 registered
 
 - The remaining 10,564 profiles are loaded (`profiler-5.ndjson.gz` holds all 16,789 from this download). 65,128 profiles in all; the site has 38,126 players, 3,672 of them without a 270-minute season.
