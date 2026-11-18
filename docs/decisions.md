@@ -93,3 +93,9 @@ Descriptions that have not shown predictive value (collective attributes, weakes
 `docs/lessons.md`, unknowns live in `docs/open-questions.md`, and no model change is finished before `scripts/run_all.py` has
 rebuilt `docs/scoreboard.md`. Reason: on 2026-11-16 the value model was changed three times in reaction to single players before
 the buy test was rerun.
+
+## 47. The fee model follows the going rate, and is judged on a rolling origin
+
+Each training fee is measured against the fee-over-value level of its own year; predictions add the level of the previous 365 days
+in the player's value bracket. The yearly price index is out of the fee model. Model changes are decided on six rolling years
+(2021-2026), not on one window. Reason: tests 30-30c; the index left a 19 % bias and one window hid that the model beats the market value.

@@ -1080,3 +1080,95 @@ So the owner's point holds in one form and not in another. An eleven with more b
 the same market value and level (and one that makes many clearances wins by less). That a ball winner helps MORE in a team that lacks one is not visible.
 Not adopted into the squad model yet: that model is fitted on seasons, this on matches; joining them is the next step.
 Lesson: at match level the attribute mix of the eleven adds a little beyond quality (ball winning, passing, finishing up; clearing down); evenness and "filling the weakest spot" add nothing.
+
+
+## Test 30: systematic search for fee-model improvements
+
+Written before the search (2026-11-18). Only one diagnostic was run first, and it is the reason for step T below: the site fee model predicts 18.6 %
+too high on the 2025-26 test transfers (median prediction over fee 1.19; the market value alone 1.03).
+
+Question: which changes to the target, the training and the inputs make the fee model better, and does any combination beat the third-party market value alone?
+
+Protocol (to keep a search over many candidates honest):
+- Selection set: fit on transfers to 2023, score on 2024. Candidates are accepted or rejected on this set only.
+- Final test: fit on transfers to 2024, score once on 2025-26, for (i) today's site model, (ii) the selected model, (iii) the selected model plus what is known only when the buyer is known, (iv) the market value alone.
+- Greedy forward selection over groups, in the order listed; a group stays if the typical miss on the selection set falls by 0.3 points or more.
+- Metric: typical miss (median absolute percentage error) on the fee; also the bias (median prediction over fee) and the rank correlation.
+
+Candidates:
+- T, target: the log ratio of fee to market value WITHOUT the price index. The market value on the day is already in that day's money, so dividing the fee by an index and multiplying back for the test year adds a year effect twice.
+- W, training weights: recent transfers count more (half-life two years), because the provider's level against fees drifts (fee over value by year: 1.62 in 2018, 0.87 in 2021, 0.96 in 2024).
+- CAL, rolling calibration: the median log fee-over-value of all transfers in the 365 days before the transfer, overall and in the same value bracket.
+- MVH, value history before the transfer: change over the last 6 and 12 months, months since the value last changed, the width of the provider's own range, number of value points.
+- PREV, earlier fees for the player: last fee, years since, last fee over today's value, number of earlier fees.
+- LVL, level and the seven attributes on the common scale from the season before (as on the site).
+- POS, primary position code and number of listed positions.
+- CTX, seller: quality of the selling team (mean value of its eleven most valuable players), window (summer or winter).
+- BUY (only for iii), buyer: league strength, team quality, step in league strength and in team quality, largest fee the buyer had paid before.
+Could mislead us: one selection year; availability inputs exist only from 2022/23; BUY cannot be used for the generic Speider price because the buyer is unknown.
+
+### Test 30b: price-level offset, rolling origin (follow-up, written before running)
+
+Written 2026-11-18 after test 30 was read. Test 30 kept only recency weights (final 45.1 -> 44.5 %, bias 1.19 -> 1.13) and showed that no new player-side group clears the bar. The remaining bias says the model still learns the fee-over-value level of old years. Trees cannot use the rolling level (CAL) well as an input. Hypothesis: subtracting the rolling level from the target and adding today's level back (an offset, not an input) removes most of the bias and lowers the miss by at least 0.5 points.
+
+Because the 2025-26 test set has now been used, the decision is made on a rolling origin instead: for each year 2021-2026, fit on all earlier years and score that year; pool the six years. Variants: site model today; recency weights; offset (overall level); offset (value-bracket level); offset + weights; half-life one year; each of these with buyer-known inputs; market value alone. Adoption bar: pooled miss at least 0.5 points below the site model and worse in at most one of the six years. Bias is reported for every variant.
+
+### Test 30c: year-centred training target (follow-up, written before running)
+
+Written 2026-11-18 after 30b was read. The offset model cut the pooled miss but predicts 7-15 % too low in 2025 and 2026 although the fees in those years sit slightly above the trailing level. Suspicion: inputs that only exist in recent seasons (match line-ups, newer statistics) let the trees recognise recent years and carry over the low 2024 level. Hypothesis: if each training fee is measured against the level of its own year (so no year-level signal is left to learn) and the trailing level is added back when predicting, the bias moves to within 5 % of 1 without raising the pooled miss. Same rolling origin and bar as 30b.
+
+## Results of tests 30, 30b and 30c (2026-11-18)
+
+### Test 30 (`analysis/fee_feature_search.py`)
+
+11,527 fee transfers. Selection set: fit to 2023 (6,380), score 2024 (1,552). Final: fit to 2024 (7,932), score 2025-26 (3,595).
+
+| Step on the selection set | Miss | Bias | Kept |
+|---|---|---|---|
+| Site model (indexed target) | 48.6 % | 1.13 | |
+| T raw ratio target | 48.3 % | 1.15 | no |
+| W recency weights | 47.0 % | 1.11 | yes |
+| CAL rolling level as input | 46.8 % | 1.07 | no |
+| MVH value history | 48.0 % | 1.10 | no |
+| PREV earlier fees | 47.1 % | 1.13 | no |
+| LVL level and attributes | 47.1 % | 1.13 | no |
+| POS position | 47.5 % | 1.13 | no |
+| CTX selling club, window | 47.6 % | 1.11 | no |
+| Market value alone | 46.7 % | 1.04 | |
+
+Final test, once: site model 45.1 % (bias 1.19), selected (weights only) 44.5 % (1.13), selected plus buyer-known inputs 39.8 % (1.16, rank 0.890), market value alone 43.2 % (1.03, rank 0.836).
+
+Reading: no player-side group clears the bar. Value history, earlier fees, level, attributes, position and selling club add nothing once the market value, age, statistics and availability are in. The buyer is worth five points. The bias stays.
+
+### Test 30b (`analysis/fee_offset_test.py`), rolling origin 2021-2026, pooled 9,950 transfers
+
+| Variant | Miss | Bias | Rank | Years worse than site model |
+|---|---|---|---|---|
+| Market value alone | 48.5 % | 1.00 | 0.801 | |
+| Site model before | 47.4 % | 1.14 | 0.824 | |
+| Recency weights | 46.9 % | 1.10 | 0.824 | 2 |
+| Raw target | 46.9 % | 1.08 | 0.820 | 2 |
+| Offset, overall level | 45.5 % | 0.95 | 0.826 | 2 |
+| Offset, bracket level | 44.9 % | 0.95 | 0.828 | 1 |
+| Offset, bracket level, weights | 45.3 % | 0.95 | 0.827 | 0 |
+| Site model before + buyer | 42.5 % | 1.15 | 0.864 | 0 |
+| Offset + buyer | 40.3 % | 0.95 | 0.867 | 0 |
+
+Hypothesis confirmed on the miss (2.5 points, bar 0.5), not on the bias: it swings from 14 % too high to 5 % too low, and 7-15 % too low in 2025 and 2026. Recency weights add nothing once the offset is in. Over six years the model beats the market value alone by 3.6 points; the single 2025-26 window had hidden that (the market value alone has its two best years there).
+
+### Test 30c (same script)
+
+| Variant | Miss | Bias | 2025 bias | 2026 bias |
+|---|---|---|---|---|
+| Offset, bracket level | 44.9 % | 0.95 | 0.86 | 0.93 |
+| Year-centred, bracket level | 45.1 % | 0.97 | 0.92 | 0.94 |
+| Year-centred, without availability inputs | 45.4 % | 0.97 | 0.91 | 0.95 |
+| Year-centred + buyer | 39.9 % | 0.99 | 0.92 | 0.98 |
+
+Hypothesis half confirmed: the bias moves closer to 1 at the same miss, but 2025 and 2026 stay 6-8 % low (the bar was 5 %). The suspicion about the availability inputs was wrong: dropping them changes nothing. Adopted: year-centred target with the trailing bracket level added back (`analysis/transfers.py: price_level`, `analysis/site_models.py`). The yearly price index is no longer used by the fee model.
+
+Site model after the change, 2025-26 (3,595): miss 41.9 % against 43.2 % for the market value alone (first time below), under 23: 45.2 % against 48.7 %, rank 0.852 against 0.836, bias 0.91 against 1.03, 74.9 % of fees inside the 80 % range. These transfers were looked at during the search, so the rolling-origin numbers are the ones to trust. Speider values on the site fall by a median of 23 %, most among players worth under 1m.
+
+Not done: buyer-known inputs are not on the site (a player page has no buyer). The form slope (test 27) was estimated on the old model's errors and has not been re-estimated.
+
+Worse after the change: players worth 40m+ (n=81), miss 21.1 % -> 24.7 %; the tail line now trails the trees alone (23.9 %). Listed as an open question.

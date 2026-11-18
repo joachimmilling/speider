@@ -9,18 +9,18 @@
    plus the chance of still playing.
 
 Writes data/site_models.pkl (one row per player) and data/result_site_models.json.
-Run: PYTHONPATH=analysis python3 analysis/site_models.py
+Run: PYTHONPATH=analysis python3 analysis/site_models.py   (SITE_STAGE=value refits only the fee model and updates the value columns)
 """
 from __future__ import annotations
 
 import json
+import os
 
 import duckdb
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier as HGBC, HistGradientBoostingRegressor as HGBR
 
-from price_model_v4 import INDEX
 from projection_v3 import BANDS, FEATS, KW, apply, band, fit_q, offsets
 
 # Momentum is left out everywhere (test 20): it adds nothing out of time, it punished top players for a
@@ -81,44 +81,64 @@ def main() -> None:
     from availability import table as _avail
     av = _avail(con); av = av.sort_values("squad").groupby(["player_id", "ey"], as_index=False).last(); av = av[av.squad + av.inj >= 5][["player_id", "ey"] + AV].rename(columns={"ey": "y"})
     m = m.merge(av, on=["player_id", "y"], how="left"); now = now.merge(av[av.y == 2026].drop(columns=["y"]), on="player_id", how="left")
-    m["val"] = np.log(m.mv); m["target"] = np.log(m.fee / m.yy.map(INDEX) * 100)
+    m["val"] = np.log(m.mv); m["target"] = np.log(m.fee)
     # The models learn the fee relative to the third-party value (log ratio), not the fee itself. Trees cannot
     # extrapolate, so a model of the fee itself caps out near the largest fees seen and marks every
     # 100m+ player as overpriced. A ratio carries over to values above anything in the training data.
-    m["ratio"] = m.target - m.val
-    pv0 = lambda mm, X: mm.predict(X[PFA]) + X.val.values
+    # Test 30b: the ratio is measured against the going rate (median log fee over value in the previous 365 days,
+    # by value bracket), which is added back at prediction time. That replaces the yearly price index and keeps the
+    # model from carrying the fee-over-value level of old years into today.
+    from transfers import price_level
+    raw = (m.target - m.val).values
+    m["lev"] = price_level(m.date, raw, m.val, m.date, m.val)[1]
+    lev_at = lambda dates, vals: price_level(m.date, raw, m.val, dates, vals)[1]
+    # Test 30c: each training fee is measured against the level of its own calendar year, so no year-level signal is left
+    # for the trees to pick up through inputs that only exist in some seasons; predictions add the trailing level.
+    _b = np.digitize(m.val.values, np.log([1e6, 5e6, 2e7])); _ya = pd.Series(raw).groupby(m.yy.values).transform("median").values
+    m["ratio"] = raw - (0.5 * _ya + 0.5 * pd.Series(raw).groupby([m.yy.values, _b]).transform("median").values)
+    pv0 = lambda mm, X: mm.predict(X[PFA]) + X.val.values + X.lev.values
     TL = {}
     def pv(mm, X):
         # the tail line moves the median; the 10 % and 90 % models move by the same amount
-        d = tail_w(X.val.values) * (TL["f"](X.age.values, X.val.values) + X.val.values - pv0(TL["med"], X))
+        d = tail_w(X.val.values) * (TL["f"](X.age.values, X.val.values) + X.val.values + X.lev.values - pv0(TL["med"], X))
         return pv0(mm, X) + d
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
     q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PFA], tr.ratio) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(tr.age.values, tr.val.values, tr.ratio.values, 20e6), q[0.5]
-    scale = te.yy.map(INDEX).values / 100
     big = (te.mv >= 40e6).values
-    res["tail_value"] = dict(n_test_40m=int(big.sum()), err_trees=round(err(np.exp(pv0(q[0.5], te))[big] * scale[big], te.fee.values[big]), 3))
-    p = {a: np.exp(pv(mm, te)) * scale for a, mm in q.items()}
+    res["tail_value"] = dict(n_test_40m=int(big.sum()), err_trees=round(err(np.exp(pv0(q[0.5], te))[big], te.fee.values[big]), 3))
+    p = {a: np.exp(pv(mm, te)) for a, mm in q.items()}
     res["tail_value"]["err_with_tail"] = round(err(p[0.5][big], te.fee.values[big]), 3)
     young = (te.age < 23).values
     res["value"] = dict(n_train=len(tr), n_test=len(te), speider_err=round(err(p[0.5], te.fee.values), 3), third_party_err=round(err(te.mv.values, te.fee.values), 3),
                         speider_err_u23=round(err(p[0.5][young], te.fee.values[young]), 3), third_party_err_u23=round(err(te.mv.values[young], te.fee.values[young]), 3),
+                        speider_bias=round(float(np.median(p[0.5] / te.fee.values)), 3), third_party_bias=round(float(np.median(te.mv.values / te.fee.values)), 3),
                         inside_80=round(float(np.mean((te.fee.values >= p[0.1]) & (te.fee.values <= p[0.9]))), 3),
                         rank=round(float(pd.Series(p[0.5]).corr(pd.Series(te.fee.values), method="spearman")), 3),
                         rank_third_party=round(float(te.mv.corr(te.fee, method="spearman")), 3))
     # widen the interval so 80 % of held-out fees fall inside, then refit on everything
-    r = np.log(te.fee.values / scale)
+    r = np.log(te.fee.values)
     lo_off = float(np.quantile(r - pv(q[0.1], te), 0.10)); hi_off = float(np.quantile(r - pv(q[0.9], te), 0.90))
     res["value"]["interval_offsets"] = [round(lo_off, 3), round(hi_off, 3)]
     q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PFA], m.ratio) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(m.age.values, m.val.values, m.ratio.values, 20e6), q[0.5]
-    now["val"] = now.lv
+    now["val"] = now.lv; today = m.date.max() + pd.Timedelta(days=1)
+    now["lev"] = lev_at(np.full(len(now), today.to_datetime64()), now.val)
+    res["value"]["level_today"] = {k: round(float(v), 3) for k, v in zip(("under 1m", "1-5m", "5-20m", "20m+"), lev_at(np.full(4, today.to_datetime64()), np.log([5e5, 2e6, 1e7, 5e7])))}
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),
                             sv_lo=np.exp(pv(q[0.1], now) + lo_off), sv_hi=np.exp(pv(q[0.9], now) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
-    # Speider value back in time: the same model applied to each earlier mid-year (in-sample for the training years)
+    # Speider value back in time: the same model applied to each earlier mid-year, with the going rate of that summer (in-sample for the training years)
     hist = b[b.y < 2026].merge(av, on=["player_id", "y"], how="left"); hist["val"] = hist.lv
-    pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(pv(q[0.5], hist)) * hist.y.map(INDEX).fillna(70).values / 100)).to_pickle("data/site_models_hist.pkl")
+    hist["lev"] = lev_at(pd.to_datetime(hist.y.astype(int).astype(str) + "-07-01").values, hist.val)
+    pd.DataFrame(dict(player_id=hist.player_id.values, y=hist.y.values, sv=np.exp(pv(q[0.5], hist)))).to_pickle("data/site_models_hist.pkl")
     print("value", json.dumps(res["value"]), flush=True)
+    if os.environ.get("SITE_STAGE") == "value":
+        # Refit only the fee model: the path models below do not depend on it, so the value columns of the existing file are replaced.
+        prev = pd.read_pickle("data/site_models.pkl"); assert (prev.player_id.values == out.player_id.values).all()
+        for c in ("mv", "sv", "sv_lo", "sv_hi"): prev[c] = out[c].values
+        prev.to_pickle("data/site_models.pkl")
+        old = json.load(open("data/result_site_models.json")); old.update(value=res["value"], tail_value=res["tail_value"])
+        json.dump(old, open("data/result_site_models.json", "w"), indent=1); print("done (value only)", len(prev)); return
 
     # 2. Value path, relative to the market, in today's prices
     res["path"] = {}

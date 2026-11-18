@@ -13,6 +13,8 @@ STEPS = [
     ("wide_frame", ["python3", "analysis/build_wide_frame.py"], {}),
     ("dropout", ["python3", "analysis/dropout_career.py"], {}),
     ("site_models", ["python3", "analysis/site_models.py"], {}),
+    ("fee_search", ["python3", "analysis/fee_feature_search.py"], {"REBUILD": "1"}),
+    ("fee_offset", ["python3", "analysis/fee_offset_test.py"], {}),
     ("buy_test", ["python3", "analysis/buy_verdict_backtest.py"], {}),
     ("team_strength", ["python3", "analysis/team_strength_backtest.py"], {}),
     ("squad_model", ["python3", "analysis/squad_model.py"], {}),

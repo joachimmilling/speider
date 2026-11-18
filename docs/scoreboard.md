@@ -1,13 +1,16 @@
 # Scoreboard
 
-Rebuilt 2026-11-17 at commit `eba5d8d` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-18 at commit `a7bdfc8` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
-| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.451** | third-party value 0.432 | n=3595, lower is better |
-| Pricing | Speider value: rank correlation with fees | **0.851** | third-party value 0.836 |  |
-| Pricing | Share of fees inside the 80 % range | **0.747** | target 0.80 |  |
-| Pricing | Miss on fees for players worth 40m+ | **0.211** | trees alone 0.219 | n=81 |
+| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.419** | third-party value 0.432 | n=3595, lower is better |
+| Pricing | Speider value: rank correlation with fees | **0.852** | third-party value 0.836 |  |
+| Pricing | Share of fees inside the 80 % range | **0.749** | target 0.80 |  |
+| Pricing | Speider value: median prediction over fee (1 is unbiased) | **0.912** | third-party value 1.027 | 2025-26 |
+| Pricing | Speider value: typical miss, six years each predicted from earlier years (2021-26) | **0.451** | third-party value 0.4848, model before test 30 0.4737 | lower is better |
+| Pricing | Same, when the buying club is known | **0.3993** | without buyer 0.451 | not on the site yet |
+| Pricing | Miss on fees for players worth 40m+ | **0.247** | trees alone 0.239 | n=81 |
 | Pricing | Predicting the next fee: Speider outcome model (rank) | **0.548** | fee paid 0.593, third-party value 0.501 | higher is better |
 | Pricing | Buys judged cheapest: resale / fee (median) | **1.41** | dearest fifth 0.89 | n=429 |
 | Pricing | Same, largest third of fees | **1.05** | dearest fifth 0.52 | n=191 |
@@ -24,7 +27,7 @@ Rebuilt 2026-11-17 at commit `eba5d8d` by `scripts/scoreboard.py`. History: `doc
 
 ## Changed since the previous row
 
-- `fee_miss`: 0.463 -> 0.451
-- `fee_rank`: 0.85 -> 0.851
-- `fee_inside80`: 0.752 -> 0.747
-- `fee_miss_40m`: 0.243 -> 0.211
+- `fee_miss`: 0.451 -> 0.419
+- `fee_rank`: 0.851 -> 0.852
+- `fee_inside80`: 0.747 -> 0.749
+- `fee_miss_40m`: 0.211 -> 0.247

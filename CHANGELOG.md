@@ -1,5 +1,12 @@
 # Changelog
 
+## Fee model follows the going rate (tests 30, 30b, 30c)
+
+- `analysis/fee_feature_search.py` (test 30): greedy search over eight feature groups. No player-side group clears the bar; buyer-known inputs cut the miss by five points.
+- `analysis/fee_offset_test.py` (tests 30b, 30c): rolling origin 2021-2026. Year-centred target plus trailing level: pooled miss 47.4 % -> 45.1 %, bias 1.14 -> 0.97; market value alone 48.5 %.
+- `analysis/transfers.py: price_level`, `analysis/site_models.py`: adopted; the price index is out of the fee model. 2025-26: miss 45.1 % -> 41.9 % (market value 43.2 %). `SITE_STAGE=value` refits only the fee model.
+- Scoreboard: fee bias, rolling-origin miss, miss with a known buyer.
+
 ## Match data, availability in the fee model, tests 28 and 29
 
 - `scripts/load_matches.py`: 7,583 big-five matches (2022/23-2026/27) into `fm_matches`, `fm_lineups`, `fm_unavailable`.

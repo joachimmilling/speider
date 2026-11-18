@@ -68,3 +68,9 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 - The site and the backtest ran different model code for a day. One definition per model.
 - Hiding a number is not a fix; find the technique that handles the data properly.
 - Publishing: the artifact blocks remote images; logos only work in the local build.
+- Fee model: the level of fee over market value drifts by year (1.9 in 2019, 0.9 in 2021). A model that learns that level from old years is biased; measure each fee against the level of its own year and add the trailing level back when predicting (tests 30b, 30c). Deflating by a yearly index did not do this.
+- Fee model: one test window misleads. Over six rolling years the model beats the market value alone by 3.6 points; on 2025-26 alone it looked 2 points worse. Judge model changes on the rolling origin.
+- Fee model: value history, earlier fees, level, attributes, position and selling club add nothing on top of market value, age, statistics and availability (test 30). Do not retry without new data.
+- Fee model: who buys is worth about five points of miss (test 30, 30c). The largest known untapped signal.
+- Tree inputs do not fix a level shift: the rolling level as an input was not kept, the same number as an offset cut 2.5 points.
+- Background processes do not survive a device shell call; a job over 180 s must be staged (`SITE_STAGE=value`).
