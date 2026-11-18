@@ -1,5 +1,11 @@
 # Changelog
 
+## Price by buyer, repeatable fee model (tests 31, 31b)
+
+- `analysis/buyers.py`: club tiers by the value of the best eleven. Buyer and seller tier cut the rolling-origin miss from 45.1 % to 42.1 %.
+- `analysis/site_models.py`: fixed row order and 25 bootstrap fits (`Bag`); values no longer move between runs. 2025-26 miss 41.6 % (market value 43.2 %).
+- Site: "Price by buyer" on the player page; signings on the team page are priced for that club's tier.
+
 ## Fee model follows the going rate (tests 30, 30b, 30c)
 
 - `analysis/fee_feature_search.py` (test 30): greedy search over eight feature groups. No player-side group clears the bar; buyer-known inputs cut the miss by five points.

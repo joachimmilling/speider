@@ -349,6 +349,13 @@ def main() -> None:
             d["tr"] = [[str(x.date)[:10], x.from_name, x.to_name, int(x.fee), int(x.mv), round(float(x.rel), 2), int(x.q),
                         int(x.next_fee) if pd.notna(x.next_fee) else None, int(x.next_y) if pd.notna(x.next_y) else None, int(x.sport), None if pd.isna(x.a1) else int(x.a1), None if pd.isna(x.a2) else int(x.a2), x.unit] for _, x in tfg[pid].iterrows()]
         shards[pid % SHARDS][pid] = d
+    # Test 31: price per buyer tier, as a percentage of the Speider value shown, and the tier of every club from today's squads
+    from buyers import TIERS, club_tiers
+    for row in index:
+        v = sm.get(row[0]) if row[10] else None
+        row.append([int(round(100 * v[f"bt{T}"] / v["sv"])) for T in TIERS] if v and v.get("bt1") == v.get("bt1") and v.get("bt1") else None)
+    tdf = pd.DataFrame([(row[18], np.log(row[12])) for row in index if row[18] is not None and row[12]], columns=["team_id", "lv"])
+    tiers = {int(x.team_id): int(x.tier) for x in club_tiers(tdf, ["team_id"]).itertuples()}
     js(OUT / "data/players.js", "players", index)
     # squad model (analysis/squad_model.py): coefficients on standardised team features, and last season's standardised goal difference
     squad = None
@@ -372,12 +379,14 @@ def main() -> None:
     e["z"] = (e.npg90 - gg.npg90.transform("mean")) / gg.npg90.transform("std"); e["pct"] = gg.npg90.rank(pct=True) * 100
     js(OUT / "data/eras.js", "eras", [[x.player, int(x.y), x.league, x.team, int(x.m), int(x.goals), int(x.pens), int(x.assists), r(x.npg90, 2), r(x.z, 2), r(x.pct, 1)] for x in e.itertuples()])
 
+    fo = json.load(open("data/result_fee_offset.json")) if Path("data/result_fee_offset.json").exists() else {}
+    buyer_test = {"with": fo["year-centred + tiers, bagged x10"]["pooled"]["miss"], "without": fo["year-centred, bagged x10"]["pooled"]["miss"]} if fo else None
     names = con.execute("select league_id, name, cc from fm_leagues").fetchdf().set_index("league_id")
     lg = [[names.name.get(i, str(i)), names.cc.get(i, ""), r(v, 2)] for i, v in ls.sort_values(ascending=False).items() if i in names.index]
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))
     proj = [[2026 + h, round(100 * np.exp(drift * h)), round(100 * np.exp(drift * h - 1.28 * sd * np.sqrt(h))), round(100 * np.exp(drift * h + 1.28 * sd * np.sqrt(h)))] for h in range(1, 9)]
     js(OUT / "data/market.js", "market", dict(index=[[k, v] for k, v in INDEX.items()], projection=proj, leagues=lg, top5_base_rate=round(base_rate, 3),
-                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), squad=squad, verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), logos=os.environ.get("SITE_LOGOS") == "1", verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
+                                             built="2026-11-16", shards=SHARDS, value_test=smres.get("value"), tiers=tiers, buyer_test=buyer_test, squad=squad, verdict_stats=verdict_stats, deals=deals, steps=steps, sport_by_verdict=sport_by_verdict, ls_per_sd=round(LS_PER_SD, 2), logos=os.environ.get("SITE_LOGOS") == "1", verdict=(json.load(open("data/result_buy_verdict.json")) if Path("data/result_buy_verdict.json").exists() else {}).get("flag"), counts=dict(players=len(index), eras=len(e))))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
     print(f"players {len(index)}, era seasons {len(e)}, leagues {len(lg)}, site {size:.0f} MB in {OUT}")
 

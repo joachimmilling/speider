@@ -74,3 +74,6 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 - Fee model: who buys is worth about five points of miss (test 30, 30c). The largest known untapped signal.
 - Tree inputs do not fix a level shift: the rolling level as an input was not kept, the same number as an offset cut 2.5 points.
 - Background processes do not survive a device shell call; a job over 180 s must be staged (`SITE_STAGE=value`).
+- Database queries return rows in a different order from run to run; a tree model fitted on them gave Speider values that moved 8-16 % per player between runs. Sort before fitting and bag the model (test 31b). This was the cause of values that jumped between builds.
+- The buyer's tier (clubs ranked by the value of their best eleven) keeps about half of what exact buyer inputs give; add the seller's tier (test 31). Top-20 clubs pay about 1.4 times the market value at the median, the smallest clubs 0.84.
+

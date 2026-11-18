@@ -75,6 +75,9 @@ def build(con) -> pd.DataFrame:
     m = m.merge(tq.rename(columns={"team_id": "from_id", "q": "sell_q"}), on=["from_id", "y"], how="left")
     m = m.merge(tq.rename(columns={"team_id": "to_id", "q": "buy_q"}), on=["to_id", "y"], how="left").merge(tls.rename(columns={"team_id": "to_id", "ls": "buy_ls"}), on=["to_id", "y"], how="left")
     m["winter"] = m.mo.isin([12, 1, 2, 3]).astype(int); m["step_ls"] = m.buy_ls - m.league_strength; m["step_q"] = m.buy_q - m.sell_q
+    from buyers import club_tiers
+    ct = club_tiers(b[b.team_id.notna()], ["team_id", "y"])[["team_id", "y", "tier"]]
+    m = m.merge(ct.rename(columns={"team_id": "to_id", "tier": "buy_tier"}), on=["to_id", "y"], how="left").merge(ct.rename(columns={"team_id": "from_id", "tier": "sell_tier"}), on=["from_id", "y"], how="left")
     m = m.sort_values("date").reset_index(drop=True)
     m["buy_max_fee"] = np.log(m.groupby("to_id").fee.transform(lambda x: x.shift().cummax()))
     return m

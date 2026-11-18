@@ -99,3 +99,10 @@ the buy test was rerun.
 Each training fee is measured against the fee-over-value level of its own year; predictions add the level of the previous 365 days
 in the player's value bracket. The yearly price index is out of the fee model. Model changes are decided on six rolling years
 (2021-2026), not on one window. Reason: tests 30-30c; the index left a 19 % bias and one window hid that the model beats the market value.
+
+## 48. A price per type of buyer, and a bagged, repeatable fee model
+
+The player page shows the price for five buyer tiers, and the team page prices a signing for that club's tier. Tiers are ranks by the
+value of a club's best eleven (`analysis/buyers.py`). The fee model is the mean of 25 bootstrap fits on rows in a fixed order.
+Reason: tests 31 and 31b; the buyer is the largest known signal, and one fit moved 8-16 % per player with the row order.
+

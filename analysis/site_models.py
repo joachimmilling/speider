@@ -51,6 +51,21 @@ def tail_fit(age, lv, y, floor):
     return lambda a, l: m.predict(X(np.asarray(a, float), np.asarray(l, float)))
 
 
+class Bag:
+    """Mean of n tree models, each fitted on a bootstrap sample of the rows (test 31b): steadier than one model."""
+
+    def __init__(self, n=25, **kw): self.n, self.kw = n, kw
+
+    def fit(self, X, y):
+        X, y, rs = pd.DataFrame(X).astype(float).values, np.asarray(y, float), np.random.RandomState(0); self.models = []
+        for i in range(self.n):
+            ix = rs.randint(0, len(y), len(y)); self.models.append(HGBR(**{**self.kw, "random_state": i}).fit(X[ix], y[ix]))
+        return self
+
+    def predict(self, X):
+        X = pd.DataFrame(X).astype(float).values; return np.mean([m_.predict(X) for m_ in self.models], axis=0)
+
+
 def err(pred, fee):
     return float(np.median(np.abs(pred - fee) / fee))
 
@@ -82,6 +97,15 @@ def main() -> None:
     av = _avail(con); av = av.sort_values("squad").groupby(["player_id", "ey"], as_index=False).last(); av = av[av.squad + av.inj >= 5][["player_id", "ey"] + AV].rename(columns={"ey": "y"})
     m = m.merge(av, on=["player_id", "y"], how="left"); now = now.merge(av[av.y == 2026].drop(columns=["y"]), on="player_id", how="left")
     m["val"] = np.log(m.mv); m["target"] = np.log(m.fee)
+    # Test 31: buyer and seller tier (clubs ranked by the value of their best eleven that year), for the price per type of buyer
+    from buyers import TIERS, club_tiers
+    ct = club_tiers(b[b.team_id.notna()], ["team_id", "y"])[["team_id", "y", "tier"]]
+    fid = con.execute("select player_id, date, any_value(from_id) from_id from fm_transfers group by 1,2").fetchdf(); fid["date"] = pd.to_datetime(fid.date).astype(m.date.dtype)
+    m = m.merge(fid, on=["player_id", "date"], how="left")
+    m = m.merge(ct.rename(columns={"team_id": "to_id", "tier": "buy_tier"}), on=["to_id", "y"], how="left").merge(ct.rename(columns={"team_id": "from_id", "tier": "sell_tier"}), on=["from_id", "y"], how="left")
+    now = now.merge(ct[ct.y == 2026].rename(columns={"team_id": "team_id", "tier": "sell_tier"})[["team_id", "sell_tier"]], on="team_id", how="left")
+    PFB = PFA + ["buy_tier", "sell_tier"]
+    m = m.sort_values(["date", "player_id", "fee"], kind="stable").reset_index(drop=True)   # query order varies between runs; the fit must not
     # The models learn the fee relative to the third-party value (log ratio), not the fee itself. Trees cannot
     # extrapolate, so a model of the fee itself caps out near the largest fees seen and marks every
     # 100m+ player as overpriced. A ratio carries over to values above anything in the training data.
@@ -103,7 +127,7 @@ def main() -> None:
         d = tail_w(X.val.values) * (TL["f"](X.age.values, X.val.values) + X.val.values + X.lev.values - pv0(TL["med"], X))
         return pv0(mm, X) + d
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
-    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(tr[PFA], tr.ratio) for a in (0.1, 0.5, 0.9)}
+    q = {a: Bag(loss="quantile", quantile=a, **KW).fit(tr[PFA], tr.ratio) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(tr.age.values, tr.val.values, tr.ratio.values, 20e6), q[0.5]
     big = (te.mv >= 40e6).values
     res["tail_value"] = dict(n_test_40m=int(big.sum()), err_trees=round(err(np.exp(pv0(q[0.5], te))[big], te.fee.values[big]), 3))
@@ -120,13 +144,18 @@ def main() -> None:
     r = np.log(te.fee.values)
     lo_off = float(np.quantile(r - pv(q[0.1], te), 0.10)); hi_off = float(np.quantile(r - pv(q[0.9], te), 0.90))
     res["value"]["interval_offsets"] = [round(lo_off, 3), round(hi_off, 3)]
-    q = {a: HGBR(loss="quantile", quantile=a, **KW).fit(m[PFA], m.ratio) for a in (0.1, 0.5, 0.9)}
+    q = {a: Bag(loss="quantile", quantile=a, **KW).fit(m[PFA], m.ratio) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(m.age.values, m.val.values, m.ratio.values, 20e6), q[0.5]
     now["val"] = now.lv; today = m.date.max() + pd.Timedelta(days=1)
     now["lev"] = lev_at(np.full(len(now), today.to_datetime64()), now.val)
     res["value"]["level_today"] = {k: round(float(v), 3) for k, v in zip(("under 1m", "1-5m", "5-20m", "20m+"), lev_at(np.full(4, today.to_datetime64()), np.log([5e5, 2e6, 1e7, 5e7])))}
+    # price per buyer tier: the price never falls with the buyer's tier; the tail line moves it by the same amount as the main model
+    qb = Bag(loss="quantile", quantile=0.5, **KW, monotonic_cst=[1 if f == "buy_tier" else 0 for f in PFB]).fit(m[PFB], m.ratio)
+    tail_d = pv(q[0.5], now) - pv0(q[0.5], now)
+    bt = {T: np.exp(qb.predict(now.assign(buy_tier=T)[PFB]) + now.val.values + now.lev.values + tail_d) for T in TIERS}
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),
                             sv_lo=np.exp(pv(q[0.1], now) + lo_off), sv_hi=np.exp(pv(q[0.9], now) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
+    for T in TIERS: out[f"bt{T}"] = bt[T]
     # Speider value back in time: the same model applied to each earlier mid-year, with the going rate of that summer (in-sample for the training years)
     hist = b[b.y < 2026].merge(av, on=["player_id", "y"], how="left"); hist["val"] = hist.lv
     hist["lev"] = lev_at(pd.to_datetime(hist.y.astype(int).astype(str) + "-07-01").values, hist.val)
@@ -135,7 +164,7 @@ def main() -> None:
     if os.environ.get("SITE_STAGE") == "value":
         # Refit only the fee model: the path models below do not depend on it, so the value columns of the existing file are replaced.
         prev = pd.read_pickle("data/site_models.pkl"); assert (prev.player_id.values == out.player_id.values).all()
-        for c in ("mv", "sv", "sv_lo", "sv_hi"): prev[c] = out[c].values
+        for c in ["mv", "sv", "sv_lo", "sv_hi"] + [f"bt{T}" for T in TIERS]: prev[c] = out[c].values
         prev.to_pickle("data/site_models.pkl")
         old = json.load(open("data/result_site_models.json")); old.update(value=res["value"], tail_value=res["tail_value"])
         json.dump(old, open("data/result_site_models.json", "w"), indent=1); print("done (value only)", len(prev)); return

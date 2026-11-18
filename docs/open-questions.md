@@ -41,7 +41,9 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 - Country names are English in the Norwegian UI.
 - `analysis/growth_model.py` still has the old role mapping for 83-87.
 - Fee model still predicts 6-9 % low in 2025-26 after test 30c. Cause unknown (not the availability inputs).
-- Buyer-known inputs cut the miss by five points but are not used on the site. Candidate: a price per type of buyer on the player page, and in the team page's buy simulation where the buyer is known.
+- Buyer tiers recover about half of what exact buyer inputs give (42 % against 40 % miss); the rest (league, the club's own spending record) is not on the site.
+- The buyer-tier model predicts about 8 % low. The Speider value without a buyer and the tier prices come from two models and need not agree.
+- A full `analysis/site_models.py` run no longer fits in one 180 s device call; only `SITE_STAGE=value` has been rerun since test 30.
 - The form slope (test 27) and the buy tests (test 20) were run on the fee model before test 30; rerun on the new one.
 - Statistics add little to the fee model beyond the market value; the provider's value already holds them. Untested: models without the market value as an input, to see what performance alone explains.
 - Players worth 40m+: the miss rose from 21.1 % to 24.7 % with the test-30 model (n=81), and the tail line now does worse than the trees alone (23.9 %). Re-test the tail line on the rolling origin.

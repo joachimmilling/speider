@@ -25,9 +25,9 @@ def main() -> None:
         if "speider_bias" in v: rows.append(("fee_bias", "Pricing", "Speider value: median prediction over fee (1 is unbiased)", v["speider_bias"], f'third-party value {v["third_party_bias"]}', "2025-26"))
         fo = load("result_fee_offset.json")
         if fo:
-            k = "year-centred, bracket level"
+            k = "year-centred, bagged x10"
             rows += [("fee_miss_rolling", "Pricing", "Speider value: typical miss, six years each predicted from earlier years (2021-26)", fo[k]["pooled"]["miss"], f'third-party value {fo["market value alone"]["pooled"]["miss"]}, model before test 30 {fo["site model today"]["pooled"]["miss"]}', "lower is better"),
-                     ("fee_miss_buyer", "Pricing", "Same, when the buying club is known", fo[k + " + buyer"]["pooled"]["miss"], f'without buyer {fo[k]["pooled"]["miss"]}', "not on the site yet")]
+                     ("fee_miss_buyer", "Pricing", "Same, when the buying club's tier is known", fo["year-centred + tiers, bagged x10"]["pooled"]["miss"], f'without buyer {fo[k]["pooled"]["miss"]}, exact buyer inputs {fo["year-centred, bracket level + buyer"]["pooled"]["miss"]}', "buyer and seller tier")]
         if "tail_value" in sm: rows.append(("fee_miss_40m", "Pricing", "Miss on fees for players worth 40m+", sm["tail_value"]["err_with_tail"], f'trees alone {sm["tail_value"]["err_trees"]}', f'n={sm["tail_value"]["n_test_40m"]}'))
     if bv:
         r, vd, vl = bv["next_fee_rank"], bv["verdict"], bv["verdict_large"]

@@ -1172,3 +1172,35 @@ Site model after the change, 2025-26 (3,595): miss 41.9 % against 43.2 % for the
 Not done: buyer-known inputs are not on the site (a player page has no buyer). The form slope (test 27) was estimated on the old model's errors and has not been re-estimated.
 
 Worse after the change: players worth 40m+ (n=81), miss 21.1 % -> 24.7 %; the tail line now trails the trees alone (23.9 %). Listed as an open question.
+
+## Test 31: buyer tiers (written before running, 2026-11-18)
+
+Test 30 showed that knowing the buyer cuts the pooled miss from 45.1 % to 39.9 %. The site cannot run a tree model per buyer in the browser, so the buyer has to be reduced to a few types. Definition: clubs are ranked each year by the mean log market value of their eleven most valuable players; tier 5 is rank 1-20, tier 4 rank 21-60, tier 3 rank 61-150, tier 2 rank 151-400, tier 1 the rest (`analysis/buyers.py`).
+
+Hypothesis: the buyer's tier alone keeps at least half of the gain, i.e. a pooled rolling-origin miss of 42.5 % or lower. Variants: exact buyer inputs (reference), buyer tier, buyer tier plus seller tier. The simplest variant that meets the bar is adopted; the seller tier is added only if it gives a further 0.3 points. Same rolling origin as 30b.
+
+### Test 31b: fit noise and bagging (written before running)
+
+Found while implementing test 31: two runs of the same site model gave Speider values that differed by 11 % (standard deviation) per player, only because the database returned the transfers in a different order. The fit is now ordered and repeatable, but the sensitivity says one tree model on 11,500 transfers is noisy. Hypothesis: the mean of ten models, each fitted on a bootstrap sample of the transfers, lowers the pooled rolling-origin miss by at least 0.3 points and cuts the reshuffle noise to under a third. Tested with and without the buyer and seller tier.
+
+## Results of tests 31 and 31b (2026-11-18)
+
+Rolling origin 2021-2026, pooled (`analysis/fee_offset_test.py`):
+
+| Variant | Miss | Bias | Rank |
+|---|---|---|---|
+| No buyer (test 30c) | 45.1 % | 0.97 | 0.827 |
+| Exact buyer inputs | 39.9 % | 0.99 | 0.868 |
+| Buyer tier | 42.8 % | 0.92 | 0.853 |
+| Buyer and seller tier | 42.1 % | 0.92 | 0.854 |
+| Buyer and seller tier, price never falls with buyer tier | 42.3 % | 0.92 | 0.854 |
+| No buyer, bagged x10 | 44.8 % | 0.97 | 0.827 |
+| Buyer and seller tier, monotone, bagged x10 | 41.9 % | 0.93 | 0.854 |
+
+Test 31: the buyer tier alone misses the bar by 0.3 points (42.8 against 42.5); with the seller tier it passes (42.1) and the seller tier earns its place (0.7 points). The monotone version costs 0.2 points and is used because a price that falls when a richer club buys cannot be explained. Median fee over market value by buyer tier, all years: tier 1 0.84, tier 2 0.99, tier 3 1.15, tier 4 1.31, tier 5 1.42. The tier models predict about 8 % low (bias 0.92-0.93), lower than the model without a buyer.
+
+Test 31b: bagging lowers the miss by 0.3 points without a buyer and 0.4 with tiers (bar 0.3, met). Reshuffle noise per player (standard deviation of the log Speider value between two row orders): one model 0.08-0.16 depending on value bracket, ten bags 0.04-0.07. That is about half, not the third the hypothesis asked for. The site model uses 25 bags and a fixed row order, so the same data now gives the same values.
+
+Site model, 2025-26 (3,595): miss 41.6 % against 43.2 % for the market value alone, bias 0.91, rank 0.854.
+
+On the site: price per buyer tier on the player page (`players.js` index 25, percentages of the Speider value), club tiers from today's squads (`market.js: tiers`), signings on the team page priced for that club's tier.
