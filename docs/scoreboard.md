@@ -1,6 +1,6 @@
 # Scoreboard
 
-Rebuilt 2026-11-18 at commit `dff6c97` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-19 at commit `e71f181` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
@@ -11,26 +11,24 @@ Rebuilt 2026-11-18 at commit `dff6c97` by `scripts/scoreboard.py`. History: `doc
 | Pricing | Speider value: typical miss, six years each predicted from earlier years (2021-26) | **0.4478** | third-party value 0.4848, model before test 30 0.4737 | lower is better |
 | Pricing | Same, when the buying club's tier is known | **0.4195** | without buyer 0.4478, exact buyer inputs 0.3993 | buyer and seller tier |
 | Pricing | Miss on fees for players worth 40m+ | **0.229** | trees alone 0.206 | n=81 |
-| Pricing | Predicting the next fee: Speider outcome model (rank) | **0.548** | fee paid 0.593, third-party value 0.501 | higher is better |
-| Pricing | Buys judged cheapest: resale / fee (median) | **1.41** | dearest fifth 0.89 | n=429 |
-| Pricing | Same, largest third of fees | **1.05** | dearest fifth 0.52 | n=191 |
-| Pricing | Speider above market value, top fifth: next fee vs typical | **3.06** | bottom fifth 0.48 | n=1649 |
+| Pricing | Predicting the next fee: Speider outcome model (rank) | **0.546** | fee paid 0.592, third-party value 0.5 | higher is better |
+| Pricing | Buys judged cheapest: resale / fee (median) | **1.43** | dearest fifth 0.89 | n=431 |
+| Pricing | Same, largest third of fees | **1.07** | dearest fifth 0.56 | n=186 |
+| Pricing | Speider above market value, top fifth: next fee vs typical | **3.01** | bottom fifth 0.45 | n=1656 |
 | Squads | Squad model: correlation with goal difference, seasons not seen | **0.61** | last season only 0.409 | n=1026 |
 | Squads | Squad model: explained share | **0.372** | value and level of the eleven 0.337 |  |
 | Squads | Same with the seven attributes added | **0.372** | no gain = attributes add nothing |  |
 | Squads | Level of the best eleven alone: correlation with goal difference | **0.451** | value of top eleven 0.544, last season 0.508 | n=829 |
 | Pricing | Form nowcast: explained share of value change during a season | **0.267** | age and value 0.152 | n=24709 |
 | Pricing | Miss on mid-season fees, site model | **0.491** | with form line 0.519, with nowcast 0.513 | n=413, form not adopted |
-| Pricing | Form slope in the price (fee above model per unit of form excess) | **0.597** | 90 % interval 0.253 to 0.922 | mid-season miss 0.491 -> 0.486, n=413 |
+| Pricing | Form lift in the price: slope for form above expectation | **1.183** | 90 % interval 0.71 to 1.619; below expectation -0.373 (not used) | mid-season miss 0.487 -> 0.484, n=417; below the 0.5-point bar, kept by decision 49 |
 | Pricing | Predicting next season's share out of the squad (rank) | **0.296** | minutes and age 0.235 | n=1890 |
 | Squads | Match goal difference explained by both elevens' quality | **0.1895** | with attribute means 0.1975, with balance terms 0.1964 | n=2058 |
 
 ## Changed since the previous row
 
-- `fee_miss`: 0.419 -> 0.416
-- `fee_rank`: 0.852 -> 0.854
-- `fee_inside80`: 0.749 -> 0.751
-- `fee_bias`: 0.912 -> 0.91
-- `fee_miss_rolling`: 0.451 -> 0.4478
-- `fee_miss_buyer`: 0.3993 -> 0.4195
-- `fee_miss_40m`: 0.247 -> 0.229
+- `next_fee_rank`: 0.548 -> 0.546
+- `verdict_cheap`: 1.41 -> 1.43
+- `verdict_cheap_large`: 1.05 -> 1.07
+- `flag_top`: 3.06 -> 3.01
+- `form_slope`: 0.597 -> 1.183

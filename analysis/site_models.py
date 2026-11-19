@@ -26,10 +26,9 @@ from projection_v3 import BANDS, FEATS, KW, apply, band, fit_q, offsets
 # Momentum is left out everywhere (test 20): it adds nothing out of time, it punished top players for a
 # fall that does not predict anything, and the mid-year value can postdate a summer transfer and leak the fee.
 import projection_v3 as _pv
-FEATS = [f for f in FEATS if f not in ("mom1", "mom2")]; _pv.FEATS = FEATS
-PF = [f for f in dict.fromkeys(FEATS + ["age"]) if f != "lv"] + ["val"]
-AV = ["starts_sh", "min_sh", "absent_sh", "bench_sh"]
-PFA = PF + AV
+import fee_model
+from fee_model import AV, FEATS, PF, PFA, PFB
+_pv.FEATS = FEATS
 
 
 # Above about 40m the data thins out (145 fees at 40-70m, 24 above), and trees fill the gap with patterns learned
@@ -49,21 +48,6 @@ def tail_fit(age, lv, y, floor):
     X = lambda a, l: np.column_stack([a, np.asarray(a) ** 2 / 100, l])
     m = HuberRegressor(alpha=1.0, max_iter=500).fit(X(np.asarray(age)[k], np.asarray(lv)[k]), np.asarray(y)[k])
     return lambda a, l: m.predict(X(np.asarray(a, float), np.asarray(l, float)))
-
-
-class Bag:
-    """Mean of n tree models, each fitted on a bootstrap sample of the rows (test 31b): steadier than one model."""
-
-    def __init__(self, n=25, **kw): self.n, self.kw = n, kw
-
-    def fit(self, X, y):
-        X, y, rs = pd.DataFrame(X).astype(float).values, np.asarray(y, float), np.random.RandomState(0); self.models = []
-        for i in range(self.n):
-            ix = rs.randint(0, len(y), len(y)); self.models.append(HGBR(**{**self.kw, "random_state": i}).fit(X[ix], y[ix]))
-        return self
-
-    def predict(self, X):
-        X = pd.DataFrame(X).astype(float).values; return np.mean([m_.predict(X) for m_ in self.models], axis=0)
 
 
 def err(pred, fee):
@@ -87,39 +71,13 @@ def main() -> None:
     now = now.merge(latest, on="player_id", how="left")
     shift = (now.lv_latest - now.lv).fillna(0.0)
     now["lv"] += shift; now["mom1"] += shift; now["mom2"] += shift
-    from transfers import load as load_transfers
-    t = load_transfers(con).drop(columns=["name"])          # value on the day from the value history, not the crawl-time field
-    t["y"] = np.where(t.mo >= 6, t.yy, t.yy - 1)
-    m = t.merge(b, on=["player_id", "y"])
-    # Test 28: availability from match line-ups (big five leagues from 2022/23): share of the team's matches started, minutes share,
-    # share out of the matchday squad and share on the bench unused, in the season before. Missing elsewhere.
-    from availability import table as _avail
-    av = _avail(con); av = av.sort_values("squad").groupby(["player_id", "ey"], as_index=False).last(); av = av[av.squad + av.inj >= 5][["player_id", "ey"] + AV].rename(columns={"ey": "y"})
-    m = m.merge(av, on=["player_id", "y"], how="left"); now = now.merge(av[av.y == 2026].drop(columns=["y"]), on="player_id", how="left")
-    m["val"] = np.log(m.mv); m["target"] = np.log(m.fee)
-    # Test 31: buyer and seller tier (clubs ranked by the value of their best eleven that year), for the price per type of buyer
-    from buyers import TIERS, club_tiers
-    ct = club_tiers(b[b.team_id.notna()], ["team_id", "y"])[["team_id", "y", "tier"]]
-    fid = con.execute("select player_id, date, any_value(from_id) from_id from fm_transfers group by 1,2").fetchdf(); fid["date"] = pd.to_datetime(fid.date).astype(m.date.dtype)
-    m = m.merge(fid, on=["player_id", "date"], how="left")
-    m = m.merge(ct.rename(columns={"team_id": "to_id", "tier": "buy_tier"}), on=["to_id", "y"], how="left").merge(ct.rename(columns={"team_id": "from_id", "tier": "sell_tier"}), on=["from_id", "y"], how="left")
-    now = now.merge(ct[ct.y == 2026].rename(columns={"team_id": "team_id", "tier": "sell_tier"})[["team_id", "sell_tier"]], on="team_id", how="left")
-    PFB = PFA + ["buy_tier", "sell_tier"]
-    m = m.sort_values(["date", "player_id", "fee"], kind="stable").reset_index(drop=True)   # query order varies between runs; the fit must not
-    # The models learn the fee relative to the third-party value (log ratio), not the fee itself. Trees cannot
-    # extrapolate, so a model of the fee itself caps out near the largest fees seen and marks every
-    # 100m+ player as overpriced. A ratio carries over to values above anything in the training data.
-    # Test 30b: the ratio is measured against the going rate (median log fee over value in the previous 365 days,
-    # by value bracket), which is added back at prediction time. That replaces the yearly price index and keeps the
-    # model from carrying the fee-over-value level of old years into today.
-    from transfers import price_level
-    raw = (m.target - m.val).values
-    m["lev"] = price_level(m.date, raw, m.val, m.date, m.val)[1]
-    lev_at = lambda dates, vals: price_level(m.date, raw, m.val, dates, vals)[1]
-    # Test 30c: each training fee is measured against the level of its own calendar year, so no year-level signal is left
-    # for the trees to pick up through inputs that only exist in some seasons; predictions add the trailing level.
-    _b = np.digitize(m.val.values, np.log([1e6, 5e6, 2e7])); _ya = pd.Series(raw).groupby(m.yy.values).transform("median").values
-    m["ratio"] = raw - (0.5 * _ya + 0.5 * pd.Series(raw).groupby([m.yy.values, _b]).transform("median").values)
+    # The fee model is defined in analysis/fee_model.py (tests 28, 30-31b): log fee over the value on the day, measured against
+    # the level of its own year; predictions add the going rate of the last 365 days.
+    from buyers import TIERS
+    m, av, ct = fee_model.frame(con, b)
+    now = now.merge(av[av.y == 2026].drop(columns=["y"]), on="player_id", how="left")
+    now = now.merge(ct[ct.y == 2026][["team_id", "tier"]].rename(columns={"tier": "sell_tier"}), on="team_id", how="left")
+    lev_at = lambda dates, vals: fee_model.level_at(m, dates, vals)
     pv0 = lambda mm, X: mm.predict(X[PFA]) + X.val.values + X.lev.values
     TL = {}
     def pv(mm, X):
@@ -127,7 +85,7 @@ def main() -> None:
         d = tail_w(X.val.values) * (TL["f"](X.age.values, X.val.values) + X.val.values + X.lev.values - pv0(TL["med"], X))
         return pv0(mm, X) + d
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
-    q = {a: Bag(loss="quantile", quantile=a, **KW).fit(tr[PFA], tr.ratio) for a in (0.1, 0.5, 0.9)}
+    q = {a: fee_model.fit(tr, a) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(tr.age.values, tr.val.values, tr.ratio.values, 20e6), q[0.5]
     big = (te.mv >= 40e6).values
     res["tail_value"] = dict(n_test_40m=int(big.sum()), err_trees=round(err(np.exp(pv0(q[0.5], te))[big], te.fee.values[big]), 3))
@@ -144,13 +102,13 @@ def main() -> None:
     r = np.log(te.fee.values)
     lo_off = float(np.quantile(r - pv(q[0.1], te), 0.10)); hi_off = float(np.quantile(r - pv(q[0.9], te), 0.90))
     res["value"]["interval_offsets"] = [round(lo_off, 3), round(hi_off, 3)]
-    q = {a: Bag(loss="quantile", quantile=a, **KW).fit(m[PFA], m.ratio) for a in (0.1, 0.5, 0.9)}
+    q = {a: fee_model.fit(m, a) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(m.age.values, m.val.values, m.ratio.values, 20e6), q[0.5]
     now["val"] = now.lv; today = m.date.max() + pd.Timedelta(days=1)
     now["lev"] = lev_at(np.full(len(now), today.to_datetime64()), now.val)
     res["value"]["level_today"] = {k: round(float(v), 3) for k, v in zip(("under 1m", "1-5m", "5-20m", "20m+"), lev_at(np.full(4, today.to_datetime64()), np.log([5e5, 2e6, 1e7, 5e7])))}
     # price per buyer tier: the price never falls with the buyer's tier; the tail line moves it by the same amount as the main model
-    qb = Bag(loss="quantile", quantile=0.5, **KW, monotonic_cst=[1 if f == "buy_tier" else 0 for f in PFB]).fit(m[PFB], m.ratio)
+    qb = fee_model.fit(m, 0.5, PFB)
     tail_d = pv(q[0.5], now) - pv0(q[0.5], now)
     bt = {T: np.exp(qb.predict(now.assign(buy_tier=T)[PFB]) + now.val.values + now.lev.values + tail_d) for T in TIERS}
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),

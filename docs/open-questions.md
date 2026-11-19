@@ -44,6 +44,7 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 - Buyer tiers recover about half of what exact buyer inputs give (42 % against 40 % miss); the rest (league, the club's own spending record) is not on the site.
 - The buyer-tier model predicts about 8 % low. The Speider value without a buyer and the tier prices come from two models and need not agree.
 - A full `analysis/site_models.py` run no longer fits in one 180 s device call; only `SITE_STAGE=value` has been rerun since test 30.
-- The form slope (test 27) and the buy tests (test 20) were run on the fee model before test 30; rerun on the new one.
+- The one-sided form lift is on the site although its gain on the miss (0.3 points) is below the 0.5-point bar (decision 49). Re-test when there are more mid-season transfers.
+- `analysis/fee_offset_test.py` and `analysis/fee_feature_search.py` still build their own frame instead of using `analysis/fee_model.py`.
 - Statistics add little to the fee model beyond the market value; the provider's value already holds them. Untested: models without the market value as an input, to see what performance alone explains.
 - Players worth 40m+: the miss rose from 21.1 % to 24.7 % with the test-30 model (n=81), and the tail line now does worse than the trees alone (23.9 %). Re-test the tail line on the rolling origin.

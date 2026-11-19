@@ -106,3 +106,10 @@ The player page shows the price for five buyer tiers, and the team page prices a
 value of a club's best eleven (`analysis/buyers.py`). The fee model is the mean of 25 bootstrap fits on rows in a fixed order.
 Reason: tests 31 and 31b; the buyer is the largest known signal, and one fit moved 8-16 % per player with the row order.
 
+## 49. Good form lifts the price, poor form does not lower it
+
+The Speider price is multiplied by exp(1.18 x form above expectation); form below expectation changes nothing. Reason: test 32b.
+The slope above expectation is well established (90 % interval 0.71 to 1.62) and the test transfers show the same one-sided pattern,
+but the gain on the typical miss is 0.3 points, below the 0.5-point bar. It is kept because showing the price rise with form is a
+purpose of the site and the lift does not raise the miss on all transfers. The scoreboard labels it as below the bar.
+

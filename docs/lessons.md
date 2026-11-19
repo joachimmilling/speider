@@ -76,4 +76,6 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 - Background processes do not survive a device shell call; a job over 180 s must be staged (`SITE_STAGE=value`).
 - Database queries return rows in a different order from run to run; a tree model fitted on them gave Speider values that moved 8-16 % per player between runs. Sort before fitting and bag the model (test 31b). This was the cause of values that jumped between builds.
 - The buyer's tier (clubs ranked by the value of their best eleven) keeps about half of what exact buyer inputs give; add the seller's tier (test 31). Top-20 clubs pay about 1.4 times the market value at the median, the smallest clubs 0.84.
+- Form is one-sided in fees: form above expectation is paid for (slope 1.18), form below expectation does not lower the fee (test 32b). A single slope hid this and failed its bar.
+- A fee model that hits fees better is not a better buy signal (test 32c: rank with the next fee 0.538 before, 0.535 after). The verdict stays on the outcome model.
 

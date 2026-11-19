@@ -1204,3 +1204,45 @@ Test 31b: bagging lowers the miss by 0.3 points without a buyer and 0.4 with tie
 Site model, 2025-26 (3,595): miss 41.6 % against 43.2 % for the market value alone, bias 0.91, rank 0.854.
 
 On the site: price per buyer tier on the player page (`players.js` index 25, percentages of the Speider value), club tiers from today's squads (`market.js: tiers`), signings on the team page priced for that club's tier.
+
+## Test 32: the downstream tests on the new fee model (written before running, 2026-11-19)
+
+The fee model changed in tests 30-31b. Three things were measured on the old one or never checked:
+
+a. Leak check. The fee model takes momentum (`mom1`, `mom2`) from the mid-year value of the frame, which for a June transfer can be dated after the deal; the buy test left momentum out for that reason. Hypothesis: dropping momentum moves the pooled rolling-origin miss by less than 0.3 points, and no more among June transfers than among the rest. If the miss rises by more, and mostly in June, momentum is leaking and is removed from the fee model.
+b. Form slope (test 27) re-estimated on out-of-fold errors of the new model. Hypothesis: the slope stays positive with a 90 % interval above zero. Adoption bar as in test 27: the miss on transfers with a running season falls by at least 0.5 points and the miss on all transfers does not rise.
+c. Buy test (test 20) with the new fee model as signal B4 and in the "Speider above market value" flag. Hypothesis: the outcome model C2 still ranks the next fee better than any fee model, and the flag's top fifth still beats its bottom fifth.
+
+The fee model moves to one shared definition (`analysis/fee_model.py`) used by the site and by these tests.
+
+### Test 32b follow-up: one-sided form slope (written before running)
+
+32b was read first: slope 0.54 (90 % 0.19-0.88), but the miss on running-season transfers only falls from 48.7 % to 48.6 % and the miss on all rises from 41.6 % to 41.8 %, so the single slope fails its bar. The test table shows the pattern is one-sided: the top third on form was paid 1.41 times the model, the lower two thirds 1.04 and 1.08. Hypothesis: on the training errors the slope for form above expectation is positive with a 90 % interval above zero, and the slope for form below expectation is not distinguishable from zero. If so, the price is lifted for good form only. Both slopes are fitted on training errors alone; the same adoption bar applies on the 2025-26 transfers.
+
+## Results of test 32 (2026-11-19)
+
+a. Leak check: not applicable. Momentum is not an input of the fee model (it was removed everywhere after test 20), so the two runs are identical (44.8 %). June transfers miss by 46.3 %, the rest by 44.6 % (n=1,121 in June), which does not point to a leak.
+
+b. Form slope on the new model (`analysis/form_slope_test.py`, 699 training transfers with a running season, 417 in the test):
+
+| | Slope | 90 % interval | Miss, running | Miss, all |
+|---|---|---|---|---|
+| No form | | | 48.7 % | 41.6 % |
+| One slope | 0.54 | 0.19 to 0.88 | 48.6 % | 41.8 % |
+| Above expectation only | 1.18 | 0.71 to 1.62 | 48.4 % | 41.6 % |
+| Below expectation (not used) | -0.37 | -0.88 to 0.13 | | |
+
+The single slope fails its bar. The follow-up hypothesis holds: the pattern is one-sided. Form above expectation is paid for (test: top third on form paid 1.41 times the model, the other two thirds 1.04 and 1.08); form below expectation does not lower fees. The one-sided lift improves the running miss by 0.3 points, below the 0.5-point bar, and does not raise the miss on all. It is kept on the site by decision 49, labelled as below the bar.
+
+c. Buy test (`analysis/buy_verdict_backtest.py`), new fee model as B4:
+
+| Signal | Rank with next fee | Rank with 3-year outcome | Resale, cheapest / dearest fifth |
+|---|---|---|---|
+| Third-party value / fee (A) | 0.500 | 0.293 | 1.51 / 0.88 |
+| Fee model before test 30 (B) | 0.538 | 0.367 | 1.99 / 0.73 |
+| Fee model now (B4) | 0.535 | 0.360 | 2.01 / 0.81 |
+| Outcome model (C2) | 0.546 | 0.431 | 1.71 / 0.71 |
+
+Hypothesis confirmed: the outcome model still ranks best, and the flag holds with the new model (top fifth 3.01 times the typical next fee, bottom fifth 0.45, n=1,656; before 3.23 and 0.48). Hitting fees better did not make the fee model a better buy signal.
+
+The fee model now has one definition (`analysis/fee_model.py`), used by the site, the form test and the buy test.

@@ -1,5 +1,11 @@
 # Changelog
 
+## Downstream tests on the new fee model (test 32)
+
+- `analysis/fee_model.py`: one definition of the fee model for the site, the form test and the buy test.
+- Form lift is one-sided: slope 1.18 for form above expectation, none below (was one slope of 0.60 both ways).
+- Buy test: outcome model still best; the flag holds with the new fee model (top fifth 3.01, bottom 0.45).
+
 ## Price by buyer, repeatable fee model (tests 31, 31b)
 
 - `analysis/buyers.py`: club tiers by the value of the best eleven. Buyer and seller tier cut the rolling-origin miss from 45.1 % to 42.1 %.

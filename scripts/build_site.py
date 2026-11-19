@@ -173,13 +173,15 @@ def main() -> None:
         for x in pd.read_pickle("data/form_now.pkl").itertuples():
             formd[int(x.player_id)] = [round(float(x.exp), 3), round(float(x.base), 3), None if pd.isna(x.real) else round(float(x.real), 3), int(x.cur_min), None if pd.isna(x.cur_rating) else round(float(x.cur_rating), 2)]
             if x.cur_min >= 450: formlift[int(x.player_id)] = round(float(x.exp - x.base), 3)
-    # Test 27: fees run above the model for players in form. One slope on the form excess moves the Speider price (and its range).
+    # Tests 27 and 32b: fees run above the model for players in form.
     fs = json.load(open("data/result_form_slope.json")) if Path("data/result_form_slope.json").exists() else {}
-    if fs.get("adopted"):
+    # Test 32b: the lift is one-sided. Form above expectation raises the price; form below it does not lower it (no such pattern in fees).
+    s_up, s_dn = fs.get("used_on_site", [0.0, 0.0])
+    if s_up or s_dn:
         for pid_, f_ in formd.items():
             if pid_ in sm:
-                k_ = float(np.exp(fs["slope"] * (f_[0] - f_[1])))
-                for c_ in ("sv", "sv_lo", "sv_hi"): sm[pid_][c_] = sm[pid_][c_] * k_
+                ex_ = f_[0] - f_[1]; k_ = float(np.exp(s_up * max(ex_, 0.0) + s_dn * min(ex_, 0.0)))
+                for c_ in ["sv", "sv_lo", "sv_hi"] + [f"bt{T_}" for T_ in range(1, 6) if f"bt{T_}" in sm[pid_]]: sm[pid_][c_] = sm[pid_][c_] * k_
                 f_.append(round(k_, 3))
     svh = {}
     if Path("data/site_models_hist.pkl").exists():
