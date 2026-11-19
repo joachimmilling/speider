@@ -113,3 +113,8 @@ The slope above expectation is well established (90 % interval 0.71 to 1.62) and
 but the gain on the typical miss is 0.3 points, below the 0.5-point bar. It is kept because showing the price rise with form is a
 purpose of the site and the lift does not raise the miss on all transfers. The scoreboard labels it as below the bar.
 
+## 50. The price level is calibrated on the model's forward errors
+
+The level added to every prediction is the median error, over the previous 180 days and halfway to the value bracket, of a model
+fitted on earlier years only. Reason: test 33. The model runs low on new transfers every year; the raw fee-over-value level did not see that.
+

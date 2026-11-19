@@ -40,9 +40,10 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 - Club and league logo URLs are unverified; logos only in the local build.
 - Country names are English in the Norwegian UI.
 - `analysis/growth_model.py` still has the old role mapping for 83-87.
-- Fee model still predicts 6-9 % low in 2025-26 after test 30c. Cause unknown (not the availability inputs).
+- Why the fee model's own median error on new transfers is negative every year (test 33). Calibration hides it; the cause is unknown. Candidates: the frame is a sample of players active today, so earlier years hold survivors.
 - Buyer tiers recover about half of what exact buyer inputs give (42 % against 40 % miss); the rest (league, the club's own spending record) is not on the site.
-- The buyer-tier model predicts about 8 % low. The Speider value without a buyer and the tier prices come from two models and need not agree.
+- The Speider value without a buyer and the tier prices come from two models and need not agree.
+- The form test and the buy test add the trailing raw level, the site the calibrated one (test 33).
 - A full `analysis/site_models.py` run no longer fits in one 180 s device call; only `SITE_STAGE=value` has been rerun since test 30.
 - The one-sided form lift is on the site although its gain on the miss (0.3 points) is below the 0.5-point bar (decision 49). Re-test when there are more mid-season transfers.
 - `analysis/fee_offset_test.py` and `analysis/fee_feature_search.py` still build their own frame instead of using `analysis/fee_model.py`.

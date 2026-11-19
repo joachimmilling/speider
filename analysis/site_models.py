@@ -86,6 +86,9 @@ def main() -> None:
         return pv0(mm, X) + d
     tr, te = m[m.yy <= 2024], m[m.yy >= 2025]
     q = {a: fee_model.fit(tr, a) for a in (0.1, 0.5, 0.9)}
+    # Test 33: the level comes from forward errors (each transfer's error from a model fitted on earlier years), over the last 180 days
+    fwd = pd.concat([fee_model.forward_errors(m, fee_model.fit(m[m.yy < 2024], n=10), (m.yy == 2024).values), fee_model.forward_errors(m, q[0.5], (m.yy >= 2025).values)])
+    te = te.assign(lev=fee_model.calibration(m, fwd, te.date, te.val))
     TL["f"], TL["med"] = tail_fit(tr.age.values, tr.val.values, tr.ratio.values, 20e6), q[0.5]
     big = (te.mv >= 40e6).values
     res["tail_value"] = dict(n_test_40m=int(big.sum()), err_trees=round(err(np.exp(pv0(q[0.5], te))[big], te.fee.values[big]), 3))
@@ -105,12 +108,18 @@ def main() -> None:
     q = {a: fee_model.fit(m, a) for a in (0.1, 0.5, 0.9)}
     TL["f"], TL["med"] = tail_fit(m.age.values, m.val.values, m.ratio.values, 20e6), q[0.5]
     now["val"] = now.lv; today = m.date.max() + pd.Timedelta(days=1)
-    now["lev"] = lev_at(np.full(len(now), today.to_datetime64()), now.val)
-    res["value"]["level_today"] = {k: round(float(v), 3) for k, v in zip(("under 1m", "1-5m", "5-20m", "20m+"), lev_at(np.full(4, today.to_datetime64()), np.log([5e5, 2e6, 1e7, 5e7])))}
+    k26 = (m.yy == 2026).values; fwd = fee_model.forward_errors(m, fee_model.fit(m[m.yy < 2026], n=10), k26)
+    fwd_b = fee_model.forward_errors(m, fee_model.fit(m[m.yy < 2026], feats=PFB, n=10), k26, PFB)
+    now["lev"] = fee_model.calibration(m, fwd, np.full(len(now), today.to_datetime64()), now.val)
+    lev_b = fee_model.calibration(m, fwd_b, np.full(len(now), today.to_datetime64()), now.val)
+    four = (np.full(4, today.to_datetime64()), np.log([5e5, 2e6, 1e7, 5e7])); names = ("under 1m", "1-5m", "5-20m", "20m+")
+    res["value"]["level_today"] = {k: round(float(v), 3) for k, v in zip(names, fee_model.calibration(m, fwd, *four))}
+    res["value"]["level_today_buyer_model"] = {k: round(float(v), 3) for k, v in zip(names, fee_model.calibration(m, fwd_b, *four))}
+    res["value"]["raw_level_today"] = {k: round(float(v), 3) for k, v in zip(names, lev_at(*four))}
     # price per buyer tier: the price never falls with the buyer's tier; the tail line moves it by the same amount as the main model
     qb = fee_model.fit(m, 0.5, PFB)
     tail_d = pv(q[0.5], now) - pv0(q[0.5], now)
-    bt = {T: np.exp(qb.predict(now.assign(buy_tier=T)[PFB]) + now.val.values + now.lev.values + tail_d) for T in TIERS}
+    bt = {T: np.exp(qb.predict(now.assign(buy_tier=T)[PFB]) + now.val.values + lev_b + tail_d) for T in TIERS}
     out = pd.DataFrame(dict(player_id=now.player_id.values, mv=np.exp(now.lv.values), sv=np.exp(pv(q[0.5], now)),
                             sv_lo=np.exp(pv(q[0.1], now) + lo_off), sv_hi=np.exp(pv(q[0.9], now) + hi_off), band=now.band.values, age_i=np.clip(np.round(now.age.values), 16, 38).astype(int)))
     for T in TIERS: out[f"bt{T}"] = bt[T]

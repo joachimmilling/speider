@@ -78,4 +78,5 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 - The buyer's tier (clubs ranked by the value of their best eleven) keeps about half of what exact buyer inputs give; add the seller's tier (test 31). Top-20 clubs pay about 1.4 times the market value at the median, the smallest clubs 0.84.
 - Form is one-sided in fees: form above expectation is paid for (slope 1.18), form below expectation does not lower the fee (test 32b). A single slope hid this and failed its bar.
 - A fee model that hits fees better is not a better buy signal (test 32c: rank with the next fee 0.538 before, 0.535 after). The verdict stays on the outcome model.
+- The fee model predicts 3-11 % low on new transfers in every year (test 33); cause unknown. The level added to a prediction is therefore calibrated on forward errors of the last 180 days, not on raw fee-over-value ratios. Check bias, not only miss, on every model change.
 

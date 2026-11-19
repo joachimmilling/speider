@@ -69,3 +69,18 @@ def fit(tr, quantile=0.5, feats=PFA, n=25, target="ratio"):
 def predict(model, X, feats=PFA):
     """Log fee. X needs the inputs, `val` and `lev`."""
     return model.predict(X[feats]) + X.val.values + X.lev.values
+
+
+CAL_WINDOW = 180
+
+
+def forward_errors(m, model, rows, feats=PFA):
+    """Log fee minus (model + value) for `rows` of m, from a model that was fitted on earlier transfers only."""
+    return pd.Series(m.raw[rows].values - model.predict(m[rows][feats]), index=m.index[rows])
+
+
+def calibration(m, fwd, dates, vals):
+    """Test 33: the level added to a prediction is the median forward error of the transfers in the previous 180 days, halfway to the
+    value bracket. It replaces the trailing raw level, which ignored who was sold and missed that the model runs low on new transfers."""
+    k = fwd.index
+    return price_level(m.date[k], fwd.values, m.val[k], dates, vals, window=CAL_WINDOW)[1]

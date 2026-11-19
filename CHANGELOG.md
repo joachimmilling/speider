@@ -1,5 +1,10 @@
 # Changelog
 
+## Bias of the fee model (test 33)
+
+- `analysis/fee_bias_test.py`: the model predicts low on new transfers every year; the level lag is noise.
+- `analysis/fee_model.py: calibration`: level from forward errors of the last 180 days. Rolling bias 0.97 -> 0.99 (no buyer), 0.93 -> 0.99 (tiers); 2025-26 bias 0.91 -> 0.97.
+
 ## Downstream tests on the new fee model (test 32)
 
 - `analysis/fee_model.py`: one definition of the fee model for the site, the form test and the buy test.

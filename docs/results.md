@@ -1246,3 +1246,44 @@ c. Buy test (`analysis/buy_verdict_backtest.py`), new fee model as B4:
 Hypothesis confirmed: the outcome model still ranks best, and the flag holds with the new model (top fifth 3.01 times the typical next fee, bottom fifth 0.45, n=1,656; before 3.23 and 0.48). Hitting fees better did not make the fee model a better buy signal.
 
 The fee model now has one definition (`analysis/fee_model.py`), used by the site, the form test and the buy test.
+
+## Test 33: why the fee model predicts low (written before running, 2026-11-19)
+
+The fee model predicts 3 % low over the six rolling years and 6-9 % low in 2025-26; the buyer-tier model about 8 % low throughout. A prediction is model + value + trailing level, so the error splits in two: the trailing level against the level the year turned out to have (lag), and the model's own median error on new transfers (drift or composition).
+
+Step 1, diagnosis: both parts per year, for the model without a buyer and the tier model.
+
+Step 2, hypothesis: the trailing level is taken from raw fee-over-value ratios, which ignores who was sold and who bought. Calibrating instead on the model's own recent errors (median of log fee minus the model's prediction before any level, over the previous 365 days) removes the composition part. Expected: pooled bias within 3 % of 1 for both models and no rise in the pooled miss above 0.2 points. Variants: window of 365 or 180 days; overall or halfway to the value bracket. Adoption bar: bias within 3 % of 1 pooled, closer to 1 than today in at least four of six years, miss not more than 0.2 points worse. Rolling origin 2021-2026, ten bags.
+
+### Test 33 follow-up: forward errors (written before running)
+
+Step 1 was read: the level lag changes sign from year to year (+0.18 to -0.17) and is noise; the model's own median error on new transfers is negative in every year (-0.03 to -0.07 without a buyer, -0.04 to -0.11 with tiers). That part is systematic. The calibration in step 2 mixes in-sample errors (training years) with honest ones (the test year so far), so on the site, where every transfer is in the fit, it would miss the systematic part. Extra variant: calibrate only on forward errors, i.e. each recent transfer's error from a model fitted on earlier years only. Hypothesis: pooled bias within 2 % of 1 for both models, same bar otherwise.
+
+## Results of test 33 (2026-11-19)
+
+Diagnosis (`analysis/fee_bias_test.py`), median log error per year, rolling origin:
+
+| Year | Level lag | Model error, no buyer | Model error, tiers |
+|---|---|---|---|
+| 2021 | +0.18 | -0.04 | -0.09 |
+| 2022 | -0.17 | 0.00 | -0.04 |
+| 2023 | -0.02 | -0.04 | -0.08 |
+| 2024 | +0.13 | -0.05 | -0.11 |
+| 2025 | -0.04 | -0.07 | -0.11 |
+| 2026 | -0.03 | -0.03 | -0.06 |
+
+The level lag is noise around zero. The model itself predicts low on new transfers in every year, more so with tiers. Cause not found.
+
+| Level taken from | No buyer: miss | bias | Tiers: miss | bias |
+|---|---|---|---|---|
+| Trailing raw ratio, bracket, 365 d (before) | 45.1 % | 0.972 | 42.0 % | 0.927 |
+| Own errors, bracket, 365 d | 45.1 % | 0.995 | 42.2 % | 0.982 |
+| Own errors, bracket, 180 d | 44.8 % | 0.982 | 42.2 % | 0.978 |
+| Forward errors, bracket, 180 d | 44.9 % | 0.986 | 42.1 % | 0.988 |
+| Forward errors, bracket, 365 d | 45.0 % | 1.003 | 42.4 % | 1.007 |
+
+Adopted: forward errors, value bracket, 180 days (`analysis/fee_model.py: calibration`). Bias within 2 % of 1 for both models, closer to 1 than before in five of six years, miss unchanged (-0.2 and +0.1 points). The 365-day version is closer to 1 pooled but swings more by year (1.19 in 2021, 0.89 in 2022) and is closer in only four years.
+
+Site model, 2025-26 (3,595): bias 0.91 -> 0.97, miss 41.6 % -> 41.9 % (market value alone 43.2 %), 76.3 % of fees inside the 80 % range. Speider values rise by 4-9 % for players worth over 1m and are unchanged under 1m; buyer-tier prices rise by 5-13 %.
+
+Not done: the form test and the buy test still add the trailing raw level, not the calibrated one.

@@ -381,8 +381,8 @@ def main() -> None:
     e["z"] = (e.npg90 - gg.npg90.transform("mean")) / gg.npg90.transform("std"); e["pct"] = gg.npg90.rank(pct=True) * 100
     js(OUT / "data/eras.js", "eras", [[x.player, int(x.y), x.league, x.team, int(x.m), int(x.goals), int(x.pens), int(x.assists), r(x.npg90, 2), r(x.z, 2), r(x.pct, 1)] for x in e.itertuples()])
 
-    fo = json.load(open("data/result_fee_offset.json")) if Path("data/result_fee_offset.json").exists() else {}
-    buyer_test = {"with": fo["year-centred + tiers, bagged x10"]["pooled"]["miss"], "without": fo["year-centred, bagged x10"]["pooled"]["miss"]} if fo else None
+    fb = json.load(open("data/result_fee_bias.json")) if Path("data/result_fee_bias.json").exists() else {}
+    buyer_test = {"with": fb["buyer and seller tier"]["variants"]["forward errors, bracket, 180 d"]["miss"], "without": fb["no buyer"]["variants"]["forward errors, bracket, 180 d"]["miss"]} if fb else None
     names = con.execute("select league_id, name, cc from fm_leagues").fetchdf().set_index("league_id")
     lg = [[names.name.get(i, str(i)), names.cc.get(i, ""), r(v, 2)] for i, v in ls.sort_values(ascending=False).items() if i in names.index]
     d = np.diff(np.log(list(INDEX.values()))); drift, sd = float(d.mean()), float(d.std(ddof=1))

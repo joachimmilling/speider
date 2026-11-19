@@ -1,16 +1,18 @@
 # Scoreboard
 
-Rebuilt 2026-11-19 at commit `e71f181` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
+Rebuilt 2026-11-19 at commit `6586e52` by `scripts/scoreboard.py`. History: `docs/scoreboard_history.csv`.
 
 | Area | Measure | Now | Reference | Note |
 |---|---|---|---|---|
-| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.416** | third-party value 0.432 | n=3595, lower is better |
+| Pricing | Speider value: typical miss on fees not seen (2025-26) | **0.419** | third-party value 0.432 | n=3595, lower is better |
 | Pricing | Speider value: rank correlation with fees | **0.854** | third-party value 0.836 |  |
-| Pricing | Share of fees inside the 80 % range | **0.751** | target 0.80 |  |
-| Pricing | Speider value: median prediction over fee (1 is unbiased) | **0.91** | third-party value 1.027 | 2025-26 |
+| Pricing | Share of fees inside the 80 % range | **0.763** | target 0.80 |  |
+| Pricing | Speider value: median prediction over fee (1 is unbiased) | **0.971** | third-party value 1.027 | 2025-26 |
 | Pricing | Speider value: typical miss, six years each predicted from earlier years (2021-26) | **0.4478** | third-party value 0.4848, model before test 30 0.4737 | lower is better |
 | Pricing | Same, when the buying club's tier is known | **0.4195** | without buyer 0.4478, exact buyer inputs 0.3993 | buyer and seller tier |
-| Pricing | Miss on fees for players worth 40m+ | **0.229** | trees alone 0.206 | n=81 |
+| Pricing | Speider value: median prediction over fee, six rolling years (1 is unbiased) | **0.986** | before test 33 0.972; miss 0.4488 | ten bags |
+| Pricing | Same, buyer-tier model | **0.988** | before test 33 0.927; miss 0.421 | ten bags |
+| Pricing | Miss on fees for players worth 40m+ | **0.225** | trees alone 0.211 | n=81 |
 | Pricing | Predicting the next fee: Speider outcome model (rank) | **0.546** | fee paid 0.592, third-party value 0.5 | higher is better |
 | Pricing | Buys judged cheapest: resale / fee (median) | **1.43** | dearest fifth 0.89 | n=431 |
 | Pricing | Same, largest third of fees | **1.07** | dearest fifth 0.56 | n=186 |
@@ -27,8 +29,7 @@ Rebuilt 2026-11-19 at commit `e71f181` by `scripts/scoreboard.py`. History: `doc
 
 ## Changed since the previous row
 
-- `next_fee_rank`: 0.548 -> 0.546
-- `verdict_cheap`: 1.41 -> 1.43
-- `verdict_cheap_large`: 1.05 -> 1.07
-- `flag_top`: 3.06 -> 3.01
-- `form_slope`: 0.597 -> 1.183
+- `fee_miss`: 0.416 -> 0.419
+- `fee_inside80`: 0.751 -> 0.763
+- `fee_bias`: 0.91 -> 0.971
+- `fee_miss_40m`: 0.229 -> 0.225

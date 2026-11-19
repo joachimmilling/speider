@@ -28,6 +28,12 @@ def main() -> None:
             k = "year-centred, bagged x10"
             rows += [("fee_miss_rolling", "Pricing", "Speider value: typical miss, six years each predicted from earlier years (2021-26)", fo[k]["pooled"]["miss"], f'third-party value {fo["market value alone"]["pooled"]["miss"]}, model before test 30 {fo["site model today"]["pooled"]["miss"]}', "lower is better"),
                      ("fee_miss_buyer", "Pricing", "Same, when the buying club's tier is known", fo["year-centred + tiers, bagged x10"]["pooled"]["miss"], f'without buyer {fo[k]["pooled"]["miss"]}, exact buyer inputs {fo["year-centred, bracket level + buyer"]["pooled"]["miss"]}', "buyer and seller tier")]
+        fb = load("result_fee_bias.json")
+        if fb:
+            K, T0 = "forward errors, bracket, 180 d", "today (trailing raw level, bracket, 365 d)"
+            a, t_ = fb["no buyer"]["variants"], fb["buyer and seller tier"]["variants"]
+            rows += [("fee_bias_rolling", "Pricing", "Speider value: median prediction over fee, six rolling years (1 is unbiased)", a[K]["bias"], f'before test 33 {a[T0]["bias"]}; miss {a[K]["miss"]}', "ten bags"),
+                     ("fee_bias_buyer", "Pricing", "Same, buyer-tier model", t_[K]["bias"], f'before test 33 {t_[T0]["bias"]}; miss {t_[K]["miss"]}', "ten bags")]
         if "tail_value" in sm: rows.append(("fee_miss_40m", "Pricing", "Miss on fees for players worth 40m+", sm["tail_value"]["err_with_tail"], f'trees alone {sm["tail_value"]["err_trees"]}', f'n={sm["tail_value"]["n_test_40m"]}'))
     if bv:
         r, vd, vl = bv["next_fee_rank"], bv["verdict"], bv["verdict_large"]
