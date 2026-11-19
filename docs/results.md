@@ -1338,3 +1338,25 @@ Reading:
 - The inputs were checked for look-ahead (career and national-team inputs are cut at 30 June of the year): none found.
 
 Conclusion: the cause is a sample that is tilted in early years (players active today, and leagues with statistics then), which explains about half; about 1.5 % is unexplained. The calibration of test 33 covers both. The conditional year levels are not adopted now (the gap bar failed; the 0.3-point gain on the miss is one run at the margin). The fix at the source is to load the players who are missing from the early years.
+
+## The 16,021 missing profiles (2026-11-19)
+
+Downloaded and loaded (`profiler-6.ndjson.gz`, 15,989 with data; 81,117 profiles in all). Prediction before loading (decision after test 34): this fills in the early years. Result: it does not.
+
+- The 16,021 are not retired players: 13,138 are active, most aged 20-34, 5,262 have a value history. They are lower-league players.
+- They account for 146 fee transfers in `fm_transfers` and 185 in their own profiles (129 since 2016). The fee model's transfers go from 11,527 to 11,625.
+- The tilt sits in the transfer table itself: 730 fee transfers in 2016 against 2,020 in 2025, almost all with a profile already. Players sold in the early years who have since left the leagues we cover are not in the player list at all.
+
+Tests rerun on the larger frame (363,435 player-years):
+
+| | Before | After |
+|---|---|---|
+| Fee model, 2025-26 miss | 41.9 % | 41.4 % |
+| Fee model, 2025-26 bias | 0.97 | 0.97 |
+| Rolling miss / bias, no buyer | 44.9 % / 0.986 | 44.7 % / 0.991 |
+| Rolling miss / bias, tiers | 42.1 % / 0.988 | 42.0 % / 0.989 |
+| Model error on new years, no buyer | -0.03 to -0.07 | +0.01 to -0.06 |
+| Form lift, miss on running-season transfers | 48.7 -> 48.4 % | 48.7 -> 48.0 % (passes the 0.5-point bar) |
+| Flag, top / bottom fifth | 3.01 / 0.45 | 3.08 / 0.46 |
+
+The shortfall on new years is still there. `analysis/site_models.py` was run in full in the cloud workspace (11 minutes; it does not fit a 180 s device call) and the result copied back. `analysis/squad_model.py` timed out and was not rerun.

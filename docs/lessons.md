@@ -80,4 +80,7 @@ One line per lesson, newest area first. Read before proposing a model, an input 
 - A fee model that hits fees better is not a better buy signal (test 32c: rank with the next fee 0.538 before, 0.535 after). The verdict stays on the outcome model.
 - The fee model predicts 3-11 % low on new transfers in every year (test 33); cause unknown. The level added to a prediction is therefore calibrated on forward errors of the last 180 days, not on raw fee-over-value ratios. Check bias, not only miss, on every model change.
 - The fee model's low error on new years is not the estimator (random folds: +0.4 %) and not look-ahead in the inputs. About half comes from early years holding a tilted mix of players (fewer old players, stronger leagues); the rest is unexplained (test 34). Compare random folds with forward folds before blaming a model.
+- Check what a download can add before starting it: the 16,021 players without a profile turned out to be active lower-league players with 146 fee transfers, not the retired players of early years. The early-year tilt is in the transfer table (730 fee transfers in 2016, 2,020 in 2025).
+- DuckDB's CSV sniffer misread the profile file once the row order changed; the loader now states the dialect.
+- Long runs: `analysis/site_models.py` in full takes 11 minutes in the cloud workspace (pin scikit-learn 1.7.2 and pandas 2.3.3; scikit-learn 1.9 fails on the all-missing `nat_top_youth` column).
 

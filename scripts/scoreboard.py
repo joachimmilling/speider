@@ -58,7 +58,7 @@ def main() -> None:
     sl = load("result_form_slope.json")
     if sl and "one_sided" in sl:
         o = sl["one_sided"]
-        rows.append(("form_slope", "Pricing", "Form lift in the price: slope for form above expectation", o["above"]["slope"], f'90 % interval {o["above"]["slope_90"][0]} to {o["above"]["slope_90"][1]}; below expectation {o["below"]["slope"]} (not used)', f'mid-season miss {sl["miss"]["site_model"]["running"]} -> {o["miss"]["running"]}, n={sl["n_test_running"]}; below the 0.5-point bar, kept by decision 49'))
+        rows.append(("form_slope", "Pricing", "Form lift in the price: slope for form above expectation", o["above"]["slope"], f'90 % interval {o["above"]["slope_90"][0]} to {o["above"]["slope_90"][1]}; below expectation {o["below"]["slope"]} (not used)', f'mid-season miss {sl["miss"]["site_model"]["running"]} -> {o["miss"]["running"]}, n={sl["n_test_running"]}; decision 49'))
     ij, lb = load("result_injury.json"), load("result_lineup_balance.json")
     if ij: rows.append(("absent_next_rank", "Pricing", "Predicting next season's share out of the squad (rank)", ij["a"]["absent_next"]["plus out of squad, bench, listed injured"], f'minutes and age {ij["a"]["absent_next"]["minutes and age"]}', f'n={ij["a"]["n_test"]}'))
     if lb: rows.append(("match_r2", "Squads", "Match goal difference explained by both elevens' quality", lb["ridge"]["1 quality of both elevens"]["r2"], f'with attribute means {lb["ridge"]["2 plus seven attribute means"]["r2"]}, with balance terms {lb["ridge"]["3 plus lowest attribute and spread"]["r2"]}', f'n={lb["n_test"]}'))

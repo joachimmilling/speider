@@ -40,13 +40,14 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 - Club and league logo URLs are unverified; logos only in the local build.
 - Country names are English in the Norwegian UI.
 - `analysis/growth_model.py` still has the old role mapping for 83-87.
-- About 1.5 % of the fee model's shortfall on new years is unexplained (test 34). The explained half is the tilted sample of early years; the fix at the source is to load profiles and transfers of players who are no longer active (about 16,000 older players have no profile), then rerun tests 33-34.
+- The fee model still runs low on new years (test 34). The early years lack transfers of players who have left the covered leagues; they are not in the player list. A source is needed: squads or transfer lists per league and season back to 2016. Profiles carry a `transfers` list (kept as `tr` in `profiler-6`), which earlier profile files did not keep.
 - Year levels given the inputs (backfitting) gained 0.3 points of miss in one run (test 34) and are not adopted; re-test after the sample is completed.
 - Buyer tiers recover about half of what exact buyer inputs give (42 % against 40 % miss); the rest (league, the club's own spending record) is not on the site.
 - The Speider value without a buyer and the tier prices come from two models and need not agree.
 - The form test and the buy test add the trailing raw level, the site the calibrated one (test 33).
 - A full `analysis/site_models.py` run no longer fits in one 180 s device call; only `SITE_STAGE=value` has been rerun since test 30.
-- The one-sided form lift is on the site although its gain on the miss (0.3 points) is below the 0.5-point bar (decision 49). Re-test when there are more mid-season transfers.
 - `analysis/fee_offset_test.py` and `analysis/fee_feature_search.py` still build their own frame instead of using `analysis/fee_model.py`.
 - Statistics add little to the fee model beyond the market value; the provider's value already holds them. Untested: models without the market value as an input, to see what performance alone explains.
 - Players worth 40m+: the miss rose from 21.1 % to 24.7 % with the test-30 model (n=81), and the tail line now does worse than the trees alone (23.9 %). Re-test the tail line on the rolling origin.
+- `analysis/squad_model.py` was not rerun after the 16,021 profiles were loaded (timed out at 40 s); the 38,126 players on the site did not change, so check why none of the new profiles reach the site.
+- `nat_top_youth` is missing for every row of the frame.

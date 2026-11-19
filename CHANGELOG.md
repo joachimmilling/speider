@@ -1,5 +1,11 @@
 # Changelog
 
+## 16,021 more profiles
+
+- `profiler-6.ndjson.gz` loaded (81,117 profiles). The fee model gains 98 transfers; miss on 2025-26 41.9 % -> 41.4 %. The early-year tilt is not fixed by this (see results).
+- The one-sided form lift now passes its bar (48.7 % -> 48.0 % on running-season transfers).
+- `scripts/load_profiles.py`: explicit CSV dialect, height guard.
+
 ## Cause of the low forward error (test 34)
 
 - `analysis/fee_cause_test.py`: the early years hold a tilted mix of players; correcting year levels for it removes half of the shortfall. Random folds show the estimator is fine. No model change.

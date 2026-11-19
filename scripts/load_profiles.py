@@ -38,7 +38,7 @@ def main(paths):
             team = o.get("team") if isinstance(o.get("team"), list) and len(o["team"]) == 2 else [None, None]   # current club, files from 2026-11-17
             h = re.findall(r"\d+", str(info.get("Height") or ""))
             w["profiles"].writerow([o["id"], o.get("name"), (o.get("b") or "")[:10] or None, (o.get("ce") or "")[:10] or None,
-                                    o.get("gender"), h[0] if h else None, info.get("Preferred foot"), info.get("Country"),
+                                    o.get("gender"), h[0] if h and len(h[0]) <= 3 else None, info.get("Preferred foot"), info.get("Country"),
                                     json.dumps(o.get("pos") or []),
                                     team[0], team[1],
                                     json.dumps(o["inj"]) if o.get("inj") else None, o.get("st")])
@@ -61,7 +61,8 @@ def main(paths):
     }
     for n, cols in spec.items():
         con.execute(f"CREATE OR REPLACE TABLE fm_{n} ({cols})")
-        con.execute(f"COPY fm_{n} FROM '{tmp / (n + '.csv')}' (HEADER false, NULLSTR '')")
+        opts = "HEADER false, NULLSTR '', DELIM ',', QUOTE '\"', ESCAPE '\"', AUTO_DETECT false"     # explicit dialect: the sniffer misreads the JSON columns
+        con.execute(f"COPY fm_{n} FROM '{tmp / (n + '.csv')}' ({opts})")
         print(n, con.execute(f"SELECT count(*) FROM fm_{n}").fetchone()[0])
     print(con.execute("select min(date), max(date), count(distinct player_id) from fm_mv").fetchone())
     print(con.execute("select min(end_year), count(*) filter(where end_year<2015), count(distinct player_id) from fm_career").fetchone())
