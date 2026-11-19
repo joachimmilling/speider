@@ -1287,3 +1287,54 @@ Adopted: forward errors, value bracket, 180 days (`analysis/fee_model.py: calibr
 Site model, 2025-26 (3,595): bias 0.91 -> 0.97, miss 41.6 % -> 41.9 % (market value alone 43.2 %), 76.3 % of fees inside the 80 % range. Speider values rise by 4-9 % for players worth over 1m and are unchanged under 1m; buyer-tier prices rise by 5-13 %.
 
 Not done: the form test and the buy test still add the trailing raw level, not the calibrated one.
+
+## Test 34: why the model runs low on new transfers (written before running, 2026-11-19)
+
+Observation (test 33): the model's median error on a new year is negative in all six years.
+
+Suspected cause: training fees are measured against the raw median of their own year, and the mix of players differs by year. The frame holds players who are active today, so early years hold mostly players who lasted (young then, sold above their value), while the latest year holds everyone. The raw median of an early year is then high because of who is in it, the training targets of that year are pushed down, and the model predicts low for a year with the full mix.
+
+Step 1, composition by year: number of transfers, median age, share aged 28 or more, median value. Expected if the cause is right: early years are younger and smaller.
+
+Step 2, hypothesis: estimate the year levels given the inputs instead of raw (backfitting: fit the model, take each year's median error, subtract, refit; three rounds). The gap between a year's level as predicted forward (median of log fee minus model + value, from the model fitted on earlier years) and the same year's level once it is in the fit should then be within 2 % in at least four of six years and not carry one sign. With today's raw centring that gap is the model error of test 33 (-3 to -7 %).
+
+Adoption bar: the gap criterion above, and with the test-33 calibration on top a pooled rolling miss not more than 0.2 points worse and a bias within 2 % of 1.
+
+### Test 34 follow-up: more backfitting rounds (written before running)
+
+Three rounds moved the mean gap from +2.8 % to +1.5 % but only two of six years are within 2 %. If the remainder is backfitting that has not converged, six rounds should bring the mean gap under 1 %. If it does not move, the rest of the shortfall has another cause.
+
+### Test 34 diagnostic: is the rest a property of the estimator? (written before running)
+
+Six rounds leave the mean gap at +1.6 %. Check without any time shift: five random folds over all years, year-centred target, median of target minus out-of-fold prediction. If that is also clearly positive, part of the shortfall comes from the estimator itself (the mean of bootstrap medians on a right-skewed target), not from new years being different. Also reported: the same with the mean in place of the median error, and the skew of the target.
+
+## Results of test 34 (2026-11-19)
+
+Composition (`analysis/fee_cause_test.py`): the transfers of early years are a different mix.
+
+| Year | Transfers | Share aged 28+ | League strength of 20-22-year-olds in the frame |
+|---|---|---|---|
+| 2016 | 511 | 6 % | |
+| 2017 | 608 | 10 % | 0.17 |
+| 2019 | 776 | 12 % | 0.09 |
+| 2021 | 743 | 16 % | 0.02 |
+| 2023 | 1,395 | 19 % | -0.01 |
+| 2026 | 1,697 | 17 % | -0.01 |
+
+Gap between a year's level predicted forward and the same year's level once it is in the fit (log points):
+
+| | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 | Mean |
+|---|---|---|---|---|---|---|---|
+| Raw year centring (today) | +0.042 | +0.027 | +0.017 | +0.039 | +0.045 | -0.002 | +0.028 |
+| Levels given the inputs, 3 rounds | +0.046 | +0.039 | -0.025 | +0.009 | +0.026 | -0.007 | +0.015 |
+| Levels given the inputs, 6 rounds | +0.033 | +0.028 | -0.022 | +0.027 | +0.022 | +0.005 | +0.016 |
+
+With the test-33 calibration on top: miss 44.9 % (raw centring), 44.6 % (levels given the inputs); bias 0.986 both.
+
+Reading:
+- The mix does change the way the hypothesis says: early years hold fewer old players and players from stronger leagues.
+- Correcting the year levels for the mix removes about half of the shortfall (2.8 % to 1.5 %). The hypothesis asked for four of six years within 2 %; it is two of six. Not adopted as the explanation in full. More rounds change nothing, so the rest is not a convergence problem.
+- Random folds without any time shift: median out-of-fold error +0.4 %, in sample +0.4 %. The estimator is not the cause; the shortfall only appears forward in time.
+- The inputs were checked for look-ahead (career and national-team inputs are cut at 30 June of the year): none found.
+
+Conclusion: the cause is a sample that is tilted in early years (players active today, and leagues with statistics then), which explains about half; about 1.5 % is unexplained. The calibration of test 33 covers both. The conditional year levels are not adopted now (the gap bar failed; the 0.3-point gain on the miss is one run at the margin). The fix at the source is to load the players who are missing from the early years.

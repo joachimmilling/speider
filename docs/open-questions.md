@@ -40,7 +40,8 @@ In priority order within each half. Move a line to `docs/lessons.md` when it is 
 - Club and league logo URLs are unverified; logos only in the local build.
 - Country names are English in the Norwegian UI.
 - `analysis/growth_model.py` still has the old role mapping for 83-87.
-- Why the fee model's own median error on new transfers is negative every year (test 33). Calibration hides it; the cause is unknown. Candidates: the frame is a sample of players active today, so earlier years hold survivors.
+- About 1.5 % of the fee model's shortfall on new years is unexplained (test 34). The explained half is the tilted sample of early years; the fix at the source is to load profiles and transfers of players who are no longer active (about 16,000 older players have no profile), then rerun tests 33-34.
+- Year levels given the inputs (backfitting) gained 0.3 points of miss in one run (test 34) and are not adopted; re-test after the sample is completed.
 - Buyer tiers recover about half of what exact buyer inputs give (42 % against 40 % miss); the rest (league, the club's own spending record) is not on the site.
 - The Speider value without a buyer and the tier prices come from two models and need not agree.
 - The form test and the buy test add the trailing raw level, the site the calibrated one (test 33).

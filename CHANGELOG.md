@@ -1,5 +1,9 @@
 # Changelog
 
+## Cause of the low forward error (test 34)
+
+- `analysis/fee_cause_test.py`: the early years hold a tilted mix of players; correcting year levels for it removes half of the shortfall. Random folds show the estimator is fine. No model change.
+
 ## Bias of the fee model (test 33)
 
 - `analysis/fee_bias_test.py`: the model predicts low on new transfers every year; the level lag is noise.

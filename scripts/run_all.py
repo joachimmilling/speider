@@ -16,6 +16,7 @@ STEPS = [
     ("fee_search", ["python3", "analysis/fee_feature_search.py"], {"REBUILD": "1"}),
     ("fee_offset", ["python3", "analysis/fee_offset_test.py"], {}),
     ("fee_bias", ["python3", "analysis/fee_bias_test.py"], {}),
+    ("fee_cause", ["python3", "analysis/fee_cause_test.py"], {}),
     ("buy_test", ["python3", "analysis/buy_verdict_backtest.py"], {}),
     ("team_strength", ["python3", "analysis/team_strength_backtest.py"], {}),
     ("squad_model", ["python3", "analysis/squad_model.py"], {}),
